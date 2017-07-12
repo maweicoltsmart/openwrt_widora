@@ -1,0 +1,1 @@
+obj-${CONFIG_SPI_GPIO_SX1276}	+= sx1276-spidevs.o
