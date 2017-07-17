@@ -1,0 +1,10 @@
+TIMEOUT 30  
+ABORT   "BUSY"
+ABORT   "ERROR"
+ABORT   "NO CARRIER"
+''      AT    
+OK              ATS0=0    
+OK              ATE0V1    
+OK              AT+CGDCONT=1,"IP","CMNET"
+OK              ATD*99***1#    
+CONNECT         ''

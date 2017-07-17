@@ -1,0 +1,30 @@
+# Usage: root>pppd call gprs
+
+#set seriral
+/dev/ttyS1
+
+# set baudrate
+115200
+
+# set flowdate
+nocrtscts
+
+connect '/usr/sbin/chat -v -f /etc/ppp/gprs-connect-chat'
+
+#set debug ,send message to /var/log/messages
+debug
+
+#To keep pppd on the terminal
+nodetach
+
+#hide-password
+
+# Accept the peer's idea of our local IP address
+ipcp-accept-local
+# Accept the peer's idea of its (remote) IP address
+ipcp-accept-remote
+
+#dial up connetion as the default route
+defaultroute
+
+usepeerdns
