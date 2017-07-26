@@ -57,6 +57,9 @@
 #include <linux/gpio.h>
 #include <linux/spi/spi.h>
 #include <linux/spi/spi_gpio.h>
+#include <linux/interrupt.h> //---request_irq()
+#include <asm/irq.h> //---disable_irq, enable_irq()
+#include <linux/workqueue.h>
 
 #define DRV_NAME	"sx1276-spidevs"
 #define DRV_DESC	"Sx1276 GPIO-based SPI driver"
@@ -308,11 +311,74 @@ err:
 	return err;
 }
 
+// DIO0 ------> SPI_CS1 ------> GPIO6
+// DIO1 ------> NO_NAME ------> GPIO40
+// DIO2 ------> NO_NAME ------> GPIO39
+// DIO3 ------> NO_NAME ------> GPIO16
+// DIO4 ------> NO_NAME ------> GPIO15
+// DIO5 ------> NO_NAME ------> GPIO0
+void dio0irq_handler(int irq, void *dev_id, struct pt_regs *regs)
+{
+	printk("%s, %d\r\n",__func__,__LINE__);
+}
+void dio1irq_handler(int irq, void *dev_id, struct pt_regs *regs)
+{
+	printk("%s, %d\r\n",__func__,__LINE__);
+}
+void dio2irq_handler(int irq, void *dev_id, struct pt_regs *regs)
+{
+	printk("%s, %d\r\n",__func__,__LINE__);
+}
+void dio3irq_handler(int irq, void *dev_id, struct pt_regs *regs)
+{
+	printk("%s, %d\r\n",__func__,__LINE__);
+}
+void dio4irq_handler(int irq, void *dev_id, struct pt_regs *regs)
+{
+	printk("%s, %d\r\n",__func__,__LINE__);
+}
+void dio5irq_handler(int irq, void *dev_id, struct pt_regs *regs)
+{
+	printk("%s, %d\r\n",__func__,__LINE__);
+}
+
 static int __init spi_gpio_custom_probe(void)
 {
 	int err;
-
+	int dio0irq,dio1irq,dio2irq,dio3irq,dio4irq,dio5irq;
 	printk(KERN_INFO DRV_DESC " version " DRV_VERSION "\n");
+	
+	gpio_request(6, "gpio6");
+	gpio_direction_input(6);
+	dio0irq = gpio_to_irq(6);
+	request_irq(dio0irq,dio0irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,NULL);
+	
+	gpio_request(40, "gpio40");
+        gpio_direction_input(40);
+        dio1irq = gpio_to_irq(40);
+        request_irq(dio1irq,dio1irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,NULL);
+
+	gpio_request(39, "gpio39");
+        gpio_direction_input(39);
+        dio2irq = gpio_to_irq(39);
+        request_irq(dio2irq,dio2irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,NULL);
+
+        gpio_request(16, "gpio16");
+        gpio_direction_input(16);
+        dio3irq = gpio_to_irq(16);
+        request_irq(dio3irq,dio3irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,NULL);
+
+        gpio_request(15, "gpio15");
+        gpio_direction_input(15);
+        dio4irq = gpio_to_irq(15);
+        request_irq(dio4irq,dio4irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,NULL);
+
+        gpio_request(11, "gpio11");
+        gpio_direction_input(11);
+        dio5irq = gpio_to_irq(11);
+        request_irq(dio5irq,dio5irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,NULL);
+
+
 
 	err = spi_gpio_custom_add_one(0, bus0);
 	if (err)
