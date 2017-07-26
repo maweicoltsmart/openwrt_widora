@@ -164,5 +164,7 @@
                         linux,code = <0x211>;
                 };
         };
-
+	sx1276 {
+		compatible = "semtech,sx1276";
+	};
 };

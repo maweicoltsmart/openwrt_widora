@@ -103,6 +103,25 @@ MODULE_PARM_DESC(bus3, "bus3" BUS_PARM_DESC);
 static struct platform_device *devices[BUS_COUNT_MAX];
 static unsigned int nr_devices;
 
+ static const struct of_device_id sx1276_of_match[] = {
+         { .compatible = "semtech,sx1276", },
+         { }
+};
+MODULE_DEVICE_TABLE(of, sx1276_of_match);
+
+static int __init spi_gpio_custom_remove(void);
+static int __init spi_gpio_custom_probe(void);
+
+static struct spi_driver sx1276_spi_driver = {
+         .driver = {
+                 .name   = "sx1276",
+                 .owner  = THIS_MODULE,
+                 .of_match_table = sx1276_of_match,
+         },
+         .probe          = spi_gpio_custom_probe,
+         .remove         = spi_gpio_custom_remove,
+};
+
 static void spi_gpio_custom_cleanup(void)
 {
 	int i;
@@ -317,69 +336,79 @@ err:
 // DIO3 ------> NO_NAME ------> GPIO16
 // DIO4 ------> NO_NAME ------> GPIO15
 // DIO5 ------> NO_NAME ------> GPIO0
-void dio0irq_handler(int irq, void *dev_id, struct pt_regs *regs)
+static irqreturn_t dio0irq_handler(int irq, void *dev_id)
 {
 	printk("%s, %d\r\n",__func__,__LINE__);
+	return 0;
 }
-void dio1irq_handler(int irq, void *dev_id, struct pt_regs *regs)
+static irqreturn_t dio1irq_handler(int irq, void *dev_id)
 {
 	printk("%s, %d\r\n",__func__,__LINE__);
+	return 0;
 }
-void dio2irq_handler(int irq, void *dev_id, struct pt_regs *regs)
+static irqreturn_t dio2irq_handler(int irq, void *dev_id)
 {
 	printk("%s, %d\r\n",__func__,__LINE__);
+	return 0;
 }
-void dio3irq_handler(int irq, void *dev_id, struct pt_regs *regs)
+static irqreturn_t dio3irq_handler(int irq, void *dev_id)
 {
 	printk("%s, %d\r\n",__func__,__LINE__);
+	return 0;
 }
-void dio4irq_handler(int irq, void *dev_id, struct pt_regs *regs)
+static irqreturn_t dio4irq_handler(int irq, void *dev_id)
 {
 	printk("%s, %d\r\n",__func__,__LINE__);
+	return 0;
 }
-void dio5irq_handler(int irq, void *dev_id, struct pt_regs *regs)
+static irqreturn_t dio5irq_handler(int irq, void *dev_id)
 {
 	printk("%s, %d\r\n",__func__,__LINE__);
+	return 0;
 }
-
+static int __init spi_gpio_custom_remove(void)
+{
+	return 0;
+}
 static int __init spi_gpio_custom_probe(void)
 {
 	int err;
-	int dio0irq,dio1irq,dio2irq,dio3irq,dio4irq,dio5irq;
+	unsigned int dio0irq,dio1irq,dio2irq,dio3irq,dio4irq,dio5irq;
+	printk("%s, %d\r\n",__func__,__LINE__);
 	printk(KERN_INFO DRV_DESC " version " DRV_VERSION "\n");
 	
 	gpio_request(6, "gpio6");
 	gpio_direction_input(6);
 	dio0irq = gpio_to_irq(6);
-	request_irq(dio0irq,dio0irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,NULL);
+	request_irq(dio0irq,dio0irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,"dio0irq",NULL);
 	
 	gpio_request(40, "gpio40");
         gpio_direction_input(40);
         dio1irq = gpio_to_irq(40);
-        request_irq(dio1irq,dio1irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,NULL);
+        request_irq(dio1irq,dio1irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,"dio1irq",NULL);
 
 	gpio_request(39, "gpio39");
         gpio_direction_input(39);
         dio2irq = gpio_to_irq(39);
-        request_irq(dio2irq,dio2irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,NULL);
+        request_irq(dio2irq,dio2irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,"dio2irq",NULL);
 
         gpio_request(16, "gpio16");
         gpio_direction_input(16);
         dio3irq = gpio_to_irq(16);
-        request_irq(dio3irq,dio3irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,NULL);
+        request_irq(dio3irq,dio3irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,"dio3irq",NULL);
 
         gpio_request(15, "gpio15");
         gpio_direction_input(15);
         dio4irq = gpio_to_irq(15);
-        request_irq(dio4irq,dio4irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,NULL);
+        request_irq(dio4irq,dio4irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,"dio4irq",NULL);
 
         gpio_request(11, "gpio11");
         gpio_direction_input(11);
         dio5irq = gpio_to_irq(11);
-        request_irq(dio5irq,dio5irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,NULL);
+        request_irq(dio5irq,dio5irq_handler,IRQF_TRIGGER_RISING | IRQF_TRIGGER_FALLING,"dio5irq",NULL);
 
 
-
+#if 0
 	err = spi_gpio_custom_add_one(0, bus0);
 	if (err)
 		goto err;
@@ -401,17 +430,17 @@ static int __init spi_gpio_custom_probe(void)
 		err = -ENODEV;
 		goto err;
 	}
-
+#endif
 	return 0;
 
 err:
 	spi_gpio_custom_cleanup();
 	return err;
 }
-
-#ifdef MODULE
+#if 1//def MODULE
 static int __init spi_gpio_custom_init(void)
 {
+	printk("%s, %d\r\n",__func__,__LINE__);
 	return spi_gpio_custom_probe();
 }
 module_init(spi_gpio_custom_init);
