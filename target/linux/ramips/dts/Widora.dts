@@ -61,6 +61,23 @@
 				ralink,group = "wdt";
 				ralink,function = "gpio";
 			};
+			spi_cs1 {
+                                ralink,group = "spi cs1";
+                                ralink,function = "gpio";
+                        };
+			sdxc {
+                                ralink,group = "sdmode";
+                                ralink,function = "gpio";
+                        };
+			pwm0 {
+                                ralink,group = "pwm0";
+                                ralink,function = "gpio";
+                        };
+			pwm1 {
+                                ralink,group = "pwm1";
+                                ralink,function = "gpio";
+                        };
+
 		};
 	};
 
