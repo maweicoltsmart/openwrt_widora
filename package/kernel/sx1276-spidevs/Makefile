@@ -17,6 +17,7 @@ define KernelPackage/sx1276-spidevs
   SUBMENU:=SPI Support
   TITLE:=Sx1276 GPIO-based SPI device
   DEPENDS:=@GPIO_SUPPORT +kmod-spi-bitbang +kmod-spi-gpio +kmod-spi-dev
+  AUTOLOAD:=$(call AutoLoad,81,example)
   FILES:=$(PKG_BUILD_DIR)/sx1276-spidevs.ko
   KCONFIG:=
 endef

@@ -1,0 +1,14 @@
+#/etc/ppp/gprs-connect-chat
+TIMEOUT         15
+ABORT  '\nBUSY\r'   
+ABORT  '\nNO ANSWER\r'   
+ABORT  '\nRINGING\r\n\r\nRINGING\r' 
+#'' AT  
+#'OK-+++\c-OK' ATH0 
+TIMEOUT         40
+''              \rAT
+OK              ATS0=0      #这些都是标准的at命令，建议查看随模块的at命令手册
+OK              ATE0V1
+OK              AT+CGDCONT=1,"IP","CMNET" #设置isp接入网关为中国移动的cmnet，如果你想 获得更多访问资源的话
+OK              ATDT*99***1#   #中国移动gprs的接入号吗
+CONNECT         ''
