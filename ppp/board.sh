@@ -12,4 +12,8 @@ cp /tmp/chat-gprs-connect ./
 
 cp /tmp/chap-secets /etc/ppp/
 cp /tmp/gprs-connect-chat /etc/ppp/
-
+cd /sys/class/gpio
+echo 17 > export
+cd gpio17
+echo out > direction''
+echo 1 > value
