@@ -1,0 +1,18 @@
+#Copyright (c) 2016 guanlei 995318056@qq.com
+# This is second part of the ppp dial script. It will perform the connection
+#
+    ABORT           'BUSY'
+    ABORT           'NO ANSWER'
+    ABORT           'NO CARRIER'
+    ABORT           'NO DIALTONE'
+    ABORT           'ERROR'
+    ABORT           '\nRING\r\n\r\nRING\r'
+    TIMEOUT         20
+''               \rAT
+#set  apn
+OK              AT+CGDCONT=1,"IP","cmnet"
+# ............
+     OK              ATDT*99***1#    //这里要改成相应的运行商的设置
+     SAY             " + requesting data connection\n"
+     CONNECT         ''
+     SAY             " + connected\n"
