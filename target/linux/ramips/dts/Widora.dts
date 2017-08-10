@@ -31,10 +31,6 @@
 			};
 			i2s {
 				ralink,group = "i2s";
-				ralink,function = "i2s";
-			};
-			spis {
-				ralink,group = "spis";
 				ralink,function = "gpio";
 			};
 			wled_an {
@@ -59,6 +55,22 @@
 			};
 			wdt {
 				ralink,group = "wdt";
+				ralink,function = "gpio";
+			};
+			pwm0 {
+				ralink,group = "pwm0";
+				ralink,function = "gpio";
+			};
+			pwm1 {
+				ralink,group = "pwm1";
+				ralink,function = "gpio";
+			};
+			sdxc {
+				ralink,group = "sdmode";
+				ralink,function = "gpio";
+			};
+			i2c {
+				ralink,group = "i2c";
 				ralink,function = "gpio";
 			};
 		};
@@ -133,8 +145,7 @@
 	};
 
 	sdhci@10130000 {
-		status = "okay";
-		mediatek,cd-low;
+		status = "disable";
 	};
         gpio-keys-polled {
                 compatible = "gpio-keys-polled";
