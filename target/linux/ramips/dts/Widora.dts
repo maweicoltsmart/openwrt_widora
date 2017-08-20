@@ -73,6 +73,10 @@
 				ralink,group = "i2c";
 				ralink,function = "gpio";
 			};
+			spi_cs1 {
+				ralink,group = "spi cs1";
+				ralink,function = "gpio";
+			};
 		};
 	};
 

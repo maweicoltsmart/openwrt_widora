@@ -424,8 +424,8 @@ static int __init sx1276_spidevs_probe(void)
 	err = spi_gpio_custom_add_one(0, sx1276_spi_gpio_params);
 	if (err)
 		goto err;
-	spi_setup(slave[0]);
-	spi_setup(slave[1]);
+	//spi_setup(slave[0]);
+	//spi_setup(slave[1]);
 
 	gpio_request(SX1278_1_DIO0_PIN, "SX1278_1_DIO0_PIN");
 	gpio_direction_input(SX1278_1_DIO0_PIN);
@@ -524,7 +524,8 @@ static int __init sx1276_spidevs_probe(void)
 
 	//gpio_set_value(SX1278_1_SPI_CS_PIN,0);
 	udelay(1000);
-	spi_w8r8(slave[0],0x42 & 0x7f);
+	chipversion = spi_w8r8(slave[0],0x42 & 0x7f);
+	printk("%s:chipversion is 0x%02x\r\n",__func__,chipversion);
 	chipversion = spi_w8r8(slave[0],0x00);
 	//gpio_set_value(SX1278_1_SPI_CS_PIN,1);
 	printk("%s:chipversion is 0x%02x\r\n",__func__,chipversion);
@@ -533,7 +534,8 @@ static int __init sx1276_spidevs_probe(void)
 
 	//gpio_set_value(SX1278_2_SPI_CS_PIN,0);
 	udelay(1000);
-	spi_w8r8(slave[1],0x42 & 0x7f);
+	chipversion = spi_w8r8(slave[1],0x42 & 0x7f);
+	printk("%s:chipversion is 0x%02x\r\n",__func__,chipversion);
 	chipversion = spi_w8r8(slave[1],0x00);
 	//gpio_set_value(SX1278_2_SPI_CS_PIN,1);
 	printk("%s:chipversion is 0x%02x\r\n",__func__,chipversion);
