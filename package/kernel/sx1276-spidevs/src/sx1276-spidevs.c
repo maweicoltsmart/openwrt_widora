@@ -62,6 +62,7 @@
 #include <linux/workqueue.h>
 #include "pinmap.h"
 #include <linux/delay.h>
+#include "routin.h"
 
 #define DRV_NAME	"sx1276-spidevs"
 #define DRV_DESC	"Sx1276 GPIO-based SPI driver"
@@ -102,74 +103,13 @@ static unsigned int sx1276_spi_gpio_params[BUS_PARAM_COUNT] = {
 		SX1278_2_SPI_CS_PIN
 };
 
-static unsigned int sx1278_1_dio0irq,sx1278_1_dio1irq,sx1278_1_dio2irq,sx1278_1_dio3irq,sx1278_1_dio4irq,sx1278_1_dio5irq;
-static unsigned int sx1278_2_dio0irq,sx1278_2_dio1irq,sx1278_2_dio2irq,sx1278_2_dio3irq,sx1278_2_dio4irq,sx1278_2_dio5irq;
+static struct task_struct *radio_routin;
+
+extern unsigned int sx1278_1_dio0irq,sx1278_1_dio1irq,sx1278_1_dio2irq,sx1278_1_dio3irq,sx1278_1_dio4irq,sx1278_1_dio5irq;
+extern unsigned int sx1278_2_dio0irq,sx1278_2_dio1irq,sx1278_2_dio2irq,sx1278_2_dio3irq,sx1278_2_dio4irq,sx1278_2_dio5irq;
 
 static int __init sx1276_spidevs_remove(void);
 static int __init sx1276_spidevs_probe(void);
-
-static irqreturn_t sx1278_1_dio0irq_handler(int irq, void *dev_id)
-{
-	printk("%s, %d\r\n",__func__,__LINE__);
-	return 0;
-}
-static irqreturn_t sx1278_1_dio1irq_handler(int irq, void *dev_id)
-{
-	printk("%s, %d\r\n",__func__,__LINE__);
-	return 0;
-}
-static irqreturn_t sx1278_1_dio2irq_handler(int irq, void *dev_id)
-{
-	printk("%s, %d\r\n",__func__,__LINE__);
-	return 0;
-}
-static irqreturn_t sx1278_1_dio3irq_handler(int irq, void *dev_id)
-{
-	printk("%s, %d\r\n",__func__,__LINE__);
-	return 0;
-}
-static irqreturn_t sx1278_1_dio4irq_handler(int irq, void *dev_id)
-{
-	printk("%s, %d\r\n",__func__,__LINE__);
-	return 0;
-}
-static irqreturn_t sx1278_1_dio5irq_handler(int irq, void *dev_id)
-{
-	printk("%s, %d\r\n",__func__,__LINE__);
-	return 0;
-}
-
-static irqreturn_t sx1278_2_dio0irq_handler(int irq, void *dev_id)
-{
-	printk("%s, %d\r\n",__func__,__LINE__);
-	return 0;
-}
-static irqreturn_t sx1278_2_dio1irq_handler(int irq, void *dev_id)
-{
-	printk("%s, %d\r\n",__func__,__LINE__);
-	return 0;
-}
-static irqreturn_t sx1278_2_dio2irq_handler(int irq, void *dev_id)
-{
-	printk("%s, %d\r\n",__func__,__LINE__);
-	return 0;
-}
-static irqreturn_t sx1278_2_dio3irq_handler(int irq, void *dev_id)
-{
-	printk("%s, %d\r\n",__func__,__LINE__);
-	return 0;
-}
-static irqreturn_t sx1278_2_dio4irq_handler(int irq, void *dev_id)
-{
-	printk("%s, %d\r\n",__func__,__LINE__);
-	return 0;
-}
-static irqreturn_t sx1278_2_dio5irq_handler(int irq, void *dev_id)
-{
-	printk("%s, %d\r\n",__func__,__LINE__);
-	return 0;
-}
-
 
 static void sx1276_spidevs_free_gpio(void)
 {
@@ -432,91 +372,7 @@ static int __init sx1276_spidevs_probe(void)
 	if (err)
 		goto err;
 
-	gpio_request(SX1278_1_DIO0_PIN, "SX1278_1_DIO0_PIN");
-	gpio_direction_input(SX1278_1_DIO0_PIN);
-	sx1278_1_dio0irq = gpio_to_irq(SX1278_1_DIO0_PIN);
-	request_irq(sx1278_1_dio0irq,sx1278_1_dio0irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio0irq",NULL);
-	disable_irq(sx1278_1_dio0irq);
-
-	gpio_request(SX1278_1_DIO1_PIN, "SX1278_1_DIO1_PIN");
-	gpio_direction_input(SX1278_1_DIO1_PIN);
-	sx1278_1_dio1irq = gpio_to_irq(SX1278_1_DIO1_PIN);
-	request_irq(sx1278_1_dio1irq,sx1278_1_dio1irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio1irq",NULL);
-	disable_irq(sx1278_1_dio1irq);
-
-	gpio_request(SX1278_1_DIO2_PIN, "SX1278_1_DIO2_PIN");
-	gpio_direction_input(SX1278_1_DIO2_PIN);
-	sx1278_1_dio2irq = gpio_to_irq(SX1278_1_DIO2_PIN);
-	request_irq(sx1278_1_dio2irq,sx1278_1_dio2irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio2irq",NULL);
-	disable_irq(sx1278_1_dio2irq);
-
-	gpio_request(SX1278_1_DIO3_PIN, "SX1278_1_DIO3_PIN");
-	gpio_direction_input(SX1278_1_DIO3_PIN);
-	sx1278_1_dio3irq = gpio_to_irq(SX1278_1_DIO3_PIN);
-	request_irq(sx1278_1_dio3irq,sx1278_1_dio3irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio3irq",NULL);
-	disable_irq(sx1278_1_dio3irq);
-
-	gpio_request(SX1278_1_DIO4_PIN, "SX1278_1_DIO4_PIN");
-	gpio_direction_input(SX1278_1_DIO4_PIN);
-	sx1278_1_dio4irq = gpio_to_irq(SX1278_1_DIO4_PIN);
-	request_irq(sx1278_1_dio4irq,sx1278_1_dio4irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio4irq",NULL);
-	disable_irq(sx1278_1_dio4irq);
-
-	gpio_request(SX1278_1_DIO5_PIN, "SX1278_1_DIO5_PIN");
-	gpio_direction_input(SX1278_1_DIO5_PIN);
-	sx1278_1_dio5irq = gpio_to_irq(SX1278_1_DIO5_PIN);
-	request_irq(sx1278_1_dio5irq,sx1278_1_dio5irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio5irq",NULL);
-	disable_irq(sx1278_1_dio5irq);
-
-	gpio_request(SX1278_2_DIO0_PIN, "SX1278_2_DIO0_PIN");
-	gpio_direction_input(SX1278_2_DIO0_PIN);
-	sx1278_1_dio0irq = gpio_to_irq(SX1278_2_DIO0_PIN);
-	request_irq(sx1278_2_dio0irq,sx1278_2_dio0irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio0irq",NULL);
-	disable_irq(sx1278_2_dio0irq);
-
-	gpio_request(SX1278_2_DIO1_PIN, "SX1278_2_DIO1_PIN");
-	gpio_direction_input(SX1278_2_DIO1_PIN);
-	sx1278_2_dio1irq = gpio_to_irq(SX1278_2_DIO1_PIN);
-	request_irq(sx1278_2_dio1irq,sx1278_2_dio1irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio1irq",NULL);
-	disable_irq(sx1278_2_dio1irq);
-
-	gpio_request(SX1278_2_DIO2_PIN, "SX1278_2_DIO2_PIN");
-	gpio_direction_input(SX1278_1_DIO2_PIN);
-	sx1278_2_dio2irq = gpio_to_irq(SX1278_2_DIO2_PIN);
-	request_irq(sx1278_2_dio2irq,sx1278_2_dio2irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio2irq",NULL);
-	disable_irq(sx1278_2_dio2irq);
-
-	gpio_request(SX1278_2_DIO3_PIN, "SX1278_2_DIO3_PIN");
-	gpio_direction_input(SX1278_2_DIO3_PIN);
-	sx1278_2_dio3irq = gpio_to_irq(SX1278_2_DIO3_PIN);
-	request_irq(sx1278_2_dio3irq,sx1278_2_dio3irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio3irq",NULL);
-	disable_irq(sx1278_2_dio3irq);
-
-	gpio_request(SX1278_2_DIO4_PIN, "SX1278_2_DIO4_PIN");
-	gpio_direction_input(SX1278_2_DIO4_PIN);
-	sx1278_2_dio4irq = gpio_to_irq(SX1278_2_DIO4_PIN);
-	request_irq(sx1278_2_dio4irq,sx1278_2_dio4irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio4irq",NULL);
-	disable_irq(sx1278_2_dio4irq);
-
-	gpio_request(SX1278_2_DIO5_PIN, "SX1278_2_DIO5_PIN");
-	gpio_direction_input(SX1278_2_DIO5_PIN);
-	sx1278_2_dio5irq = gpio_to_irq(SX1278_2_DIO5_PIN);
-	request_irq(sx1278_2_dio5irq,sx1278_2_dio5irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio5irq",NULL);
-	disable_irq(sx1278_2_dio5irq);
-
-	enable_irq(sx1278_1_dio0irq);
-	enable_irq(sx1278_1_dio1irq);
-	enable_irq(sx1278_1_dio2irq);
-	enable_irq(sx1278_1_dio3irq);
-	enable_irq(sx1278_1_dio4irq);
-	enable_irq(sx1278_1_dio5irq);
-
-	enable_irq(sx1278_2_dio0irq);
-	enable_irq(sx1278_2_dio1irq);
-	enable_irq(sx1278_2_dio2irq);
-	enable_irq(sx1278_2_dio3irq);
-	enable_irq(sx1278_2_dio4irq);
-	enable_irq(sx1278_2_dio5irq);
+	radio_routin = kthread_create(Radio_routin, NULL, "Radio routin thread");
 
 	if(devices == NULL)
 	{
@@ -524,20 +380,7 @@ static int __init sx1276_spidevs_probe(void)
 		return 0;
 	}
 
-	err = gpio_request(SX1278_1_RST_PIN, "SX1278_1_RST_PIN");
-	if (err)
-		goto err;
-	err = gpio_request(SX1278_2_RST_PIN, "SX1278_2_RST_PIN");
-	if (err)
-		goto err;
-
-	udelay(10000);
-	gpio_direction_output(SX1278_1_RST_PIN,0);
-	gpio_direction_output(SX1278_2_RST_PIN,0);
-	udelay(10000);
-	gpio_set_value(SX1278_1_RST_PIN,1);
-	gpio_set_value(SX1278_2_RST_PIN,1);
-	udelay(100000);
+#if 0
 	printk("now read chip version through spi\r\n");
 
 	udelay(1000);
@@ -553,7 +396,7 @@ static int __init sx1276_spidevs_probe(void)
 	printk("%s:chipversion is 0x%02x\r\n",__func__,chipversion);
 	chipversion = spi_w8r8(slave[1],0x00);
 	printk("%s:chipversion is 0x%02x\r\n",__func__,chipversion);
-
+#endif
 	return 0;
 
 err:

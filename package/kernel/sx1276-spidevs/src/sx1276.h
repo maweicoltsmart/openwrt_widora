@@ -14,9 +14,11 @@ Maintainer: Miguel Luis and Gregory Cristian
 */
 #ifndef __SX1276_H__
 #define __SX1276_H__
-
+#include "typedef.h"
 #include "sx1276Regs-Fsk.h"
 #include "sx1276Regs-LoRa.h"
+#include <linux/spi/spi.h>
+#include <linux/spi/spi_gpio.h>
 
 /*!
  * Radio wakeup time from SLEEP mode
@@ -108,15 +110,15 @@ typedef struct
  */
 typedef struct SX1276_s
 {
-    Gpio_t        Reset;
-    Gpio_t        DIO0;
-    Gpio_t        DIO1;
-    Gpio_t        DIO2;
-    Gpio_t        DIO3;
-    Gpio_t        DIO4;
-    Gpio_t        DIO5;
-    Spi_t         Spi;
-    uint8_t       RxTx;
+    unsigned        Reset;
+    unsigned        DIO0;
+    unsigned        DIO1;
+    unsigned        DIO2;
+    unsigned        DIO3;
+    unsigned        DIO4;
+    unsigned        DIO5;
+    struct spi_device *        Spi;
+    unsigned        RxTx;
     RadioSettings_t Settings;
 }SX1276_t;
 
