@@ -62,7 +62,12 @@
 #include <linux/workqueue.h>
 #include "pinmap.h"
 #include <linux/delay.h>
-#include "routin.h"
+#include "routin-1.h"
+#include "routin-2.h"
+#include <linux/sched.h>   //wake_up_process()
+#include <linux/kthread.h> //kthread_create()、kthread_run()
+#include <linux/err.h> //IS_ERR()、PTR_ERR()
+#include <linux/spinlock.h>
 
 #define DRV_NAME	"sx1276-spidevs"
 #define DRV_DESC	"Sx1276 GPIO-based SPI driver"
@@ -96,18 +101,19 @@ static unsigned int sx1276_spi_gpio_params[BUS_PARAM_COUNT] = {
 		SX1278_1_SPI_MOSI_PIN,
 		SX1278_1_SPI_MISO_PIN,
 		SPI_MODE_0,
-		1000000,
+		100000,
 		SX1278_1_SPI_CS_PIN,
 		SPI_MODE_0,
-		1000000,
+		100000,
 		SX1278_2_SPI_CS_PIN
 };
 
-static struct task_struct *radio_routin;
+static struct task_struct *radio_routin1,*radio_routin2;
 
 extern unsigned int sx1278_1_dio0irq,sx1278_1_dio1irq,sx1278_1_dio2irq,sx1278_1_dio3irq,sx1278_1_dio4irq,sx1278_1_dio5irq;
 extern unsigned int sx1278_2_dio0irq,sx1278_2_dio1irq,sx1278_2_dio2irq,sx1278_2_dio3irq,sx1278_2_dio4irq,sx1278_2_dio5irq;
 
+DEFINE_SPINLOCK (spi_lock);
 static int __init sx1276_spidevs_remove(void);
 static int __init sx1276_spidevs_probe(void);
 
@@ -150,7 +156,8 @@ static void sx1276_spidevs_free_irq(void)
 static void sx1276_spidevs_cleanup(void)
 {
 	int i;
-
+	kthread_stop(radio_routin1);
+	kthread_stop(radio_routin2);
 	if (devices)
 		platform_device_unregister(devices);
 	sx1276_spidevs_free_irq();
@@ -371,9 +378,26 @@ static int __init sx1276_spidevs_probe(void)
 	err = sx1276_spidevs_add_one(0, sx1276_spi_gpio_params);
 	if (err)
 		goto err;
-
-	radio_routin = kthread_create(Radio_routin, NULL, "Radio routin thread");
-
+	printk("%s, %d\r\n",__func__,__LINE__);
+	radio_routin1 = kthread_create(Radio_1_routin, NULL, "Radio1 routin thread");
+	radio_routin2 = kthread_create(Radio_2_routin, NULL, "Radio2 routin thread");
+	if(IS_ERR(radio_routin1)){
+		printk("Unable to start kernel thread radio_routin1./n");  
+		err = PTR_ERR(radio_routin1);  
+		radio_routin1 = NULL;  
+		return err;
+	}
+	if(IS_ERR(radio_routin2)){
+		printk("Unable to start kernel thread radio_routin2./n");  
+		err = PTR_ERR(radio_routin2);  
+		radio_routin2 = NULL;  
+		return err;
+	}
+	printk("%s, %d\r\n",__func__,__LINE__);
+	wake_up_process(radio_routin1);
+	wake_up_process(radio_routin2);
+	
+	printk("%s,%d\r\n",__func__,__LINE__);
 	if(devices == NULL)
 	{
 		printk("devices is NULL\r\n");

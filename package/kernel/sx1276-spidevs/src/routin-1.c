@@ -1,5 +1,5 @@
 #include "radio.h"
-#include "routin.h"
+#include "routin-1.h"
 #include <linux/sched.h>  //wake_up_process()
 #include <linux/kthread.h>//kthread_create()、kthread_run()
 #include <linux/err.h>             //IS_ERR()、PTR_ERR()
@@ -30,7 +30,7 @@
     #error "Please define a frequency band in the compiler options."
 #endif
 
-#define TX_OUTPUT_POWER                             14        // dBm
+#define TX_OUTPUT_POWER                             20        // dBm
 
 #if defined( USE_MODEM_LORA )
 
@@ -71,59 +71,61 @@ typedef enum
     TX_TIMEOUT,
 }States_t;
 
-#define RX_TIMEOUT_VALUE                            1000000
+#define RX_TIMEOUT_VALUE                            1000
 #define BUFFER_SIZE                                 64 // Define the payload size here
 
-const uint8_t PingMsg[] = "PING";
-const uint8_t PongMsg[] = "PONG";
+static const uint8_t PingMsg[] = "PING";
+static const uint8_t PongMsg[] = "PONG";
 
-uint16_t BufferSize = BUFFER_SIZE;
-uint8_t Buffer[BUFFER_SIZE];
+static uint16_t BufferSize = BUFFER_SIZE;
+static uint8_t Buffer[BUFFER_SIZE];
 
-States_t State = LOWPOWER;
+static States_t State = LOWPOWER;
 
-int8_t RssiValue = 0;
-int8_t SnrValue = 0;
-
-/*!
- * Radio events function pointer
- */
-static RadioEvents_t RadioEvents;
+static int8_t RssiValue = 0;
+static int8_t SnrValue = 0;
 
 /*!
- * \brief Function to be executed on Radio Tx Done event
+ * Radio_1 events function pointer
  */
-void OnTxDone( void );
+static RadioEvents_t Radio_1Events;
 
 /*!
- * \brief Function to be executed on Radio Rx Done event
+ * \brief Function to be executed on Radio_1 Tx Done event
  */
-void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr );
+static void OnTxDone( void );
 
 /*!
- * \brief Function executed on Radio Tx Timeout event
+ * \brief Function to be executed on Radio_1 Rx Done event
  */
-void OnTxTimeout( void );
+static void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr );
 
 /*!
- * \brief Function executed on Radio Rx Timeout event
+ * \brief Function executed on Radio_1 Tx Timeout event
  */
-void OnRxTimeout( void );
+static void OnTxTimeout( void );
 
 /*!
- * \brief Function executed on Radio Rx Error event
+ * \brief Function executed on Radio_1 Rx Timeout event
  */
-void OnRxError( void );
+static void OnRxTimeout( void );
 
-void OnTxDone( void )
+/*!
+ * \brief Function executed on Radio_1 Rx Error event
+ */
+static void OnRxError( void );
+
+static void OnTxDone( void )
 {
-    Radio.Sleep( );
+    printk(KERN_DEBUG "%s\r\n",__func__);
+    Radio_1.Sleep( );
     State = TX;
 }
 
-void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
+static void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
-    Radio.Sleep( );
+    printk(KERN_DEBUG "%s\r\n",__func__);
+    Radio_1.Sleep( );
     BufferSize = size;
     memcpy( Buffer, payload, BufferSize );
     RssiValue = rssi;
@@ -131,60 +133,58 @@ void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
     State = RX;
 }
 
-void OnTxTimeout( void )
+static void OnTxTimeout( void )
 {
-    Radio.Sleep( );
+    printk(KERN_DEBUG "%s\r\n",__func__);
+    Radio_1.Sleep( );
     State = TX_TIMEOUT;
 }
 
-void OnRxTimeout( void )
+static void OnRxTimeout( void )
 {
-    Radio.Sleep( );
+    printk(KERN_DEBUG "%s\r\n",__func__);
+    Radio_1.Sleep( );
     State = RX_TIMEOUT;
 }
 
-void OnRxError( void )
+static void OnRxError( void )
 {
-    Radio.Sleep( );
+    printk(KERN_DEBUG "%s\r\n",__func__);
+    Radio_1.Sleep( );
     State = RX_ERROR;
 }
 
-int Radio_routin(void *data){
+int Radio_1_routin(void *data){
 	bool isMaster = true;
     uint8_t i;
     int err;
 
-	// Radio initialization
- 	RadioEvents.TxDone = OnTxDone;
-	RadioEvents.RxDone = OnRxDone;
-	RadioEvents.TxTimeout = OnTxTimeout;
-	RadioEvents.RxTimeout = OnRxTimeout;
-	RadioEvents.RxError = OnRxError;
-
-	Radio.Init( &RadioEvents );
-
-	Radio.SetChannel( RF_FREQUENCY );
-
+	// Radio_1 initialization
+ 	Radio_1Events.TxDone = OnTxDone;
+	Radio_1Events.RxDone = OnRxDone;
+	Radio_1Events.TxTimeout = OnTxTimeout;
+	Radio_1Events.RxTimeout = OnRxTimeout;
+	Radio_1Events.RxError = OnRxError;
+	Radio_1.Init( &Radio_1Events );
+	Radio_1.SetChannel( RF_FREQUENCY );
 #if defined( USE_MODEM_LORA )
 
-	Radio.SetTxConfig( MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
+	Radio_1.SetTxConfig( MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
 									LORA_SPREADING_FACTOR, LORA_CODINGRATE,
 									LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
-									true, 0, 0, LORA_IQ_INVERSION_ON, 3000000 );
-
-	Radio.SetRxConfig( MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR,
+									true, 0, 0, LORA_IQ_INVERSION_ON, 1000 );
+	Radio_1.SetRxConfig( MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR,
 									LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
 									LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
 									0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
-
 #elif defined( USE_MODEM_FSK )
 
-	Radio.SetTxConfig( MODEM_FSK, TX_OUTPUT_POWER, FSK_FDEV, 0,
+	Radio_1.SetTxConfig( MODEM_FSK, TX_OUTPUT_POWER, FSK_FDEV, 0,
 									FSK_DATARATE, 0,
 									FSK_PREAMBLE_LENGTH, FSK_FIX_LENGTH_PAYLOAD_ON,
 									true, 0, 0, 0, 3000000 );
 
-	Radio.SetRxConfig( MODEM_FSK, FSK_BANDWIDTH, FSK_DATARATE,
+	Radio_1.SetRxConfig( MODEM_FSK, FSK_BANDWIDTH, FSK_DATARATE,
 									0, FSK_AFC_BANDWIDTH, FSK_PREAMBLE_LENGTH,
 									0, FSK_FIX_LENGTH_PAYLOAD_ON, 0, true,
  									0, 0,false, true );
@@ -192,8 +192,8 @@ int Radio_routin(void *data){
 #else
 	#error "Please define a frequency band in the compiler options."
 #endif
-
-	Radio.Rx( RX_TIMEOUT_VALUE );
+    msleep(100);
+	Radio_1.Rx( RX_TIMEOUT_VALUE );
 	while(1)
 	{
 		switch( State )
@@ -219,18 +219,18 @@ int Radio_routin(void *data){
                             Buffer[i] = i - 4;
                         }
                         udelay( 1000 ); 
-                        Radio.Send( Buffer, BufferSize );
+                        Radio_1.Send( Buffer, BufferSize );
                     }
                     else if( strncmp( ( const char* )Buffer, ( const char* )PingMsg, 4 ) == 0 )
                     { // A master already exists then become a slave
                         isMaster = false;
                         printk("received a message 'ping'\r\n");
-                        Radio.Rx( RX_TIMEOUT_VALUE );
+                        Radio_1.Rx( RX_TIMEOUT_VALUE );
                     }
                     else // valid reception but neither a PING or a PONG message
                     {    // Set device as master ans start again
                         isMaster = true;
-                        Radio.Rx( RX_TIMEOUT_VALUE );
+                        Radio_1.Rx( RX_TIMEOUT_VALUE );
                     }
                 }
             }
@@ -254,12 +254,12 @@ int Radio_routin(void *data){
                             Buffer[i] = i - 4;
                         }
                         udelay( 1000 );
-                        Radio.Send( Buffer, BufferSize );
+                        Radio_1.Send( Buffer, BufferSize );
                     }
                     else // valid reception but not a PING as expected
                     {    // Set device as master and start again
                         isMaster = true;
-                        Radio.Rx( RX_TIMEOUT_VALUE );
+                        Radio_1.Rx( RX_TIMEOUT_VALUE );
                     }   
                 }
             }
@@ -269,7 +269,7 @@ int Radio_routin(void *data){
             // Indicates on a LED that we have sent a PING [Master]
             // Indicates on a LED that we have sent a PONG [Slave]
             printk("send a message 'ping' or 'pong'\r\n");
-            Radio.Rx( RX_TIMEOUT_VALUE );
+            Radio_1.Rx( RX_TIMEOUT_VALUE );
             State = LOWPOWER;
             break;
         case RX_TIMEOUT:
@@ -286,16 +286,16 @@ int Radio_routin(void *data){
                     Buffer[i] = i - 4;
                 }
                 udelay( 1000 ); 
-                Radio.Send( Buffer, BufferSize );
+                Radio_1.Send( Buffer, BufferSize );
             }
             else
             {
-                Radio.Rx( RX_TIMEOUT_VALUE );
+                Radio_1.Rx( RX_TIMEOUT_VALUE );
             }
             State = LOWPOWER;
             break;
         case TX_TIMEOUT:
-            Radio.Rx( RX_TIMEOUT_VALUE );
+            Radio_1.Rx( RX_TIMEOUT_VALUE );
             State = LOWPOWER;
             break;
         case LOWPOWER:
