@@ -69,56 +69,35 @@
 #include <linux/err.h> //IS_ERR()、PTR_ERR()
 #include <linux/spinlock.h>
 
-#define DRV_NAME	"sx1276-spidevs"
-#define DRV_DESC	"Sx1276 GPIO-based SPI driver"
+//#define DRV_NAME	"semtech,sx1278-1"
+#define DRV_DESC	"LoraWAN Driver"
 #define DRV_VERSION	"0.1"
 
-#define PFX		DRV_NAME ": "
+//#define PFX		DRV_NAME ": "
 
-#define BUS_PARAM_ID		0
-#define BUS_PARAM_SCK		1
-#define BUS_PARAM_MOSI		2
-#define BUS_PARAM_MISO		3
-#define BUS_PARAM_MODE1		4
-#define BUS_PARAM_MAXFREQ1	5
-#define BUS_PARAM_CS1		6
-
-#define BUS_SLAVE_COUNT_MAX	2
-#define BUS_PARAM_REQUIRED	6
-#define BUS_PARAM_PER_SLAVE	3
-#define BUS_PARAM_COUNT		(4+BUS_PARAM_PER_SLAVE*BUS_SLAVE_COUNT_MAX)
-
-static unsigned int bus_nump[1] = {10};
 static struct platform_device *devices;
-struct spi_device *slave[2];
-
-#define BUS_PARM_DESC \
-	" config -> id,sck,mosi,miso,mode1,maxfreq1[,cs1,mode2,maxfreq2,cs2,...]"
-
-static unsigned int sx1276_spi_gpio_params[BUS_PARAM_COUNT] = {
-		0,
-		SX1278_1_SPI_CLK_PIN,
-		SX1278_1_SPI_MOSI_PIN,
-		SX1278_1_SPI_MISO_PIN,
-		SPI_MODE_0,
-		100000,
-		SX1278_1_SPI_CS_PIN,
-		SPI_MODE_0,
-		100000,
-		SX1278_2_SPI_CS_PIN
-};
+struct spi_device *slave[2] = {NULL,NULL};
 
 static struct task_struct *radio_routin1,*radio_routin2;
 
 extern unsigned int sx1278_1_dio0irq,sx1278_1_dio1irq,sx1278_1_dio2irq,sx1278_1_dio3irq,sx1278_1_dio4irq,sx1278_1_dio5irq;
 extern unsigned int sx1278_2_dio0irq,sx1278_2_dio1irq,sx1278_2_dio2irq,sx1278_2_dio3irq,sx1278_2_dio4irq,sx1278_2_dio5irq;
 
-DEFINE_SPINLOCK (spi_lock);
-static int __init sx1276_spidevs_remove(void);
-static int __init sx1276_spidevs_probe(void);
+static int sx1276_spidevs_remove_1(struct spi_device *spi);
+static int sx1276_spidevs_probe_1(struct spi_device *spi);
 
-static void sx1276_spidevs_free_gpio(void)
+static void sx1276_spidevs_cleanup_1(void)
 {
+	int i;
+	kthread_stop(radio_routin1);
+
+	free_irq(sx1278_1_dio0irq,NULL);
+	free_irq(sx1278_1_dio1irq,NULL);
+	free_irq(sx1278_1_dio2irq,NULL);
+	free_irq(sx1278_1_dio3irq,NULL);
+	free_irq(sx1278_1_dio4irq,NULL);
+	free_irq(sx1278_1_dio5irq,NULL);
+
 	gpio_free(SX1278_1_RST_PIN);
 	gpio_free(SX1278_1_DIO0_PIN);
 	gpio_free(SX1278_1_DIO1_PIN);
@@ -126,6 +105,78 @@ static void sx1276_spidevs_free_gpio(void)
 	gpio_free(SX1278_1_DIO3_PIN);
 	gpio_free(SX1278_1_DIO4_PIN);
 	gpio_free(SX1278_1_DIO5_PIN);
+}
+
+static int sx1276_spidevs_remove_1(struct spi_device *spi)
+{
+	sx1276_spidevs_cleanup_1();
+	return 0;
+}
+static int sx1276_spidevs_probe_1(struct spi_device *spi)
+{
+	int err;
+	slave[0] = spi;
+	printk("%s, %d,slave[0] = %d, slave[1] = %d\r\n",__func__,__LINE__,slave[0],slave[1]);
+	printk(KERN_INFO DRV_DESC " version " DRV_VERSION "\n");
+	spi->bits_per_word = 8;
+    spi->mode = SPI_MODE_0;
+    spi_setup(spi);
+	printk("%s, %d\r\n",__func__,__LINE__);
+	radio_routin1 = kthread_create(Radio_1_routin, NULL, "Radio1 routin thread");
+	if(IS_ERR(radio_routin1)){
+		printk("Unable to start kernel thread radio_routin1./n");  
+		err = PTR_ERR(radio_routin1);  
+		radio_routin1 = NULL;  
+		return err;
+	}
+	printk("%s, %d\r\n",__func__,__LINE__);
+	wake_up_process(radio_routin1);
+	
+	return 0;
+
+err:
+	sx1276_spidevs_cleanup_1();
+	return err;
+}
+
+static const struct of_device_id lorawan_dt_ids_1[] = {
+        { .compatible = "semtech,sx1278-1" },
+        {},
+};
+
+MODULE_DEVICE_TABLE(of, lorawan_dt_ids_1);
+
+static struct spi_driver lorawan_spi_driver_1 = {
+        .driver = {
+                .name =         "semtech,sx1278-1",
+                .owner =        THIS_MODULE,
+                .of_match_table = of_match_ptr(lorawan_dt_ids_1),
+        },
+        .probe =        sx1276_spidevs_probe_1,
+        .remove =       sx1276_spidevs_remove_1,
+
+        /* NOTE:  suspend/resume methods are not necessary here.
+         * We don't do anything except pass the requests to/from
+         * the underlying controller.  The refrigerator handles
+         * most issues; the controller driver handles the rest.
+         */
+};
+
+static int sx1276_spidevs_remove_2(struct spi_device *spi);
+static int sx1276_spidevs_probe_2(struct spi_device *spi);
+
+static void sx1276_spidevs_cleanup_2(void)
+{
+	int i;
+
+	kthread_stop(radio_routin2);
+
+	free_irq(sx1278_2_dio0irq,NULL);
+	free_irq(sx1278_2_dio1irq,NULL);
+	free_irq(sx1278_2_dio2irq,NULL);
+	free_irq(sx1278_2_dio3irq,NULL);
+	free_irq(sx1278_2_dio4irq,NULL);
+	free_irq(sx1278_2_dio5irq,NULL);
 
 	gpio_free(SX1278_2_RST_PIN);
 	gpio_free(SX1278_2_DIO0_PIN);
@@ -136,315 +187,85 @@ static void sx1276_spidevs_free_gpio(void)
 	gpio_free(SX1278_2_DIO5_PIN);
 }
 
-static void sx1276_spidevs_free_irq(void)
+static int sx1276_spidevs_remove_2(struct spi_device *spi)
 {
-	free_irq(sx1278_1_dio0irq,NULL);
-	free_irq(sx1278_1_dio1irq,NULL);
-	free_irq(sx1278_1_dio2irq,NULL);
-	free_irq(sx1278_1_dio3irq,NULL);
-	free_irq(sx1278_1_dio4irq,NULL);
-	free_irq(sx1278_1_dio5irq,NULL);
-
-	free_irq(sx1278_2_dio0irq,NULL);
-	free_irq(sx1278_2_dio1irq,NULL);
-	free_irq(sx1278_2_dio2irq,NULL);
-	free_irq(sx1278_2_dio3irq,NULL);
-	free_irq(sx1278_2_dio4irq,NULL);
-	free_irq(sx1278_2_dio5irq,NULL);
-}
-
-static void sx1276_spidevs_cleanup(void)
-{
-	int i;
-	kthread_stop(radio_routin1);
-	kthread_stop(radio_routin2);
-	if (devices)
-		platform_device_unregister(devices);
-	sx1276_spidevs_free_irq();
-	sx1276_spidevs_free_gpio();
-}
-
-static int sx1276_spidevs_get_slave_mode(unsigned int id,
-					  unsigned int *params,
-					  int slave_index)
-{
-	int param_index;
-
-	param_index = BUS_PARAM_MODE1+slave_index*BUS_PARAM_PER_SLAVE;
-	if (param_index >= bus_nump[id])
-		return -1;
-
-	return params[param_index];
-}
-static int sx1276_spidevs_get_slave_maxfreq(unsigned int id,
-					     unsigned int *params,
-					     int slave_index)
-{
-	int param_index;
-
-	param_index = BUS_PARAM_MAXFREQ1+slave_index*BUS_PARAM_PER_SLAVE;
-	if (param_index >= bus_nump[id])
-		return -1;
-
-	return params[param_index];
-}
-static int sx1276_spidevs_get_slave_cs(unsigned int id,
-					unsigned int *params,
-					int slave_index)
-{
-	int param_index;
-
-	param_index = BUS_PARAM_CS1+slave_index*BUS_PARAM_PER_SLAVE;
-	if (param_index >= bus_nump[id])
-		return -1;
-	if (!gpio_is_valid(params[param_index]))
-		return -1;
-
-	return params[param_index];
-}
-
-static int sx1276_spidevs_check_params(unsigned int id, unsigned int *params)
-{
-	int i;
-	struct spi_master *master;
-
-	if (bus_nump[id] < BUS_PARAM_REQUIRED) {
-		printk(KERN_ERR PFX "not enough values for parameter bus%d\n",
-		       id);
-		return -EINVAL;
-	}
-
-	if (bus_nump[id] > (1+BUS_PARAM_CS1)) {
-		/* more than 1 device: check CS GPIOs */
-		for (i = 0; i < BUS_SLAVE_COUNT_MAX; i++) {
-			/* no more slaves? */
-			if (sx1276_spidevs_get_slave_mode(id, params, i) < 0)
-				break;
-
-			if (sx1276_spidevs_get_slave_cs(id, params, i) < 0) {
-				printk(KERN_ERR PFX "invalid/missing CS gpio for slave %d on bus %d\n",
-				       i, params[BUS_PARAM_ID]);
-				return -EINVAL;
-			}
-		}
-	}
-
-	if (!gpio_is_valid(params[BUS_PARAM_SCK])) {
-		printk(KERN_ERR PFX "invalid SCK gpio for bus %d\n",
-		       params[BUS_PARAM_ID]);
-		return -EINVAL;
-	}
-
-	master = spi_busnum_to_master(params[BUS_PARAM_ID]);
-	if (master) {
-		spi_master_put(master);
-		printk(KERN_ERR PFX "bus %d already exists\n",
-		       params[BUS_PARAM_ID]);
-		return -EEXIST;
-	}
-
+	sx1276_spidevs_cleanup_2();
 	return 0;
 }
-
-static int __init sx1276_spidevs_add_one(unsigned int id, unsigned int *params)
-{
-	struct platform_device *pdev;
-	struct spi_gpio_platform_data pdata;
-	int i;
-	int num_cs;
-	int err;
-	struct spi_master *master;
-	//struct spi_device *slave;
-	struct spi_board_info slave_info;
-	int mode, maxfreq, cs;
-
-
-	/*if (!bus_nump[id])
-		return 0;*/
-
-	err = sx1276_spidevs_check_params(id, params);
-	if (err)
-		goto err;
-
-	/* Create BUS device node */
-
-	pdev = platform_device_alloc("spi_gpio", params[BUS_PARAM_ID]);
-	if (!pdev) {
-		err = -ENOMEM;
-		goto err;
-	}
-
-	num_cs = 0;
-	for (i = 0; i < BUS_SLAVE_COUNT_MAX; i++) {
-		/* no more slaves? */
-		if (sx1276_spidevs_get_slave_mode(id, params, i) < 0)
-			break;
-
-		if (sx1276_spidevs_get_slave_cs(id, params, i) >= 0)
-			num_cs++;
-	}
-	if (num_cs == 0) {
-		/*
-		 * Even if no CS is used, spi modules expect
-		 * at least 1 (unused)
-		 */
-		num_cs = 1;
-	}
-
-	pdata.sck = params[BUS_PARAM_SCK];
-	pdata.mosi = gpio_is_valid(params[BUS_PARAM_MOSI])
-		? params[BUS_PARAM_MOSI]
-		: SPI_GPIO_NO_MOSI;
-	pdata.miso = gpio_is_valid(params[BUS_PARAM_MISO])
-		? params[BUS_PARAM_MISO]
-		: SPI_GPIO_NO_MISO;
-	pdata.num_chipselect = num_cs;
-
-	err = platform_device_add_data(pdev, &pdata, sizeof(pdata));
-	if (err) {
-		platform_device_put(pdev);
-		goto err;
-	}
-
-	err = platform_device_add(pdev);
-	if (err) {
-		printk(KERN_ERR PFX "platform_device_add failed with return code %d\n",
-		       err);
-		platform_device_put(pdev);
-		goto err;
-	}
-
-	/* Register SLAVE devices */
-
-	for (i = 0; i < BUS_SLAVE_COUNT_MAX; i++) {
-		mode = sx1276_spidevs_get_slave_mode(id, params, i);
-		maxfreq = sx1276_spidevs_get_slave_maxfreq(id, params, i);
-		cs = sx1276_spidevs_get_slave_cs(id, params, i);
-
-		/* no more slaves? */
-		if (mode < 0)
-			break;
-
-		memset(&slave_info, 0, sizeof(slave_info));
-		strcpy(slave_info.modalias, "spidev");
-		slave_info.controller_data = (void *)((cs >= 0)
-			? cs
-			: SPI_GPIO_NO_CHIPSELECT);
-		slave_info.max_speed_hz = maxfreq;
-		slave_info.bus_num = params[BUS_PARAM_ID];
-		slave_info.chip_select = i;
-		slave_info.mode = mode;
-
-		master = spi_busnum_to_master(params[BUS_PARAM_ID]);
-		if (!master) {
-			printk(KERN_ERR PFX "unable to get master for bus %d\n",
-			       params[BUS_PARAM_ID]);
-			err = -EINVAL;
-			goto err_unregister;
-		}
-		slave[i] = spi_new_device(master, &slave_info);
-		spi_master_put(master);
-		if (!slave[i]) {
-			printk(KERN_ERR PFX "unable to create slave %d for bus %d\n",
-			       i, params[BUS_PARAM_ID]);
-			/* Will most likely fail due to unsupported mode bits */
-			err = -EINVAL;
-			goto err_unregister;
-		}
-	}
-
-	devices = pdev;
-
-	return 0;
-
-err_unregister:
-	platform_device_unregister(pdev);
-err:
-	return err;
-}
-
-static int __init sx1276_spidevs_remove(void)
-{
-	return 0;
-}
-static int __init sx1276_spidevs_probe(void)
+static int sx1276_spidevs_probe_2(struct spi_device *spi)
 {
 	int err;
 	int chipversion;
 
-	printk("%s, %d\r\n",__func__,__LINE__);
+	slave[1] = spi;
+	printk("%s, %d,slave[0] = %d, slave[1] = %d\r\n",__func__,__LINE__,slave[0],slave[1]);
 	printk(KERN_INFO DRV_DESC " version " DRV_VERSION "\n");
-	
-	err = sx1276_spidevs_add_one(0, sx1276_spi_gpio_params);
-	if (err)
-		goto err;
+	spi->bits_per_word = 8;
+    spi->mode = SPI_MODE_0;
+    spi_setup(spi);
 	printk("%s, %d\r\n",__func__,__LINE__);
-	radio_routin1 = kthread_create(Radio_1_routin, NULL, "Radio1 routin thread");
 	radio_routin2 = kthread_create(Radio_2_routin, NULL, "Radio2 routin thread");
-	if(IS_ERR(radio_routin1)){
-		printk("Unable to start kernel thread radio_routin1./n");  
-		err = PTR_ERR(radio_routin1);  
-		radio_routin1 = NULL;  
-		return err;
-	}
 	if(IS_ERR(radio_routin2)){
-		printk("Unable to start kernel thread radio_routin2./n");  
+	printk("Unable to start kernel thread radio_routin2./n");  
 		err = PTR_ERR(radio_routin2);  
 		radio_routin2 = NULL;  
 		return err;
 	}
 	printk("%s, %d\r\n",__func__,__LINE__);
-	wake_up_process(radio_routin1);
 	wake_up_process(radio_routin2);
-	
-	printk("%s,%d\r\n",__func__,__LINE__);
-	if(devices == NULL)
-	{
-		printk("devices is NULL\r\n");
-		return 0;
-	}
-
-#if 0
-	printk("now read chip version through spi\r\n");
-
-	udelay(1000);
-	chipversion = spi_w8r8(slave[0],0x42 & 0x7f);
-	printk("%s:chipversion is 0x%02x\r\n",__func__,chipversion);
-	chipversion = spi_w8r8(slave[0],0x00);
-	printk("%s:chipversion is 0x%02x\r\n",__func__,chipversion);
-
-	udelay(10000);
-
-	udelay(1000);
-	chipversion = spi_w8r8(slave[1],0x42 & 0x7f);
-	printk("%s:chipversion is 0x%02x\r\n",__func__,chipversion);
-	chipversion = spi_w8r8(slave[1],0x00);
-	printk("%s:chipversion is 0x%02x\r\n",__func__,chipversion);
-#endif
 	return 0;
 
 err:
-	sx1276_spidevs_cleanup();
+	sx1276_spidevs_cleanup_2();
 	return err;
 }
-#if 1//def MODULE
-static int __init sx1276_spidevs_init(void)
+
+static const struct of_device_id lorawan_dt_ids_2[] = {
+        { .compatible = "semtech,sx1278-2" },
+        {},
+};
+
+MODULE_DEVICE_TABLE(of, lorawan_dt_ids_2);
+
+static struct spi_driver lorawan_spi_driver_2 = {
+        .driver = {
+                .name =         "semtech,sx1278-2",
+                .owner =        THIS_MODULE,
+                .of_match_table = of_match_ptr(lorawan_dt_ids_2),
+        },
+        .probe =        sx1276_spidevs_probe_2,
+        .remove =       sx1276_spidevs_remove_2,
+
+        /* NOTE:  suspend/resume methods are not necessary here.
+         * We don't do anything except pass the requests to/from
+         * the underlying controller.  The refrigerator handles
+         * most issues; the controller driver handles the rest.
+         */
+};
+
+static int __init lorawan_init(void)
+{
+	int ret;
+	printk("%s, %d\r\n",__func__,__LINE__);	
+	ret = spi_register_driver(&lorawan_spi_driver_1);
+	ret = spi_register_driver(&lorawan_spi_driver_2);
+	printk("%s, %d\r\n",__func__,__LINE__);
+
+	return ret;
+}
+
+static void __exit lorawan_exit(void)
 {
 	printk("%s, %d\r\n",__func__,__LINE__);
-	return sx1276_spidevs_probe();
+	spi_unregister_driver(&lorawan_spi_driver_1);
+	spi_unregister_driver(&lorawan_spi_driver_2);
+	printk("%s, %d\r\n",__func__,__LINE__);
 }
-module_init(sx1276_spidevs_init);
 
-static void __init sx1276_spidevs_exit(void)
-{
-	sx1276_spidevs_cleanup();
-}
-module_exit(sx1276_spidevs_exit);
-#else
-subsys_initcall(sx1276-spidevs_probe);
-#endif /* MODULE*/
+module_init(lorawan_init);
+module_exit(lorawan_exit);
 
-MODULE_LICENSE("GPL v2");
-MODULE_AUTHOR("Marco Burato <zmaster.adsl@gmail.com>");
-MODULE_DESCRIPTION(DRV_DESC);
-MODULE_VERSION(DRV_VERSION);
+MODULE_AUTHOR("HorseMa, <wei_technology@163.com>");
+MODULE_DESCRIPTION("LoraWAN small gateway use two chips sx1278");
+MODULE_LICENSE("GPL");
+MODULE_ALIAS("platform:" "semtech,sx1278");

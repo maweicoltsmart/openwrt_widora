@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2008 OpenWrt.org
+# Copyright (C) 2008-2012 OpenWrt.org
 #
 # This is free software, licensed under the GNU General Public License v2.
 # See /LICENSE for more information.
@@ -17,8 +17,8 @@ define KernelPackage/sx1276-spidevs
   SUBMENU:=SPI Support
   TITLE:=Sx1276 GPIO-based SPI device
   DEPENDS:=@GPIO_SUPPORT +kmod-spi-bitbang +kmod-spi-gpio +kmod-spi-dev
-  AUTOLOAD:=$(call AutoLoad,81,example)
   FILES:=$(PKG_BUILD_DIR)/sx1276-spidevs.ko
+  AUTOLOAD:=$(call AutoLoad,81,sx1276-spidevs,1)
   KCONFIG:=
 endef
 
@@ -26,19 +26,10 @@ define KernelPackage/sx1276-spidevs/description
  Kernel module for register a sx1276 spi-gpio platform device.
 endef
 
-EXTRA_KCONFIG:= \
-	CONFIG_SPI_GPIO_SX1276=m
-
-EXTRA_CFLAGS:= \
-	$(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=m,%,$(filter %=m,$(EXTRA_KCONFIG)))) \
-	$(patsubst CONFIG_%, -DCONFIG_%=1, $(patsubst %=y,%,$(filter %=y,$(EXTRA_KCONFIG)))) \
-
 MAKE_OPTS:= \
 	ARCH="$(LINUX_KARCH)" \
 	CROSS_COMPILE="$(TARGET_CROSS)" \
-	SUBDIRS="$(PKG_BUILD_DIR)" \
-	EXTRA_CFLAGS="$(EXTRA_CFLAGS)" \
-	$(EXTRA_KCONFIG)
+	SUBDIRS="$(PKG_BUILD_DIR)" 
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)

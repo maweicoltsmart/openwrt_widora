@@ -1104,7 +1104,7 @@ void sx1276_1SetRx( uint32_t timeout )
 void sx1276_1SetTx( uint32_t timeout )
 {
     del_timer(&TxTimeoutTimer);
-    TxTimeoutTimer.expires = jiffies + HZ / timeout;        //定时时间
+    TxTimeoutTimer.expires = jiffies + HZ;        //定时时间
     TxTimeoutTimer.function = sx1276_1OnTimeoutIrq;
     //add_timer(&TxTimeoutTimer);        //注册定时器
 
