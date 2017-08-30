@@ -69,6 +69,8 @@
 #include <linux/err.h> //IS_ERR()、PTR_ERR()
 #include <linux/spinlock.h>
 
+DEFINE_SPINLOCK(spi_lock);
+
 //#define DRV_NAME	"semtech,sx1278-1"
 #define DRV_DESC	"LoraWAN Driver"
 #define DRV_VERSION	"0.1"

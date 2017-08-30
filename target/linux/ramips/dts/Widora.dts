@@ -14,10 +14,71 @@
 		device_type = "memory";
 		reg = <0x0 0x8000000>;
 	};
+
 	pinctrl {
 		state_default: pinctrl0 {
 			gpio {
-				ralink,group = "i2c", "perst", "refclk", "i2s", "ephy_p1","ephy_p2", "ephy_p3", "ephy_p4", "wdt", "pwm0", "pwm1", "sdmode", "spi cs1";
+				ralink,group = "gpio";
+				ralink,function = "gpio";
+			};
+			perst {
+				ralink,group = "perst";
+				ralink,function = "gpio";
+			};
+			refclk {
+				ralink,group = "refclk";
+				ralink,function = "gpio";
+			};
+			i2s {
+				ralink,group = "i2s";
+				ralink,function = "gpio";
+			};
+			spis {
+				ralink,group = "spis";
+				ralink,function = "gpio";
+			};
+			wled_an {
+				ralink,group = "wled_an";
+				ralink,function = "wled_an";
+			};
+			ephy_p1 {
+				ralink,group = "ephy_p1";
+				ralink,function = "gpio";
+			};
+			ephy_p2 {
+				ralink,group = "ephy_p2";
+				ralink,function = "gpio";
+			};
+			ephy_p3 {
+				ralink,group = "ephy_p3";
+				ralink,function = "gpio";
+			};
+			ephy_p4 {
+				ralink,group = "ephy_p4";
+				ralink,function = "gpio";
+			};
+			wdt {
+				ralink,group = "wdt";
+				ralink,function = "gpio";
+			};
+			pwm0 {
+				ralink,group = "pwm0";
+				ralink,function = "gpio";
+			};
+			pwm1 {
+				ralink,group = "pwm1";
+				ralink,function = "gpio";
+			};
+			sdxc {
+				ralink,group = "sdmode";
+				ralink,function = "gpio";
+			};
+			i2c {
+				ralink,group = "i2c";
+				ralink,function = "gpio";
+			};
+			spi_cs1 {
+				ralink,group = "spi cs1";
 				ralink,function = "gpio";
 			};
 		};

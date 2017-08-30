@@ -1,0 +1,184 @@
+Index: linux-3.18.29/drivers/pinctrl/pinctrl-rt2880.c
+===================================================================
+--- linux-3.18.29.orig/drivers/pinctrl/pinctrl-rt2880.c
++++ linux-3.18.29/drivers/pinctrl/pinctrl-rt2880.c
+@@ -206,6 +206,7 @@ static int rt2880_pmx_group_enable(struc
+ 	struct rt2880_priv *p = pinctrl_dev_get_drvdata(pctrldev);
+         u32 mode = 0;
+ 	u32 reg = SYSC_REG_GPIO_MODE;
++	u32 agpio = 0;
+ 	int i;
+ 	int shift;
+ 
+@@ -215,29 +216,164 @@ static int rt2880_pmx_group_enable(struc
+ 		return -EBUSY;
+ 	}
+ 
++	if(!strcmp(p->groups[group].name,"gpio"))
++	{
++		reg = SYSC_REG_GPIO_MODE;
++		mode = rt_sysc_r32(reg);
++		mode |= (0x01 << 0);
++		mode &= ~(0x01 << 1);
++	}
++
++	else if(!strcmp(p->groups[group].name,"perst"))
++	{
++		reg = SYSC_REG_GPIO_MODE;
++		mode = rt_sysc_r32(reg);
++		mode |= (0x01 << 16);
++	}
++
++	else if(!strcmp(p->groups[group].name,"refclk"))
++	{
++		reg = SYSC_REG_GPIO_MODE;
++		mode = rt_sysc_r32(reg);
++		mode |= (0x01 << 18);
++	}
++
++	else if(!strcmp(p->groups[group].name,"i2s"))
++	{
++		reg = SYSC_REG_GPIO_MODE;
++		mode = rt_sysc_r32(reg);
++		mode |= (0x01 << 6);
++		mode &= ~(0x01 << 7);
++	}
++
++	else if(!strcmp(p->groups[group].name,"spis"))
++	{
++		reg = SYSC_REG_GPIO_MODE;
++		mode = rt_sysc_r32(reg);
++		mode |= (0x01 << 2);
++		mode &= ~(0x01 << 3);
++	}
++
++	else if(!strcmp(p->groups[group].name,"ephy_p1"))
++	{
++		reg = SYSC_REG_GPIO_MODE2;
++		mode = rt_sysc_r32(reg);
++		mode |= (0x01 << 20);
++		mode &= ~(0x01 << 21);
++		mode |= (0x01 << 24);
++		mode &= ~(0x01 << 25);
++		agpio = rt_sysc_r32(0x3C);
++		agpio |= (0xf << 17);
++		agpio |= (0xf << 0);
++		rt_sysc_w32(agpio,0x3c);
++	}
++
++	else if(!strcmp(p->groups[group].name,"ephy_p2"))
++	{
++		reg = SYSC_REG_GPIO_MODE2;
++		mode = rt_sysc_r32(reg);
++		mode |= (0x01 << 22);
++		mode &= ~(0x01 << 23);
++		mode |= (0x01 << 6);
++		mode &= ~(0x01 << 7);
++	}
++
++	else if(!strcmp(p->groups[group].name,"ephy_p3"))
++	{
++		reg = SYSC_REG_GPIO_MODE2;
++		mode = rt_sysc_r32(reg);
++		mode |= (0x01 << 24);
++		mode &= ~(0x01 << 25);
++		mode |= (0x01 << 8);
++		mode &= ~(0x01 << 9);
++	}
++
++	else if(!strcmp(p->groups[group].name,"ephy_p4"))
++	{
++		reg = SYSC_REG_GPIO_MODE2;
++		mode = rt_sysc_r32(reg);
++		mode |= (0x01 << 26);
++		mode &= ~(0x01 << 27);
++		mode |= (0x01 << 10);
++		mode &= ~(0x01 << 11);
++	}
++
++	else if(!strcmp(p->groups[group].name,"wdt"))
++	{
++		reg = SYSC_REG_GPIO_MODE;
++		mode = rt_sysc_r32(reg);
++		mode |= (0x01 << 14);	
++	}
++
++	else if(!strcmp(p->groups[group].name,"pwm0"))
++	{
++		reg = SYSC_REG_GPIO_MODE;
++		mode = rt_sysc_r32(reg);
++		mode |= (0x01 << 28);
++		mode &= ~(0x01 << 29);
++	}
++
++	else if(!strcmp(p->groups[group].name,"pwm1"))
++	{
++		reg = SYSC_REG_GPIO_MODE;
++		mode = rt_sysc_r32(reg);
++		mode |= (0x01 << 30);
++		mode &= ~(0x01 << 31);
++	}
++
++	else if(!strcmp(p->groups[group].name,"sdmode"))
++	{
++		reg = SYSC_REG_GPIO_MODE;
++		mode = rt_sysc_r32(reg);
++		mode |= (0x01 << 10);
++		mode &= ~(0x01 << 11);
++		mode &= ~(0x01 << 15);
++	}
++
++	else if(!strcmp(p->groups[group].name,"i2c"))
++	{
++		reg = SYSC_REG_GPIO_MODE;
++		mode = rt_sysc_r32(reg);
++		mode |= (0x01 << 20);
++		mode &= ~(0x01 << 21);
++	}
++
++	else if(!strcmp(p->groups[group].name,"spi cs1"))
++	{
++		reg = SYSC_REG_GPIO_MODE;
++		mode = rt_sysc_r32(reg);
++		mode |= (0x01 << 4);
++		mode &= ~(0x01 << 5);
++	}
++
++	else
++	{
++		return 0;
++	}
+ 	p->groups[group].enabled = 1;
+ 	p->func[func]->enabled = 1;
+-
+-	shift = p->groups[group].shift;
++	/*shift = p->groups[group].shift;
+ 	if (shift >= 32) {
+ 		shift -= 32;
+ 		reg = SYSC_REG_GPIO_MODE2;
+ 	}
++	
+ 	mode = rt_sysc_r32(reg);
+ 	mode &= ~(p->groups[group].mask << shift);
+-
++	*/
+ 	/* mark the pins as gpio */
+-	for (i = 0; i < p->groups[group].func[0].pin_count; i++)
++	/*for (i = 0; i < p->groups[group].func[0].pin_count; i++)
+ 		p->gpio[p->groups[group].func[0].pins[i]] = 1;
+-
++*/
+ 	/* function 0 is gpio and needs special handling */
+-	if (func == 0) {
++	/*if (func == 0) {
+ 		mode |= p->groups[group].gpio << shift;
+ 	} else {
+ 		for (i = 0; i < p->func[func]->pin_count; i++)
+ 			p->gpio[p->func[func]->pins[i]] = 0;
+ 		mode |= p->func[func]->value << shift;
+-	}
++	}*/
++	printk("%s,%d,%s,0x%04x,0x%08x\r\n",__func__,__LINE__,p->groups[group].name,mode,reg);
+ 	rt_sysc_w32(mode, reg);
+ 
+ 	return 0;

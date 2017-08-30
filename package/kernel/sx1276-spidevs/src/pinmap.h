@@ -24,7 +24,7 @@
 
 #define    SX1278_2_RST_PIN              0 // GPIO00
 
-#define    SX1278_2_DIO0_PIN             1 // GPIO01
+#define    SX1278_2_DIO0_PIN            29 // GPIO01
 #define    SX1278_2_DIO1_PIN             4 // GPIO04
 #define    SX1278_2_DIO2_PIN             5 // GPIO05
 #define    SX1278_2_DIO3_PIN             3 // GPIO03

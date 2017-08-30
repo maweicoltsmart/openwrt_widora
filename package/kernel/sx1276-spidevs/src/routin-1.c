@@ -84,6 +84,8 @@ static States_t State = LOWPOWER;
 
 static int8_t RssiValue = 0;
 static int8_t SnrValue = 0;
+static int event1 = 0;
+DECLARE_WAIT_QUEUE_HEAD(wq1);
 
 /*!
  * Radio_1 events function pointer
@@ -117,13 +119,18 @@ static void OnRxError( void );
 
 static void OnTxDone( void )
 {
+    event1 = 1;
+    wake_up(&wq1);
     printk(KERN_DEBUG "%s\r\n",__func__);
     Radio_1.Sleep( );
+    Radio_1.Rx( RX_TIMEOUT_VALUE );
     State = TX;
 }
 
 static void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
+    event1 = 1;
+    wake_up(&wq1);
     printk(KERN_DEBUG "%s\r\n",__func__);
     Radio_1.Sleep( );
     BufferSize = size;
@@ -135,6 +142,8 @@ static void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr 
 
 static void OnTxTimeout( void )
 {
+    event1 = 1;
+    wake_up(&wq1);
     printk(KERN_DEBUG "%s\r\n",__func__);
     Radio_1.Sleep( );
     State = TX_TIMEOUT;
@@ -142,6 +151,8 @@ static void OnTxTimeout( void )
 
 static void OnRxTimeout( void )
 {
+    event1 = 1;
+    wake_up(&wq1);
     printk(KERN_DEBUG "%s\r\n",__func__);
     Radio_1.Sleep( );
     State = RX_TIMEOUT;
@@ -149,6 +160,8 @@ static void OnRxTimeout( void )
 
 static void OnRxError( void )
 {
+    event1 = 1;
+    wake_up(&wq1);
     printk(KERN_DEBUG "%s\r\n",__func__);
     Radio_1.Sleep( );
     State = RX_ERROR;
@@ -196,6 +209,9 @@ int Radio_1_routin(void *data){
 	Radio_1.Rx( RX_TIMEOUT_VALUE );
 	while(1)
 	{
+        //printk("%s,%d\r\n",__func__,__LINE__);
+        wait_event(wq1, event1 == 1);
+        event1 = 0;
 		switch( State )
         {
         case RX:
@@ -218,7 +234,7 @@ int Radio_1_routin(void *data){
                         {
                             Buffer[i] = i - 4;
                         }
-                        udelay( 1000 ); 
+                        msleep( 100 ); 
                         Radio_1.Send( Buffer, BufferSize );
                     }
                     else if( strncmp( ( const char* )Buffer, ( const char* )PingMsg, 4 ) == 0 )
@@ -253,7 +269,7 @@ int Radio_1_routin(void *data){
                         {
                             Buffer[i] = i - 4;
                         }
-                        udelay( 1000 );
+                        msleep( 100 );
                         Radio_1.Send( Buffer, BufferSize );
                     }
                     else // valid reception but not a PING as expected
@@ -269,7 +285,7 @@ int Radio_1_routin(void *data){
             // Indicates on a LED that we have sent a PING [Master]
             // Indicates on a LED that we have sent a PONG [Slave]
             printk("send a message 'ping' or 'pong'\r\n");
-            Radio_1.Rx( RX_TIMEOUT_VALUE );
+            //Radio_1.Rx( RX_TIMEOUT_VALUE );
             State = LOWPOWER;
             break;
         case RX_TIMEOUT:
@@ -285,7 +301,7 @@ int Radio_1_routin(void *data){
                 {
                     Buffer[i] = i - 4;
                 }
-                udelay( 1000 ); 
+                msleep( 100 ); 
                 Radio_1.Send( Buffer, BufferSize );
             }
             else
@@ -305,7 +321,6 @@ int Radio_1_routin(void *data){
         }
     
         //TimerLowPowerHandler( );
-		msleep(100);
 	}
 	return 0;
 }

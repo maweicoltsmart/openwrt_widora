@@ -185,7 +185,7 @@ static const FskBandwidth_t FskBandwidths[] =
 /*!
  * Radio callbacks variable
  */
-static RadioEvents_t *RadioEvents;
+static RadioEvents_t *RadioEvents2;
 
 /*!
  * Reception buffer
@@ -225,7 +225,7 @@ void sx1276_2Init( RadioEvents_t *events )
 {
     uint8_t i;
     uint8_t chipversion2;
-    RadioEvents = events;
+    RadioEvents2 = events;
 
     // Initialize driver timeout timers
     init_timer(&TxTimeoutTimer);
@@ -1382,16 +1382,16 @@ void sx1276_2OnTimeoutIrq( unsigned long arg )
                 del_timer(&RxTimeoutSyncWord);
             }
         }
-        if( ( RadioEvents != NULL ) && ( RadioEvents->RxTimeout != NULL ) )
+        if( ( RadioEvents2 != NULL ) && ( RadioEvents2->RxTimeout != NULL ) )
         {
-            RadioEvents->RxTimeout( );
+            RadioEvents2->RxTimeout( );
         }
         break;
     case RF_TX_RUNNING:
         sx1276_2.Settings.State = RF_IDLE;
-        if( ( RadioEvents != NULL ) && ( RadioEvents->TxTimeout != NULL ) )
+        if( ( RadioEvents2 != NULL ) && ( RadioEvents2->TxTimeout != NULL ) )
         {
-            RadioEvents->TxTimeout( );
+            RadioEvents2->TxTimeout( );
         }
         break;
     default:
@@ -1434,9 +1434,9 @@ void sx1276_2OnDio0Irq( unsigned long param)
                         }
                         del_timer( &RxTimeoutTimer );
 
-                        if( ( RadioEvents != NULL ) && ( RadioEvents->RxError != NULL ) )
+                        if( ( RadioEvents2 != NULL ) && ( RadioEvents2->RxError != NULL ) )
                         {
-                            RadioEvents->RxError( ); 
+                            RadioEvents2->RxError( ); 
                         }
                         sx1276_2.Settings.FskPacketHandler.PreambleDetected = false;
                         sx1276_2.Settings.FskPacketHandler.SyncWordDetected = false;
@@ -1478,9 +1478,9 @@ void sx1276_2OnDio0Irq( unsigned long param)
                 }
                 del_timer( &RxTimeoutTimer );
 
-                if( ( RadioEvents != NULL ) && ( RadioEvents->RxDone != NULL ) )
+                if( ( RadioEvents2 != NULL ) && ( RadioEvents2->RxDone != NULL ) )
                 {
-                    RadioEvents->RxDone( RxBuffer, sx1276_2.Settings.FskPacketHandler.Size, sx1276_2.Settings.FskPacketHandler.RssiValue, 0 ); 
+                    RadioEvents2->RxDone( RxBuffer, sx1276_2.Settings.FskPacketHandler.Size, sx1276_2.Settings.FskPacketHandler.RssiValue, 0 ); 
                 } 
                 sx1276_2.Settings.FskPacketHandler.PreambleDetected = false;
                 sx1276_2.Settings.FskPacketHandler.SyncWordDetected = false;
@@ -1506,9 +1506,9 @@ void sx1276_2OnDio0Irq( unsigned long param)
                         }
                         del_timer( &RxTimeoutTimer );
 
-                        if( ( RadioEvents != NULL ) && ( RadioEvents->RxError != NULL ) )
+                        if( ( RadioEvents2 != NULL ) && ( RadioEvents2->RxError != NULL ) )
                         {
-                            RadioEvents->RxError( ); 
+                            RadioEvents2->RxError( ); 
                         }
                         break;
                     }
@@ -1561,9 +1561,9 @@ void sx1276_2OnDio0Irq( unsigned long param)
                     }
                     del_timer( &RxTimeoutTimer );
 
-                    if( ( RadioEvents != NULL ) && ( RadioEvents->RxDone != NULL ) )
+                    if( ( RadioEvents2 != NULL ) && ( RadioEvents2->RxDone != NULL ) )
                     {
-                        RadioEvents->RxDone( RxBuffer, sx1276_2.Settings.LoRaPacketHandler.Size, sx1276_2.Settings.LoRaPacketHandler.RssiValue, sx1276_2.Settings.LoRaPacketHandler.SnrValue );
+                        RadioEvents2->RxDone( RxBuffer, sx1276_2.Settings.LoRaPacketHandler.Size, sx1276_2.Settings.LoRaPacketHandler.RssiValue, sx1276_2.Settings.LoRaPacketHandler.SnrValue );
                     }
                 }
                 break;
@@ -1583,9 +1583,9 @@ void sx1276_2OnDio0Irq( unsigned long param)
             case MODEM_FSK:
             default:
                 sx1276_2.Settings.State = RF_IDLE;
-                if( ( RadioEvents != NULL ) && ( RadioEvents->TxDone != NULL ) )
+                if( ( RadioEvents2 != NULL ) && ( RadioEvents2->TxDone != NULL ) )
                 {
-                    RadioEvents->TxDone( );
+                    RadioEvents2->TxDone( );
                 } 
                 break;
             }
@@ -1632,9 +1632,9 @@ void sx1276_2OnDio1Irq( unsigned long param)
                 // Sync time out
                 del_timer( &RxTimeoutTimer );
                 sx1276_2.Settings.State = RF_IDLE;
-                if( ( RadioEvents != NULL ) && ( RadioEvents->RxTimeout != NULL ) )
+                if( ( RadioEvents2 != NULL ) && ( RadioEvents2->RxTimeout != NULL ) )
                 {
-                    RadioEvents->RxTimeout( );
+                    RadioEvents2->RxTimeout( );
                 }
                 break;
             default:
@@ -1699,9 +1699,9 @@ void sx1276_2OnDio2Irq( unsigned long param)
                     // Clear Irq
                     sx1276_2Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL );
                     
-                    if( ( RadioEvents != NULL ) && ( RadioEvents->FhssChangeChannel != NULL ) )
+                    if( ( RadioEvents2 != NULL ) && ( RadioEvents2->FhssChangeChannel != NULL ) )
                     {
-                        RadioEvents->FhssChangeChannel( ( sx1276_2Read( REG_LR_HOPCHANNEL ) & RFLR_HOPCHANNEL_CHANNEL_MASK ) );
+                        RadioEvents2->FhssChangeChannel( ( sx1276_2Read( REG_LR_HOPCHANNEL ) & RFLR_HOPCHANNEL_CHANNEL_MASK ) );
                     }
                 }
                 break;
@@ -1720,9 +1720,9 @@ void sx1276_2OnDio2Irq( unsigned long param)
                     // Clear Irq
                     sx1276_2Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_FHSSCHANGEDCHANNEL );
                     
-                    if( ( RadioEvents != NULL ) && ( RadioEvents->FhssChangeChannel != NULL ) )
+                    if( ( RadioEvents2 != NULL ) && ( RadioEvents2->FhssChangeChannel != NULL ) )
                     {
-                        RadioEvents->FhssChangeChannel( ( sx1276_2Read( REG_LR_HOPCHANNEL ) & RFLR_HOPCHANNEL_CHANNEL_MASK ) );
+                        RadioEvents2->FhssChangeChannel( ( sx1276_2Read( REG_LR_HOPCHANNEL ) & RFLR_HOPCHANNEL_CHANNEL_MASK ) );
                     }
                 }
                 break;
@@ -1746,18 +1746,18 @@ void sx1276_2OnDio3Irq( unsigned long param)
         {
             // Clear Irq
             sx1276_2Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_CADDETECTED | RFLR_IRQFLAGS_CADDONE );
-            if( ( RadioEvents != NULL ) && ( RadioEvents->CadDone != NULL ) )
+            if( ( RadioEvents2 != NULL ) && ( RadioEvents2->CadDone != NULL ) )
             {
-                RadioEvents->CadDone( true );
+                RadioEvents2->CadDone( true );
             }
         }
         else
         {        
             // Clear Irq
             sx1276_2Write( REG_LR_IRQFLAGS, RFLR_IRQFLAGS_CADDONE );
-            if( ( RadioEvents != NULL ) && ( RadioEvents->CadDone != NULL ) )
+            if( ( RadioEvents2 != NULL ) && ( RadioEvents2->CadDone != NULL ) )
             {
-                RadioEvents->CadDone( false );
+                RadioEvents2->CadDone( false );
             }
         }
         break;
