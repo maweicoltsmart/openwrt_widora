@@ -1,0 +1,14 @@
+#/etc/ppp/gprs-connect-chat
+TIMEOUT 15
+ABORT '\nBUSY\r'
+ABORT '\nNO ANSWER\r'
+ABORT '\nRINGING\r\n\r\nRINGING\r'
+'' AT
+OK ATH0
+TIMEOUT 40
+'' AT
+OK ATS0=0
+OK ATE0
+OK AT+CGDCONT=1,"IP","CMNET"
+OK ATDT*99***1#
+CONNECT ''
