@@ -1,5 +1,7 @@
---- a/arch/mips/ralink/reset.c
-+++ b/arch/mips/ralink/reset.c
+Index: linux-3.18.29/arch/mips/ralink/reset.c
+===================================================================
+--- linux-3.18.29.orig/arch/mips/ralink/reset.c
++++ linux-3.18.29/arch/mips/ralink/reset.c
 @@ -11,6 +11,7 @@
  #include <linux/pm.h>
  #include <linux/io.h>
@@ -33,3 +35,72 @@
  	local_irq_disable();
  	rt_sysc_w32(RSTCTL_RESET_SYSTEM, SYSC_REG_RESET_CTRL);
  	unreachable();
+Index: linux-3.18.29/arch/mips/ralink/mt7620.c
+===================================================================
+--- linux-3.18.29.orig/arch/mips/ralink/mt7620.c
++++ linux-3.18.29/arch/mips/ralink/mt7620.c
+@@ -216,11 +216,41 @@ static struct rt2880_pmx_func ephy_p4_gr
+         FUNC("gpio", 1, 39, 1),
+         FUNC("ephy", 0, 39, 1),
+ };
++
++static struct rt2880_pmx_func ephyk_p1_grp_mt7628[] = {
++        FUNC("rsvd", 3, 33, 1),
++        FUNC("rsvd", 2, 33, 1),
++        FUNC("gpio", 1, 33, 1),
++        FUNC("ephy", 0, 33, 1),
++};
++static struct rt2880_pmx_func ephyk_p2_grp_mt7628[] = {
++        FUNC("rsvd", 3, 32, 1),
++        FUNC("rsvd", 2, 32, 1),
++        FUNC("gpio", 1, 32, 1),
++        FUNC("ephy", 0, 32, 1),
++};
++static struct rt2880_pmx_func ephyk_p3_grp_mt7628[] = {
++        FUNC("rsvd", 3, 31, 1),
++        FUNC("rsvd", 2, 31, 1),
++        FUNC("gpio", 1, 31, 1),
++        FUNC("ephy", 0, 31, 1),
++};
++static struct rt2880_pmx_func ephyk_p4_grp_mt7628[] = {
++        FUNC("rsvd", 3, 30, 1),
++        FUNC("rsvd", 2, 30, 1),
++        FUNC("gpio", 1, 30, 1),
++        FUNC("ephy", 0, 30, 1),
++};
++
+ #define MT7628_GPIO_MODE_MASK		0x3
+ #define MT7628_GPIO_MODE_EPHY_P4        42
+ #define MT7628_GPIO_MODE_EPHY_P3        40
+ #define MT7628_GPIO_MODE_EPHY_P2        38
+ #define MT7628_GPIO_MODE_EPHY_P1        36
++#define MT7628_GPIO_MODE_EPHYK_P4        58
++#define MT7628_GPIO_MODE_EPHYK_P3        56
++#define MT7628_GPIO_MODE_EPHYK_P2        54
++#define MT7628_GPIO_MODE_EPHYK_P1        52
+ #define MT7628_GPIO_MODE_WLED_AN	32
+ #define MT7628_GPIO_MODE_PWM1		30
+ #define MT7628_GPIO_MODE_PWM0		28
+@@ -260,6 +290,10 @@ static struct rt2880_pmx_group mt7628an_
+         GRP_G("ephy_p3", ephy_p3_grp_mt7628, MT7628_GPIO_MODE_MASK, 1, MT7628_GPIO_MODE_EPHY_P3),
+         GRP_G("ephy_p4", ephy_p4_grp_mt7628, MT7628_GPIO_MODE_MASK, 1, MT7628_GPIO_MODE_EPHY_P4),
+ 
++	GRP_G("ephyk_p1", ephyk_p1_grp_mt7628, MT7628_GPIO_MODE_MASK, 1, MT7628_GPIO_MODE_EPHYK_P1),
++        GRP_G("ephyk_p2", ephyk_p2_grp_mt7628, MT7628_GPIO_MODE_MASK, 1, MT7628_GPIO_MODE_EPHYK_P2),
++        GRP_G("ephyk_p3", ephyk_p3_grp_mt7628, MT7628_GPIO_MODE_MASK, 1, MT7628_GPIO_MODE_EPHYK_P3),
++        GRP_G("ephyk_p4", ephyk_p4_grp_mt7628, MT7628_GPIO_MODE_MASK, 1, MT7628_GPIO_MODE_EPHYK_P4),
+ 	{ 0 }
+ };
+ 
+Index: linux-3.18.29/drivers/pinctrl/pinctrl-rt2880.c
+===================================================================
+--- linux-3.18.29.orig/drivers/pinctrl/pinctrl-rt2880.c
++++ linux-3.18.29/drivers/pinctrl/pinctrl-rt2880.c
+@@ -221,6 +221,7 @@ static int rt2880_pmx_group_enable(struc
+ 	shift = p->groups[group].shift;
+ 	if (shift >= 32) {
+ 		shift -= 32;
++		rt_sysc_w32(0xfe01ff, 0x3c);
+ 		reg = SYSC_REG_GPIO_MODE2;
+ 	}
+ 	mode = rt_sysc_r32(reg);

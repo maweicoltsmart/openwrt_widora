@@ -41,6 +41,22 @@
 				ralink,group = "wled_an";
 				ralink,function = "wled_an";
 			};
+			ephyk_p1 {
+				ralink,group = "ephyk_p1";
+				ralink,function = "gpio";
+			};
+			ephyk_p2 {
+				ralink,group = "ephyk_p2";
+				ralink,function = "gpio";
+			};
+			ephyk_p3 {
+				ralink,group = "ephyk_p3";
+				ralink,function = "gpio";
+			};
+			ephyk_p4 {
+				ralink,group = "ephyk_p4";
+				ralink,function = "gpio";
+			};
 			ephy_p1 {
 				ralink,group = "ephy_p1";
 				ralink,function = "gpio";
@@ -82,14 +98,6 @@
 				ralink,function = "gpio";
 			};
 		};
-	};
-
-	uart1@d00 {
-		status = "okay";
-	};
-
-	uart2@e00 {
-		status = "okay";
 	};
 
 	palmbus@10000000 {

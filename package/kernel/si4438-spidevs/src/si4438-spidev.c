@@ -110,7 +110,6 @@ static int si4438_spidevs_probe(struct spi_device *spi)
 	int err;
 	slave = spi;
 	master = spi->master;
-	dump_stack();
 	printk("%s,%d\r\n",__func__,__LINE__);
 	printk(KERN_INFO DRV_DESC " version " DRV_VERSION "\n");
 	spi->bits_per_word = 8;
