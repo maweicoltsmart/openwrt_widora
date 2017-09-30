@@ -14,6 +14,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 */
 #ifndef __sx1276_2_ARCH_H__
 #define __sx1276_2_ARCH_H__
+#include "sx1276-2.h"
 
 /*!
  * \brief Radio hardware registers initialization definition
@@ -51,7 +52,7 @@ void sx1276_2IoInit( void );
  *
  * \param [IN] irqHandlers Array containing the IRQ callback functions
  */
-void sx1276_2IoIrqInit( DioIrqHandler **irqHandlers );
+void sx1276_2IoIrqInit(void);
 
 /*!
  * \brief De-initializes the radio I/Os pins interface. 

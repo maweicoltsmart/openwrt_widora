@@ -34,7 +34,7 @@ DEALINGS WITH THE SOFTWARE
 *****************************************************************************/
 //#include <sys/param.h>
 //#include <sys/systm.h> 
-#include <stdint.h>
+//#include <stdint.h>
 #include "typedef.h"
 #include "aes.h"
 #include "cmac.h"

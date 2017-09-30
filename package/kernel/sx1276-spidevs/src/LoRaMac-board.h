@@ -15,6 +15,9 @@ Maintainer: Miguel Luis and Gregory Cristian
 #ifndef __LORAMAC_BOARD_H__
 #define __LORAMAC_BOARD_H__
 
+#define USE_BAND_433
+#define USE_MODEM_LORA
+
 /*!
  * Returns individual channel mask
  *

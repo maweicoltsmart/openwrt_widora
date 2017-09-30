@@ -19,6 +19,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include "sx1276Regs-LoRa.h"
 #include <linux/spi/spi.h>
 #include <linux/spi/spi_gpio.h>
+#include "radio.h"
 
 /*!
  * Radio wakeup time from SLEEP mode

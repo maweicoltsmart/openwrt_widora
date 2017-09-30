@@ -42,8 +42,9 @@
 #endif
 
 
-#include <stdlib.h>
-#include <stdint.h>
+//#include <stdlib.h>
+//#include <stdint.h>
+#include "typedef.h"
 
 /* define if you have fast 32-bit types on your system */
 #if 1
@@ -63,6 +64,13 @@
 #endif
 
 #include "aes.h"
+
+#ifndef EXIT_FAILURE
+#define EXIT_FAILURE    0
+#endif
+#ifndef EXIT_SUCCESS
+#define EXIT_SUCCESS    1
+#endif
 
 //#if defined( HAVE_UINT_32T )
 //  typedef unsigned long uint32_t;

@@ -190,7 +190,7 @@ void sx1276_2IoInit( void )
     }
 }
 
-void sx1276_2IoIrqInit( DioIrqHandler **irqHandlers )
+void sx1276_2IoIrqInit(void)
 {
     int err;
     sx1278_2_dio0irq = gpio_to_irq(SX1278_2_DIO0_PIN);

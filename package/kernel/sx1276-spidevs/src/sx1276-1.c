@@ -251,7 +251,7 @@ void sx1276_1Init( RadioEvents_t *events )
     
     sx1276_1SetOpMode( RF_OPMODE_SLEEP );
 
-    sx1276_1IoIrqInit( NULL );
+    sx1276_1IoIrqInit();
         
     for( i = 0; i < sizeof( RadioRegsInit ) / sizeof( RadioRegisters_t ); i++ )
     {
