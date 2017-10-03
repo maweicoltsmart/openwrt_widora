@@ -34,6 +34,7 @@
  */
 #ifndef __REGION_CN470_H__
 #define __REGION_CN470_H__
+#include "typedef.h"
 
 /*!
  * LoRaMac maximum number of channels
@@ -223,7 +224,7 @@ static const uint8_t MaxPayloadOfDatarateRepeaterCN470[] = { 51, 51, 51, 115, 22
  *
  * \retval Returns a structure containing the PHY parameter.
  */
-PhyParam_t RegionCN470GetPhyParam( GetPhyParams_t* getPhy );
+uint32_t RegionCN470GetPhyParam( GetPhyParams_t* getPhy );
 
 /*!
  * \brief Updates the last TX done parameters of the current channel.

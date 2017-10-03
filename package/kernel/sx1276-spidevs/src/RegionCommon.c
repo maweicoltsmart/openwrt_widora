@@ -18,12 +18,12 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jaeckle ( STACKFORCE )
 */
 
-#include <stdbool.h>
-#include <string.h>
-#include <stdint.h>
-#include <math.h>
+//#include <stdbool.h>
+//#include <string.h>
+//#include <stdint.h>
+//#include <math.h>
 
-#include "timer.h"
+//#include "timer.h"
 #include "utilities.h"
 #include "LoRaMac.h"
 #include "RegionCommon.h"
@@ -39,8 +39,8 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 static uint8_t CountChannels( uint16_t mask, uint8_t nbBits )
 {
     uint8_t nbActiveBits = 0;
-
-    for( uint8_t j = 0; j < nbBits; j++ )
+	uint8_t j = 0;
+    for( j = 0; j < nbBits; j++ )
     {
         if( ( mask & ( 1 << j ) ) == ( 1 << j ) )
         {
@@ -73,14 +73,15 @@ uint16_t RegionCommonGetJoinDc( TimerTime_t elapsedTime )
 
 bool RegionCommonChanVerifyDr( uint8_t nbChannels, uint16_t* channelsMask, int8_t dr, int8_t minDr, int8_t maxDr, ChannelParams_t* channels )
 {
+	uint8_t i = 0,k = 0,j = 0;
     if( RegionCommonValueInRange( dr, minDr, maxDr ) == 0 )
     {
         return false;
     }
 
-    for( uint8_t i = 0, k = 0; i < nbChannels; i += 16, k++ )
+    for( i = 0, k = 0; i < nbChannels; i += 16, k++ )
     {
-        for( uint8_t j = 0; j < 16; j++ )
+        for( j = 0; j < 16; j++ )
         {
             if( ( ( channelsMask[k] & ( 1 << j ) ) != 0 ) )
             {// Check datarate validity for enabled channels
@@ -123,13 +124,14 @@ bool RegionCommonChanDisable( uint16_t* channelsMask, uint8_t id, uint8_t maxCha
 uint8_t RegionCommonCountChannels( uint16_t* channelsMask, uint8_t startIdx, uint8_t stopIdx )
 {
     uint8_t nbChannels = 0;
-
+	uint8_t i = 0;
+	
     if( channelsMask == NULL )
     {
         return 0;
     }
 
-    for( uint8_t i = startIdx; i < stopIdx; i++ )
+    for( i = startIdx; i < stopIdx; i++ )
     {
         nbChannels += CountChannels( channelsMask[i], 16 );
     }
@@ -139,9 +141,10 @@ uint8_t RegionCommonCountChannels( uint16_t* channelsMask, uint8_t startIdx, uin
 
 void RegionCommonChanMaskCopy( uint16_t* channelsMaskDest, uint16_t* channelsMaskSrc, uint8_t len )
 {
+	uint8_t i = 0;
     if( ( channelsMaskDest != NULL ) && ( channelsMaskSrc != NULL ) )
     {
-        for( uint8_t i = 0; i < len; i++ )
+        for( i = 0; i < len; i++ )
         {
             channelsMaskDest[i] = channelsMaskSrc[i];
         }
@@ -164,9 +167,10 @@ void RegionCommonSetBandTxDone( bool joined, Band_t* band, TimerTime_t lastTxDon
 TimerTime_t RegionCommonUpdateBandTimeOff( bool joined, bool dutyCycle, Band_t* bands, uint8_t nbBands )
 {
     TimerTime_t nextTxDelay = ( TimerTime_t )( -1 );
-
+	uint8_t i = 0;
+	
     // Update bands Time OFF
-    for( uint8_t i = 0; i < nbBands; i++ )
+    for( i = 0; i < nbBands; i++ )
     {
         if( joined == false )
         {
@@ -305,15 +309,19 @@ double RegionCommonComputeSymbolTimeFsk( uint8_t phyDr )
 
 void RegionCommonComputeRxWindowParameters( double tSymbol, uint8_t minRxSymbols, uint32_t rxError, uint32_t wakeUpTime, uint32_t* windowTimeout, int32_t* windowOffset )
 {
-    *windowTimeout = MAX( ( uint32_t )ceil( ( ( 2 * minRxSymbols - 8 ) * tSymbol + 2 * rxError ) / tSymbol ), minRxSymbols ); // Computed number of symbols
-    *windowOffset = ( int32_t )ceil( ( 4.0 * tSymbol ) - ( ( *windowTimeout * tSymbol ) / 2.0 ) - wakeUpTime );
+    //*windowTimeout = MAX( ( uint32_t )ceil( ( ( 2 * minRxSymbols - 8 ) * tSymbol + 2 * rxError ) / tSymbol ), minRxSymbols ); // Computed number of symbols
+    //*windowOffset = ( int32_t )ceil( ( 4.0 * tSymbol ) - ( ( *windowTimeout * tSymbol ) / 2.0 ) - wakeUpTime );
+    *windowTimeout = MAX( ( uint32_t )( ( ( 2 * minRxSymbols - 8 ) * tSymbol + 2 * rxError ) / tSymbol ), minRxSymbols ); // Computed number of symbols
+    *windowOffset = ( int32_t )( ( 4.0 * tSymbol ) - ( ( *windowTimeout * tSymbol ) / 2.0 ) - wakeUpTime );
+
 }
 
 int8_t RegionCommonComputeTxPower( int8_t txPowerIndex, float maxEirp, float antennaGain )
 {
     int8_t phyTxPower = 0;
 
-    phyTxPower = ( int8_t )floor( ( maxEirp - ( txPowerIndex * 2U ) ) - antennaGain );
+    //phyTxPower = ( int8_t )floor( ( maxEirp - ( txPowerIndex * 2U ) ) - antennaGain );
+    phyTxPower = ( int8_t )( ( maxEirp - ( txPowerIndex * 2U ) ) - antennaGain );
 
     return phyTxPower;
 }

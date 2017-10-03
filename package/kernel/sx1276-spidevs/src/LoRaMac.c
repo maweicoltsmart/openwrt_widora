@@ -17,14 +17,17 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 
 Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jaeckle ( STACKFORCE )
 */
-#include "board.h"
-
-#include "LoRaMac.h"
-#include "region/Region.h"
+#include "typedef.h"
+#include "Region.h"
 #include "LoRaMacCrypto.h"
 #include "LoRaMacTest.h"
-
-
+#include "LoRaMac.h"
+#include "radio.h"
+#include "utilities.h"
+#include "sx1276.h"
+#include <linux/time.h>
+#include <linux/timer.h>
+#include <linux/delay.h>
 
 /*!
  * Maximum PHY layer payload size
@@ -303,7 +306,7 @@ uint32_t LoRaMacState = LORAMAC_IDLE;
 /*!
  * LoRaMac timer used to check the LoRaMacState (runs every second)
  */
-static TimerEvent_t MacStateCheckTimer;
+static struct timer_list MacStateCheckTimer;
 
 /*!
  * LoRaMac upper layer event functions
@@ -323,13 +326,13 @@ static RadioEvents_t RadioEvents;
 /*!
  * LoRaMac duty cycle delayed Tx timer
  */
-static TimerEvent_t TxDelayedTimer;
+static struct timer_list TxDelayedTimer;
 
 /*!
  * LoRaMac reception windows timers
  */
-static TimerEvent_t RxWindowTimer1;
-static TimerEvent_t RxWindowTimer2;
+static struct timer_list  RxWindowTimer1;
+static struct timer_list  RxWindowTimer2;
 
 /*!
  * LoRaMac reception windows delay
@@ -348,7 +351,7 @@ static RxConfigParams_t RxWindow2Config;
 /*!
  * Acknowledge timeout timer. Used for packet retransmissions.
  */
-static TimerEvent_t AckTimeoutTimer;
+static struct timer_list AckTimeoutTimer;
 
 /*!
  * Number of trials to get a frame acknowledged
@@ -606,7 +609,8 @@ static void OnRadioTxDone( void )
     GetPhyParams_t getPhy;
     PhyParam_t phyParam;
     SetBandTxDoneParams_t txDone;
-    TimerTime_t curTime = TimerGetCurrentTime( );
+	TimerTime_t curTime = jiffies;
+    //TimerTime_t curTime = TimerGetCurrentTime( );
 
     if( LoRaMacDeviceClass != CLASS_C )
     {
@@ -620,19 +624,19 @@ static void OnRadioTxDone( void )
     // Setup timers
     if( IsRxWindowsEnabled == true )
     {
-        TimerSetValue( &RxWindowTimer1, RxWindow1Delay );
-        TimerStart( &RxWindowTimer1 );
+		RxWindowTimer1.expires = jiffies + RxWindow1Delay;        //定时时间
+		add_timer( &RxWindowTimer1 );
         if( LoRaMacDeviceClass != CLASS_C )
         {
-            TimerSetValue( &RxWindowTimer2, RxWindow2Delay );
-            TimerStart( &RxWindowTimer2 );
+			RxWindowTimer2.expires = jiffies + RxWindow2Delay;
+			add_timer( &RxWindowTimer2 );
         }
         if( ( LoRaMacDeviceClass == CLASS_C ) || ( NodeAckRequested == true ) )
         {
             getPhy.Attribute = PHY_ACK_TIMEOUT;
-            phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
-            TimerSetValue( &AckTimeoutTimer, RxWindow2Delay + phyParam.Value );
-            TimerStart( &AckTimeoutTimer );
+            phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+			AckTimeoutTimer.expires = jiffies + RxWindow2Delay + phyParam.Value;
+			add_timer( &AckTimeoutTimer );
         }
     }
     else
@@ -687,8 +691,8 @@ static void PrepareRxDoneAbort( void )
     LoRaMacFlags.Bits.MacDone = 1;
 
     // Trig OnMacCheckTimerEvent call as soon as possible
-    TimerSetValue( &MacStateCheckTimer, 1 );
-    TimerStart( &MacStateCheckTimer );
+	MacStateCheckTimer.expires = jiffies + 1;
+	add_timer( &MacStateCheckTimer );
 }
 
 static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
@@ -736,7 +740,7 @@ static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t
     McpsIndication.McpsIndication = MCPS_UNCONFIRMED;
 
     Radio.Sleep( );
-    TimerStop( &RxWindowTimer2 );
+    del_timer( &RxWindowTimer2 );
 
     macHdr.Value = payload[pktHeaderLen++];
 
@@ -815,7 +819,7 @@ static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t
                 {
                     getPhy.Attribute = PHY_MAX_PAYLOAD_REPEATER;
                 }
-                phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+                phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
                 if( MAX( 0, ( int16_t )( ( int16_t )size - ( int16_t )LORA_MAC_FRMPAYLOAD_OVERHEAD ) ) > phyParam.Value )
                 {
                     McpsIndication.Status = LORAMAC_EVENT_INFO_STATUS_ERROR;
@@ -897,7 +901,7 @@ static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t
 
                 // Check for a the maximum allowed counter difference
                 getPhy.Attribute = PHY_MAX_FCNT_GAP;
-                phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+                phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
                 if( sequenceCounterDiff >= phyParam.Value )
                 {
                     McpsIndication.Status = LORAMAC_EVENT_INFO_STATUS_DOWNLINK_TOO_MANY_FRAMES_LOSS;
@@ -1058,7 +1062,7 @@ static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t
 
                             // Stop the AckTimeout timer as no more retransmissions
                             // are needed.
-                            TimerStop( &AckTimeoutTimer );
+                            del_timer( &AckTimeoutTimer );
                         }
                         else
                         {
@@ -1068,7 +1072,7 @@ static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t
                             {
                                 // Stop the AckTimeout timer as no more retransmissions
                                 // are needed.
-                                TimerStop( &AckTimeoutTimer );
+                                del_timer( &AckTimeoutTimer );
                             }
                         }
                     }
@@ -1106,8 +1110,8 @@ static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t
     LoRaMacFlags.Bits.MacDone = 1;
 
     // Trig OnMacCheckTimerEvent call as soon as possible
-    TimerSetValue( &MacStateCheckTimer, 1 );
-    TimerStart( &MacStateCheckTimer );
+	MacStateCheckTimer.expires = jiffies + 1;
+	add_timer( &MacStateCheckTimer );
 }
 
 static void OnRadioTxTimeout( void )
@@ -1206,7 +1210,7 @@ static void OnMacStateCheckTimerEvent( void )
     PhyParam_t phyParam;
     bool txTimeout = false;
 
-    TimerStop( &MacStateCheckTimer );
+    del_timer( &MacStateCheckTimer );
 
     if( LoRaMacFlags.Bits.MacDone == 1 )
     {
@@ -1317,7 +1321,7 @@ static void OnMacStateCheckTimerEvent( void )
                     getPhy.Attribute = PHY_NEXT_LOWER_TX_DR;
                     getPhy.UplinkDwellTime = LoRaMacParams.UplinkDwellTime;
                     getPhy.Datarate = LoRaMacParams.ChannelsDatarate;
-                    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+                    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
                     LoRaMacParams.ChannelsDatarate = phyParam.Value;
                 }
                 // Try to send the frame again
@@ -1384,8 +1388,8 @@ static void OnMacStateCheckTimerEvent( void )
     else
     {
         // Operation not finished restart timer
-        TimerSetValue( &MacStateCheckTimer, MAC_STATE_CHECK_TIMEOUT );
-        TimerStart( &MacStateCheckTimer );
+		MacStateCheckTimer.expires = jiffies + MAC_STATE_CHECK_TIMEOUT;
+		add_timer( &MacStateCheckTimer );
     }
 
     if( LoRaMacFlags.Bits.McpsInd == 1 )
@@ -1409,7 +1413,7 @@ static void OnTxDelayedTimerEvent( void )
     LoRaMacFrameCtrl_t fCtrl;
     AlternateDrParams_t altDr;
 
-    TimerStop( &TxDelayedTimer );
+    del_timer( &TxDelayedTimer );
     LoRaMacState &= ~LORAMAC_TX_DELAYED;
 
     if( ( LoRaMacFlags.Bits.MlmeReq == 1 ) && ( MlmeConfirm.MlmeRequest == MLME_JOIN ) )
@@ -1436,7 +1440,7 @@ static void OnTxDelayedTimerEvent( void )
 
 static void OnRxWindow1TimerEvent( void )
 {
-    TimerStop( &RxWindowTimer1 );
+    del_timer( &RxWindowTimer1 );
     RxSlot = 0;
 
     RxWindow1Config.Channel = Channel;
@@ -1457,7 +1461,7 @@ static void OnRxWindow1TimerEvent( void )
 
 static void OnRxWindow2TimerEvent( void )
 {
-    TimerStop( &RxWindowTimer2 );
+    del_timer( &RxWindowTimer2 );
 
     RxWindow2Config.Channel = Channel;
     RxWindow2Config.Frequency = LoRaMacParams.Rx2Channel.Frequency;
@@ -1483,7 +1487,7 @@ static void OnRxWindow2TimerEvent( void )
 
 static void OnAckTimeoutTimerEvent( void )
 {
-    TimerStop( &AckTimeoutTimer );
+    del_timer( &AckTimeoutTimer );
 
     if( NodeAckRequested == true )
     {
@@ -1525,7 +1529,7 @@ static bool ValidatePayloadLength( uint8_t lenN, int8_t datarate, uint8_t fOptsL
     {
         getPhy.Attribute = PHY_MAX_PAYLOAD_REPEATER;
     }
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     maxN = phyParam.Value;
 
     // Calculate the resulting payload size
@@ -1692,7 +1696,7 @@ static uint8_t ParseMacCommandsToRepeat( uint8_t* cmdBufIn, uint8_t length, uint
 static void ProcessMacCommands( uint8_t *payload, uint8_t macIndex, uint8_t commandsSize, uint8_t snr )
 {
     uint8_t status = 0;
-
+	uint8_t i = 0;
     while( macIndex < commandsSize )
     {
         // Decode Frame MAC commands
@@ -1732,7 +1736,7 @@ static void ProcessMacCommands( uint8_t *payload, uint8_t macIndex, uint8_t comm
                     }
 
                     // Add the answers to the buffer
-                    for( uint8_t i = 0; i < ( linkAdrNbBytesParsed / 5 ); i++ )
+                    for( i = 0; i < ( linkAdrNbBytesParsed / 5 ); i++ )
                     {
                         AddMacCommand( MOTE_MAC_LINK_ADR_ANS, status, 0 );
                     }
@@ -1970,8 +1974,8 @@ static LoRaMacStatus_t ScheduleTx( void )
     {
         // Send later - prepare timer
         LoRaMacState |= LORAMAC_TX_DELAYED;
-        TimerSetValue( &TxDelayedTimer, dutyCycleTimeOff );
-        TimerStart( &TxDelayedTimer );
+		TxDelayedTimer.expires = jiffies + dutyCycleTimeOff;
+		add_timer( &TxDelayedTimer );
 
         return LORAMAC_STATUS_OK;
     }
@@ -2234,8 +2238,8 @@ LoRaMacStatus_t SendFrameOnChannel( uint8_t channel )
     MlmeConfirm.TxTimeOnAir = TxTimeOnAir;
 
     // Starts the MAC layer status check timer
-    TimerSetValue( &MacStateCheckTimer, MAC_STATE_CHECK_TIMEOUT );
-    TimerStart( &MacStateCheckTimer );
+	MacStateCheckTimer.expires = jiffies + MAC_STATE_CHECK_TIMEOUT;
+	add_timer( &MacStateCheckTimer );
 
     if( IsLoRaMacNetworkJoined == false )
     {
@@ -2264,8 +2268,8 @@ LoRaMacStatus_t SetTxContinuousWave( uint16_t timeout )
     RegionSetContinuousWave( LoRaMacRegion, &continuousWave );
 
     // Starts the MAC layer status check timer
-    TimerSetValue( &MacStateCheckTimer, MAC_STATE_CHECK_TIMEOUT );
-    TimerStart( &MacStateCheckTimer );
+	MacStateCheckTimer.expires = jiffies + MAC_STATE_CHECK_TIMEOUT;
+	add_timer( &MacStateCheckTimer );
 
     LoRaMacState |= LORAMAC_TX_RUNNING;
 
@@ -2277,8 +2281,8 @@ LoRaMacStatus_t SetTxContinuousWave1( uint16_t timeout, uint32_t frequency, uint
     Radio.SetTxContinuousWave( frequency, power, timeout );
 
     // Starts the MAC layer status check timer
-    TimerSetValue( &MacStateCheckTimer, MAC_STATE_CHECK_TIMEOUT );
-    TimerStart( &MacStateCheckTimer );
+	MacStateCheckTimer.expires = jiffies + MAC_STATE_CHECK_TIMEOUT;
+	add_timer( &MacStateCheckTimer );
 
     LoRaMacState |= LORAMAC_TX_RUNNING;
 
@@ -2326,63 +2330,63 @@ LoRaMacStatus_t LoRaMacInitialization( LoRaMacPrimitives_t *primitives, LoRaMacC
 
     // Reset to defaults
     getPhy.Attribute = PHY_DUTY_CYCLE;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     DutyCycleOn = ( bool ) phyParam.Value;
 
     getPhy.Attribute = PHY_DEF_TX_POWER;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     LoRaMacParamsDefaults.ChannelsTxPower = phyParam.Value;
 
     getPhy.Attribute = PHY_DEF_TX_DR;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     LoRaMacParamsDefaults.ChannelsDatarate = phyParam.Value;
 
     getPhy.Attribute = PHY_MAX_RX_WINDOW;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     LoRaMacParamsDefaults.MaxRxWindow = phyParam.Value;
 
     getPhy.Attribute = PHY_RECEIVE_DELAY1;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     LoRaMacParamsDefaults.ReceiveDelay1 = phyParam.Value;
 
     getPhy.Attribute = PHY_RECEIVE_DELAY2;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     LoRaMacParamsDefaults.ReceiveDelay2 = phyParam.Value;
 
     getPhy.Attribute = PHY_JOIN_ACCEPT_DELAY1;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     LoRaMacParamsDefaults.JoinAcceptDelay1 = phyParam.Value;
 
     getPhy.Attribute = PHY_JOIN_ACCEPT_DELAY2;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     LoRaMacParamsDefaults.JoinAcceptDelay2 = phyParam.Value;
 
     getPhy.Attribute = PHY_DEF_DR1_OFFSET;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     LoRaMacParamsDefaults.Rx1DrOffset = phyParam.Value;
 
     getPhy.Attribute = PHY_DEF_RX2_FREQUENCY;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     LoRaMacParamsDefaults.Rx2Channel.Frequency = phyParam.Value;
 
     getPhy.Attribute = PHY_DEF_RX2_DR;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     LoRaMacParamsDefaults.Rx2Channel.Datarate = phyParam.Value;
 
     getPhy.Attribute = PHY_DEF_UPLINK_DWELL_TIME;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     LoRaMacParamsDefaults.UplinkDwellTime = phyParam.Value;
 
     getPhy.Attribute = PHY_DEF_DOWNLINK_DWELL_TIME;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     LoRaMacParamsDefaults.DownlinkDwellTime = phyParam.Value;
 
     getPhy.Attribute = PHY_DEF_MAX_EIRP;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     LoRaMacParamsDefaults.MaxEirp = phyParam.fValue;
 
     getPhy.Attribute = PHY_DEF_ANTENNA_GAIN;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     LoRaMacParamsDefaults.AntennaGain = phyParam.fValue;
 
     RegionInitDefaults( LoRaMacRegion, INIT_TYPE_INIT );
@@ -2402,18 +2406,23 @@ LoRaMacStatus_t LoRaMacInitialization( LoRaMacPrimitives_t *primitives, LoRaMacC
     LoRaMacParams.ChannelsNbRep = LoRaMacParamsDefaults.ChannelsNbRep;
 
     ResetMacParameters( );
-
+	//do_gettimeofday(&oldtv);
     // Initialize timers
-    TimerInit( &MacStateCheckTimer, OnMacStateCheckTimerEvent );
-    TimerSetValue( &MacStateCheckTimer, MAC_STATE_CHECK_TIMEOUT );
+    init_timer( &MacStateCheckTimer );
+	MacStateCheckTimer.function = OnMacStateCheckTimerEvent;
+	MacStateCheckTimer.expires = jiffies + MAC_STATE_CHECK_TIMEOUT;
 
-    TimerInit( &TxDelayedTimer, OnTxDelayedTimerEvent );
-    TimerInit( &RxWindowTimer1, OnRxWindow1TimerEvent );
-    TimerInit( &RxWindowTimer2, OnRxWindow2TimerEvent );
-    TimerInit( &AckTimeoutTimer, OnAckTimeoutTimerEvent );
+    init_timer( &TxDelayedTimer );
+	TxDelayedTimer.function = OnTxDelayedTimerEvent;
+    init_timer( &RxWindowTimer1 );
+	RxWindowTimer1.function = OnRxWindow1TimerEvent;
+    init_timer( &RxWindowTimer2 );
+	RxWindowTimer2.function = OnRxWindow2TimerEvent;
+    init_timer( &AckTimeoutTimer );
+	AckTimeoutTimer.function = OnAckTimeoutTimerEvent;
 
     // Store the current initialization time
-    LoRaMacInitializationTime = TimerGetCurrentTime( );
+    //LoRaMacInitializationTime = TimerGetCurrentTime( );
 
     // Initialize Radio driver
     RadioEvents.TxDone = OnRadioTxDone;
@@ -2469,7 +2478,7 @@ LoRaMacStatus_t LoRaMacQueryTxPossible( uint8_t size, LoRaMacTxInfo_t* txInfo )
     {
         getPhy.Attribute = PHY_MAX_PAYLOAD_REPEATER;
     }
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     txInfo->CurrentPayloadSize = phyParam.Value;
 
     // Verify if the fOpts fit into the maximum payload
@@ -2556,7 +2565,7 @@ LoRaMacStatus_t LoRaMacMibGetRequestConfirm( MibRequestConfirm_t *mibGet )
         case MIB_CHANNELS:
         {
             getPhy.Attribute = PHY_CHANNELS;
-            phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+            phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
 
             mibGet->Param.ChannelList = phyParam.Channels;
             break;
@@ -2574,7 +2583,7 @@ LoRaMacStatus_t LoRaMacMibGetRequestConfirm( MibRequestConfirm_t *mibGet )
         case MIB_CHANNELS_DEFAULT_MASK:
         {
             getPhy.Attribute = PHY_CHANNELS_DEFAULT_MASK;
-            phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+            phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
 
             mibGet->Param.ChannelsDefaultMask = phyParam.ChannelsMask;
             break;
@@ -2582,7 +2591,7 @@ LoRaMacStatus_t LoRaMacMibGetRequestConfirm( MibRequestConfirm_t *mibGet )
         case MIB_CHANNELS_MASK:
         {
             getPhy.Attribute = PHY_CHANNELS_MASK;
-            phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+            phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
 
             mibGet->Param.ChannelsMask = phyParam.ChannelsMask;
             break;
@@ -3140,7 +3149,7 @@ LoRaMacStatus_t LoRaMacMlmeRequest( MlmeReq_t *mlmeRequest )
             {
                 // Value not supported, get default
                 getPhy.Attribute = PHY_DEF_NB_JOIN_TRIALS;
-                phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+                phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
                 mlmeRequest->Req.Join.NbTrials = ( uint8_t ) phyParam.Value;
             }
 
@@ -3278,7 +3287,7 @@ LoRaMacStatus_t LoRaMacMcpsRequest( McpsReq_t *mcpsRequest )
     // Get the minimum possible datarate
     getPhy.Attribute = PHY_MIN_TX_DR;
     getPhy.UplinkDwellTime = LoRaMacParams.UplinkDwellTime;
-    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
+    phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
     // Apply the minimum possible datarate.
     // Some regions have limitations for the minimum datarate.
     datarate = MAX( datarate, phyParam.Value );

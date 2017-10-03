@@ -51,8 +51,8 @@
  */
 #ifndef __REGION_H__
 #define __REGION_H__
-
-
+#include "typedef.h"
+#include "LoRaMac.h"
 
 
 /*!
@@ -1188,7 +1188,7 @@ bool RegionIsActive( LoRaMacRegion_t region );
  *
  * \retval Returns a structure containing the PHY parameter.
  */
-PhyParam_t RegionGetPhyParam( LoRaMacRegion_t region, GetPhyParams_t* getPhy );
+uint32_t RegionGetPhyParam( LoRaMacRegion_t region, GetPhyParams_t* getPhy );
 
 /*!
  * \brief Updates the last TX done parameters of the current channel.

@@ -17,12 +17,12 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 
 Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jaeckle ( STACKFORCE )
 */
-#include <stdbool.h>
-#include <string.h>
-#include <stdint.h>
-#include <math.h>
+//#include <stdbool.h>
+//#include <string.h>
+//#include <stdint.h>
+//#include <math.h>
 
-#include "board.h"
+//#include "board.h"
 #include "LoRaMac.h"
 
 #include "utilities.h"

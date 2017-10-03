@@ -62,8 +62,7 @@
 #include <linux/workqueue.h>
 #include "pinmap.h"
 #include <linux/delay.h>
-#include "routin-1.h"
-#include "routin-2.h"
+#include "routin.h"
 #include <linux/sched.h>   //wake_up_process()
 #include <linux/kthread.h> //kthread_create()、kthread_run()
 #include <linux/err.h> //IS_ERR()、PTR_ERR()
@@ -78,27 +77,26 @@ DEFINE_SPINLOCK(spi_lock);
 //#define PFX		DRV_NAME ": "
 
 static struct platform_device *devices;
-struct spi_device *slave[2] = {NULL,NULL};
+struct spi_device *slave = NULL;
 
-static struct task_struct *radio_routin1,*radio_routin2;
+static struct task_struct *radio_routin;
 
-extern unsigned int sx1278_1_dio0irq,sx1278_1_dio1irq,sx1278_1_dio2irq,sx1278_1_dio3irq,sx1278_1_dio4irq,sx1278_1_dio5irq;
-extern unsigned int sx1278_2_dio0irq,sx1278_2_dio1irq,sx1278_2_dio2irq,sx1278_2_dio3irq,sx1278_2_dio4irq,sx1278_2_dio5irq;
+static unsigned int sx1278_dio0irq,sx1278_dio1irq,sx1278_dio2irq,sx1278_dio3irq,sx1278_dio4irq,sx1278_dio5irq;
 
-static int sx1276_spidevs_remove_1(struct spi_device *spi);
-static int sx1276_spidevs_probe_1(struct spi_device *spi);
+static int sx1276_spidevs_remove(struct spi_device *spi);
+static int sx1276_spidevs_probe(struct spi_device *spi);
 
-static void sx1276_spidevs_cleanup_1(void)
+static void sx1276_spidevs_cleanup(void)
 {
 	int i;
-	kthread_stop(radio_routin1);
+	kthread_stop(radio_routin);
 
-	free_irq(sx1278_1_dio0irq,NULL);
-	free_irq(sx1278_1_dio1irq,NULL);
-	free_irq(sx1278_1_dio2irq,NULL);
-	free_irq(sx1278_1_dio3irq,NULL);
-	free_irq(sx1278_1_dio4irq,NULL);
-	free_irq(sx1278_1_dio5irq,NULL);
+	free_irq(sx1278_dio0irq,NULL);
+	free_irq(sx1278_dio1irq,NULL);
+	free_irq(sx1278_dio2irq,NULL);
+	free_irq(sx1278_dio3irq,NULL);
+	free_irq(sx1278_dio4irq,NULL);
+	free_irq(sx1278_dio5irq,NULL);
 
 	gpio_free(SX1278_1_RST_PIN);
 	gpio_free(SX1278_1_DIO0_PIN);
@@ -109,134 +107,53 @@ static void sx1276_spidevs_cleanup_1(void)
 	gpio_free(SX1278_1_DIO5_PIN);
 }
 
-static int sx1276_spidevs_remove_1(struct spi_device *spi)
+static int sx1276_spidevs_remove(struct spi_device *spi)
 {
-	sx1276_spidevs_cleanup_1();
+	sx1276_spidevs_cleanup();
 	return 0;
 }
-static int sx1276_spidevs_probe_1(struct spi_device *spi)
+static int sx1276_spidevs_probe(struct spi_device *spi)
 {
 	int err;
-	slave[0] = spi;
+	slave = spi;
 	printk("%s, %d,slave[0] = %d, slave[1] = %d\r\n",__func__,__LINE__,slave[0],slave[1]);
 	printk(KERN_INFO DRV_DESC " version " DRV_VERSION "\n");
 	spi->bits_per_word = 8;
     spi->mode = SPI_MODE_0;
     spi_setup(spi);
 	printk("%s, %d\r\n",__func__,__LINE__);
-	radio_routin1 = kthread_create(Radio_1_routin, NULL, "Radio1 routin thread");
-	if(IS_ERR(radio_routin1)){
-		printk("Unable to start kernel thread radio_routin1./n");  
-		err = PTR_ERR(radio_routin1);  
-		radio_routin1 = NULL;  
+	radio_routin = kthread_create(Radio_routin, NULL, "Radio1 routin thread");
+	if(IS_ERR(radio_routin)){
+		printk("Unable to start kernel thread radio_routin./n");  
+		err = PTR_ERR(radio_routin);  
+		radio_routin = NULL;  
 		return err;
 	}
 	printk("%s, %d\r\n",__func__,__LINE__);
-	wake_up_process(radio_routin1);
+	wake_up_process(radio_routin);
 	
 	return 0;
 
 err:
-	sx1276_spidevs_cleanup_1();
+	sx1276_spidevs_cleanup();
 	return err;
 }
 
-static const struct of_device_id lorawan_dt_ids_1[] = {
+static const struct of_device_id lorawan_dt_ids[] = {
         { .compatible = "semtech,sx1278-1" },
         {},
 };
 
-MODULE_DEVICE_TABLE(of, lorawan_dt_ids_1);
+MODULE_DEVICE_TABLE(of, lorawan_dt_ids);
 
-static struct spi_driver lorawan_spi_driver_1 = {
+static struct spi_driver lorawan_spi_driver = {
         .driver = {
                 .name =         "semtech,sx1278-1",
                 .owner =        THIS_MODULE,
-                .of_match_table = of_match_ptr(lorawan_dt_ids_1),
+                .of_match_table = of_match_ptr(lorawan_dt_ids),
         },
-        .probe =        sx1276_spidevs_probe_1,
-        .remove =       sx1276_spidevs_remove_1,
-
-        /* NOTE:  suspend/resume methods are not necessary here.
-         * We don't do anything except pass the requests to/from
-         * the underlying controller.  The refrigerator handles
-         * most issues; the controller driver handles the rest.
-         */
-};
-
-static int sx1276_spidevs_remove_2(struct spi_device *spi);
-static int sx1276_spidevs_probe_2(struct spi_device *spi);
-
-static void sx1276_spidevs_cleanup_2(void)
-{
-	int i;
-
-	kthread_stop(radio_routin2);
-
-	free_irq(sx1278_2_dio0irq,NULL);
-	free_irq(sx1278_2_dio1irq,NULL);
-	free_irq(sx1278_2_dio2irq,NULL);
-	free_irq(sx1278_2_dio3irq,NULL);
-	free_irq(sx1278_2_dio4irq,NULL);
-	free_irq(sx1278_2_dio5irq,NULL);
-
-	gpio_free(SX1278_2_RST_PIN);
-	gpio_free(SX1278_2_DIO0_PIN);
-	gpio_free(SX1278_2_DIO1_PIN);
-	gpio_free(SX1278_2_DIO2_PIN);
-	gpio_free(SX1278_2_DIO3_PIN);
-	gpio_free(SX1278_2_DIO4_PIN);
-	gpio_free(SX1278_2_DIO5_PIN);
-}
-
-static int sx1276_spidevs_remove_2(struct spi_device *spi)
-{
-	sx1276_spidevs_cleanup_2();
-	return 0;
-}
-static int sx1276_spidevs_probe_2(struct spi_device *spi)
-{
-	int err;
-	int chipversion;
-
-	slave[1] = spi;
-	printk("%s, %d,slave[0] = %d, slave[1] = %d\r\n",__func__,__LINE__,slave[0],slave[1]);
-	printk(KERN_INFO DRV_DESC " version " DRV_VERSION "\n");
-	spi->bits_per_word = 8;
-    spi->mode = SPI_MODE_0;
-    spi_setup(spi);
-	printk("%s, %d\r\n",__func__,__LINE__);
-	radio_routin2 = kthread_create(Radio_2_routin, NULL, "Radio2 routin thread");
-	if(IS_ERR(radio_routin2)){
-	printk("Unable to start kernel thread radio_routin2./n");  
-		err = PTR_ERR(radio_routin2);  
-		radio_routin2 = NULL;  
-		return err;
-	}
-	printk("%s, %d\r\n",__func__,__LINE__);
-	wake_up_process(radio_routin2);
-	return 0;
-
-err:
-	sx1276_spidevs_cleanup_2();
-	return err;
-}
-
-static const struct of_device_id lorawan_dt_ids_2[] = {
-        { .compatible = "semtech,sx1278-2" },
-        {},
-};
-
-MODULE_DEVICE_TABLE(of, lorawan_dt_ids_2);
-
-static struct spi_driver lorawan_spi_driver_2 = {
-        .driver = {
-                .name =         "semtech,sx1278-2",
-                .owner =        THIS_MODULE,
-                .of_match_table = of_match_ptr(lorawan_dt_ids_2),
-        },
-        .probe =        sx1276_spidevs_probe_2,
-        .remove =       sx1276_spidevs_remove_2,
+        .probe =        sx1276_spidevs_probe,
+        .remove =       sx1276_spidevs_remove,
 
         /* NOTE:  suspend/resume methods are not necessary here.
          * We don't do anything except pass the requests to/from
@@ -249,8 +166,8 @@ static int __init lorawan_init(void)
 {
 	int ret;
 	printk("%s, %d\r\n",__func__,__LINE__);	
-	ret = spi_register_driver(&lorawan_spi_driver_1);
-	ret = spi_register_driver(&lorawan_spi_driver_2);
+	ret = spi_register_driver(&lorawan_spi_driver);
+	
 	printk("%s, %d\r\n",__func__,__LINE__);
 
 	return ret;
@@ -259,8 +176,8 @@ static int __init lorawan_init(void)
 static void __exit lorawan_exit(void)
 {
 	printk("%s, %d\r\n",__func__,__LINE__);
-	spi_unregister_driver(&lorawan_spi_driver_1);
-	spi_unregister_driver(&lorawan_spi_driver_2);
+	spi_unregister_driver(&lorawan_spi_driver);
+	
 	printk("%s, %d\r\n",__func__,__LINE__);
 }
 

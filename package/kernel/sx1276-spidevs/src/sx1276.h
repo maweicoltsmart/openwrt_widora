@@ -17,7 +17,7 @@ Maintainer: Miguel Luis and Gregory Cristian
 
 #include "sx1276Regs-Fsk.h"
 #include "sx1276Regs-LoRa.h"
-
+#include "typedef.h"
 /*!
  * Radio wake-up time from sleep
  */
@@ -120,14 +120,14 @@ typedef struct
  */
 typedef struct SX1276_s
 {
-    Gpio_t        Reset;
-    Gpio_t        DIO0;
-    Gpio_t        DIO1;
-    Gpio_t        DIO2;
-    Gpio_t        DIO3;
-    Gpio_t        DIO4;
-    Gpio_t        DIO5;
-    Spi_t         Spi;
+    //Gpio_t        Reset;
+    //Gpio_t        DIO0;
+    //Gpio_t        DIO1;
+    //Gpio_t        DIO2;
+    //Gpio_t        DIO3;
+    //Gpio_t        DIO4;
+    //Gpio_t        DIO5;
+    struct spi_device *         Spi;
     RadioSettings_t Settings;
 }SX1276_t;
 
@@ -402,5 +402,7 @@ void SX1276SetMaxPayloadLength( RadioModems_t modem, uint8_t max );
  * \param [IN] enable if true, it enables a public network
  */
 void SX1276SetPublicNetwork( bool enable );
+
+extern SX1276_t SX1276;
 
 #endif // __SX1276_H__

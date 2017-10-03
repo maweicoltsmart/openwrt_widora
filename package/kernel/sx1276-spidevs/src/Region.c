@@ -17,11 +17,16 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 
 Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jaeckle ( STACKFORCE )
 */
-#include <stdbool.h>
-#include <string.h>
-#include <stdint.h>
+//#include <stdbool.h>
+//#include <string.h>
+//#include <stdint.h>
 
-#include "timer.h"
+//#include "timer.h"
+#include "typedef.h"
+#include <linux/time.h>
+#include <linux/timer.h>
+#include <linux/delay.h>
+
 #include "LoRaMac.h"
 
 
@@ -573,7 +578,7 @@ bool RegionIsActive( LoRaMacRegion_t region )
     }
 }
 
-PhyParam_t RegionGetPhyParam( LoRaMacRegion_t region, GetPhyParams_t* getPhy )
+uint32_t RegionGetPhyParam( LoRaMacRegion_t region, GetPhyParams_t* getPhy )
 {
     PhyParam_t phyParam = { 0 };
     switch( region )
@@ -590,7 +595,7 @@ PhyParam_t RegionGetPhyParam( LoRaMacRegion_t region, GetPhyParams_t* getPhy )
         US915_HYBRID_GET_PHY_PARAM( );
         default:
         {
-            return phyParam;
+            return phyParam.Value;
         }
     }
 }

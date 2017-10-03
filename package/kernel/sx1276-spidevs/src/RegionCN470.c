@@ -17,16 +17,16 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 
 Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jaeckle ( STACKFORCE )
 */
-#include <stdbool.h>
-#include <string.h>
-#include <stdint.h>
-#include <math.h>
+//#include <stdbool.h>
+//#include <string.h>
+//#include <stdint.h>
+//#include <math.h>
 
-#include "board.h"
+//#include "board.h"
 #include "LoRaMac.h"
-
+#include "radio.h"
 #include "utilities.h"
-
+#include "sx1276.h"
 #include "Region.h"
 #include "RegionCommon.h"
 #include "RegionCN470.h"
@@ -102,10 +102,11 @@ static uint8_t CountNbOfEnabledChannels( uint8_t datarate, uint16_t* channelsMas
 {
     uint8_t nbEnabledChannels = 0;
     uint8_t delayTransmission = 0;
-
-    for( uint8_t i = 0, k = 0; i < CN470_MAX_NB_CHANNELS; i += 16, k++ )
+	uint8_t i = 0,k = 0,j= 0;
+	
+    for( i = 0, k = 0; i < CN470_MAX_NB_CHANNELS; i += 16, k++ )
     {
-        for( uint8_t j = 0; j < 16; j++ )
+        for( j = 0; j < 16; j++ )
         {
             if( ( channelsMask[k] & ( 1 << j ) ) != 0 )
             {
@@ -132,7 +133,7 @@ static uint8_t CountNbOfEnabledChannels( uint8_t datarate, uint16_t* channelsMas
     return nbEnabledChannels;
 }
 
-PhyParam_t RegionCN470GetPhyParam( GetPhyParams_t* getPhy )
+uint32_t RegionCN470GetPhyParam( GetPhyParams_t* getPhy )
 {
     PhyParam_t phyParam = { 0 };
 
@@ -276,7 +277,7 @@ PhyParam_t RegionCN470GetPhyParam( GetPhyParams_t* getPhy )
         }
     }
 
-    return phyParam;
+    return phyParam.Value;
 }
 
 void RegionCN470SetBandTxDone( SetBandTxDoneParams_t* txDone )
@@ -286,13 +287,14 @@ void RegionCN470SetBandTxDone( SetBandTxDoneParams_t* txDone )
 
 void RegionCN470InitDefaults( InitType_t type )
 {
+	uint8_t i = 0;
     switch( type )
     {
         case INIT_TYPE_INIT:
         {
             // Channels
             // 125 kHz channels
-            for( uint8_t i = 0; i < CN470_MAX_NB_CHANNELS; i++ )
+            for( i = 0; i < CN470_MAX_NB_CHANNELS; i++ )
             {
                 Channels[i].Frequency = 470300000 + i * 200000;
                 Channels[i].DrRange.Value = ( DR_5 << 4 ) | DR_0;
@@ -423,7 +425,7 @@ bool RegionCN470AdrNext( AdrNextParams_t* adrNext, int8_t* drOut, int8_t* txPowO
                     getPhy.Attribute = PHY_NEXT_LOWER_TX_DR;
                     getPhy.Datarate = datarate;
                     getPhy.UplinkDwellTime = adrNext->UplinkDwellTime;
-                    phyParam = RegionCN470GetPhyParam( &getPhy );
+                    phyParam.Value = RegionCN470GetPhyParam( &getPhy );
                     datarate = phyParam.Value;
 
                     if( datarate == CN470_TX_MIN_DATARATE )
@@ -536,7 +538,8 @@ uint8_t RegionCN470LinkAdrReq( LinkAdrReqParams_t* linkAdrReq, int8_t* drOut, in
     GetPhyParams_t getPhy;
     PhyParam_t phyParam;
     RegionCommonLinkAdrReqVerifyParams_t linkAdrVerifyParams;
-
+	uint8_t i = 0;
+	
     // Initialize local copy of channels mask
     RegionCommonChanMaskCopy( channelsMask, ChannelsMask, 6 );
 
@@ -570,7 +573,7 @@ uint8_t RegionCN470LinkAdrReq( LinkAdrReqParams_t* linkAdrReq, int8_t* drOut, in
         }
         else
         {
-            for( uint8_t i = 0; i < 16; i++ )
+            for( i = 0; i < 16; i++ )
             {
                 if( ( ( linkAdrParams.ChMask & ( 1 << i ) ) != 0 ) &&
                     ( Channels[linkAdrParams.ChMaskCtrl * 16 + i].Frequency == 0 ) )
@@ -585,7 +588,7 @@ uint8_t RegionCN470LinkAdrReq( LinkAdrReqParams_t* linkAdrReq, int8_t* drOut, in
     // Get the minimum possible datarate
     getPhy.Attribute = PHY_MIN_TX_DR;
     getPhy.UplinkDwellTime = linkAdrReq->UplinkDwellTime;
-    phyParam = RegionCN470GetPhyParam( &getPhy );
+    phyParam.Value = RegionCN470GetPhyParam( &getPhy );
 
     linkAdrVerifyParams.Status = status;
     linkAdrVerifyParams.AdrEnabled = linkAdrReq->AdrEnabled;
