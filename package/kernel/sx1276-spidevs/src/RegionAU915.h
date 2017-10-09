@@ -98,12 +98,12 @@
 /*!
  * Default Max EIRP
  */
-#define AU915_DEFAULT_MAX_EIRP                      30.0f
+#define AU915_DEFAULT_MAX_EIRP                      30//30.0f
 
 /*!
  * Default antenna gain
  */
-#define AU915_DEFAULT_ANTENNA_GAIN                  2.15f
+#define AU915_DEFAULT_ANTENNA_GAIN                  2//2.15f
 
 /*!
  * ADR Ack limit

@@ -311,7 +311,7 @@ uint8_t RegionCommonLinkAdrReqVerifyParams( RegionCommonLinkAdrReqVerifyParams_t
  *
  * \retval Returns the symbol time.
  */
-double RegionCommonComputeSymbolTimeLoRa( uint8_t phyDr, uint32_t bandwidth );
+long RegionCommonComputeSymbolTimeLoRa( uint8_t phyDr, uint32_t bandwidth );
 
 /*!
  * \brief Computes the symbol time for FSK modulation.
@@ -322,7 +322,7 @@ double RegionCommonComputeSymbolTimeLoRa( uint8_t phyDr, uint32_t bandwidth );
  *
  * \retval Returns the symbol time.
  */
-double RegionCommonComputeSymbolTimeFsk( uint8_t phyDr );
+long RegionCommonComputeSymbolTimeFsk( uint8_t phyDr );
 
 /*!
  * \brief Computes the RX window timeout and the RX window offset.
@@ -340,7 +340,7 @@ double RegionCommonComputeSymbolTimeFsk( uint8_t phyDr );
  *
  * \param [OUT] windowOffset RX window time offset to be applied to the RX delay.
  */
-void RegionCommonComputeRxWindowParameters( double tSymbol, uint8_t minRxSymbols, uint32_t rxError, uint32_t wakeUpTime, uint32_t* windowTimeout, int32_t* windowOffset );
+void RegionCommonComputeRxWindowParameters( long tSymbol, uint8_t minRxSymbols, uint32_t rxError, uint32_t wakeUpTime, uint32_t* windowTimeout, int32_t* windowOffset );
 
 /*!
  * \brief Computes the txPower, based on the max EIRP and the antenna gain.
@@ -353,7 +353,7 @@ void RegionCommonComputeRxWindowParameters( double tSymbol, uint8_t minRxSymbols
  *
  * \retval Returns the physical TX power.
  */
-int8_t RegionCommonComputeTxPower( int8_t txPowerIndex, float maxEirp, float antennaGain );
+int8_t RegionCommonComputeTxPower( int8_t txPowerIndex, long maxEirp, long antennaGain );
 
 /*!
  * \brief Calculates the duty cycle for the current band.

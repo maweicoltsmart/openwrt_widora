@@ -53,7 +53,9 @@
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/platform_device.h>
-
+#include <linux/device.h>         //class_create
+#include <linux/poll.h>   //poll  
+#include <linux/fcntl.h>  
 #include <linux/gpio.h>
 #include <linux/spi/spi.h>
 #include <linux/spi/spi_gpio.h>
@@ -162,6 +164,74 @@ static struct spi_driver lorawan_spi_driver = {
          */
 };
 
+int major;  
+  
+static struct fasync_struct *lora_node_event_button_fasync;  
+
+/* 定义并初始化等待队列头 */  
+static DECLARE_WAIT_QUEUE_HEAD(lora);  
+  
+  
+static struct class *lora_node_event_drv_class;  
+static struct device *lora_node_event_drv_device;  
+
+static int lora_node_event_drv_open(struct inode * inode, struct file * filp)  
+{  
+    /*  K1 ---- EINT1,K2 ---- EINT4,K3 ---- EINT2,K4 ---- EINT0 
+     *  配置GPF1、GPF4、GPF2、GPF0为相应的外部中断引脚 
+     *  IRQT_BOTHEDGE应该改为IRQ_TYPE_EDGE_BOTH 
+     */  
+    return 0;  
+}  
+  
+static ssize_t lora_node_event_drv_read(struct file *file, char __user *user, size_t size,loff_t *ppos)  
+{  
+    if (size != 1)  
+            return -EINVAL;  
+    char key_val = 'k';
+    /* 当没有按键按下时，休眠。 
+     * 即ev_press = 0; 
+     * 当有按键按下时，发生中断，在中断处理函数会唤醒 
+     * 即ev_press = 1;  
+     * 唤醒后，接着继续将数据通过copy_to_user函数传递给应用程序 
+     */  
+    copy_to_user(user, &key_val, 1);  
+      
+    return 1;     
+}  
+  
+static int lora_node_event_drv_close(struct inode *inode, struct file *file)  
+{  
+    return 0;  
+}  
+  
+static unsigned int lora_node_event_drv_poll(struct file *file, poll_table *wait)  
+{  
+    unsigned int mask = 0;  
+  
+    return mask;    
+}  
+  
+/* 当应用程序调用了fcntl(fd, F_SETFL, Oflags | FASYNC);  
+ * 则最终会调用驱动的fasync函数，在这里则是fifth_drv_fasync 
+ * fifth_drv_fasync最终又会调用到驱动的fasync_helper函数 
+ * fasync_helper函数的作用是初始化/释放fasync_struct 
+ */  
+static int lora_node_event_drv_fasync(int fd, struct file *filp, int on)  
+{  
+    return fasync_helper(fd, filp, on, &lora_node_event_button_fasync);  
+}  
+
+/* File operations struct for character device */  
+static const struct file_operations lora_node_event_drv_fops = {  
+    .owner      = THIS_MODULE,  
+    .open       = lora_node_event_drv_open,  
+    .read       = lora_node_event_drv_read,  
+    .release    = lora_node_event_drv_close,  
+    .poll       = lora_node_event_drv_poll,  
+    .fasync     = lora_node_event_drv_fasync,  
+};  
+
 static int __init lorawan_init(void)
 {
 	int ret;
@@ -170,15 +240,28 @@ static int __init lorawan_init(void)
 	
 	printk("%s, %d\r\n",__func__,__LINE__);
 
+	    /* 主设备号设置为0表示由系统自动分配主设备号 */  
+    major = register_chrdev(0, "lora_node_event", &lora_node_event_drv_fops);  
+  
+    /* 创建fifthdrv类 */  
+    lora_node_event_drv_class = class_create(THIS_MODULE, "lora_node_event");  
+  
+    /* 在fifthdrv类下创建buttons设备，供应用程序打开设备*/  
+    lora_node_event_drv_device = device_create(lora_node_event_drv_class, NULL, MKDEV(major, 0), NULL, "lora_radio");  
+  
 	return ret;
 }
 
 static void __exit lorawan_exit(void)
 {
+	kthread_stop(radio_routin);
 	printk("%s, %d\r\n",__func__,__LINE__);
 	spi_unregister_driver(&lorawan_spi_driver);
 	
 	printk("%s, %d\r\n",__func__,__LINE__);
+	unregister_chrdev(major, "lora_node_event");  
+    device_unregister(lora_node_event_drv_device);  //卸载类下的设备  
+    class_destroy(lora_node_event_drv_class);      //卸载类  
 }
 
 module_init(lorawan_init);

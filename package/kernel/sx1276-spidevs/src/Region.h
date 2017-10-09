@@ -697,9 +697,9 @@ typedef union uPhyParam
      */
     uint32_t Value;
     /*!
-     * A floating point value.
+     * A longing point value.
      */
-    float fValue;
+    long fValue;
     /*!
      * Pointer to the channels mask.
      */
@@ -927,11 +927,11 @@ typedef struct sTxConfigParams
     /*!
      * The Max EIRP, if applicable.
      */
-    float MaxEirp;
+    long MaxEirp;
     /*!
      * The antenna gain, if applicable.
      */
-    float AntennaGain;
+    long AntennaGain;
     /*!
      * Frame length to setup.
      */
@@ -1156,11 +1156,11 @@ typedef struct sContinuousWaveParams
     /*!
      * Max EIRP, if applicable.
      */
-    float MaxEirp;
+    long MaxEirp;
     /*!
      * The antenna gain, if applicable.
      */
-    float AntennaGain;
+    long AntennaGain;
     /*!
      * Specifies the time the radio will stay in CW mode.
      */

@@ -124,12 +124,12 @@
 /*!
  * Default Max EIRP
  */
-#define AS923_DEFAULT_MAX_EIRP                      16.0f
+#define AS923_DEFAULT_MAX_EIRP                      16//16.0f
 
 /*!
  * Default antenna gain
  */
-#define AS923_DEFAULT_ANTENNA_GAIN                  2.15f
+#define AS923_DEFAULT_ANTENNA_GAIN                  2//2.15f
 
 /*!
  * ADR Ack limit

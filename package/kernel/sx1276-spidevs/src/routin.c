@@ -704,6 +704,7 @@ int Radio_routin(void *data){
 	while( 1 )
     {
     	msleep(5);
+		
         switch( DeviceState )
         {
             case DEVICE_STATE_INIT:
