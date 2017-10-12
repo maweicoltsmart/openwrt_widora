@@ -108,12 +108,12 @@
 /*!
  * Default Max EIRP
  */
-#define IN865_DEFAULT_MAX_EIRP                      30//30.0f
+#define IN865_DEFAULT_MAX_EIRP                      30.0f
 
 /*!
  * Default antenna gain
  */
-#define IN865_DEFAULT_ANTENNA_GAIN                  2//2.15f
+#define IN865_DEFAULT_ANTENNA_GAIN                  2.15f
 
 /*!
  * ADR Ack limit

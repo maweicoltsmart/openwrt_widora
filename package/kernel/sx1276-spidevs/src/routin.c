@@ -76,7 +76,7 @@
 /*!
  * User application data buffer size
  */
-#if defined( REGION_CN470 ) || ( REGION_CN779 ) || defined( REGION_EU868 ) || defined( REGION_IN865 ) || defined( REGION_KR920 )
+#if defined( REGION_CN470 ) || defined( REGION_CN779 ) || defined( REGION_EU433 ) || defined( REGION_EU868 ) || defined( REGION_IN865 ) || defined( REGION_KR920 )
 
 #define LORAWAN_APP_DATA_SIZE                       16
 
@@ -195,23 +195,6 @@ struct ComplianceTest_s
  */
 static void PrepareTxFrame( uint8_t port )
 {
-#if defined( REGION_US915 ) || defined( REGION_US915_HYBRID )
-    MibRequestConfirm_t mibReq;
-
-    if( BoardGetBatteryVoltage( ) < LOW_BAT_THRESHOLD )
-    {
-        mibReq.Type = MIB_CHANNELS_TX_POWER;
-        LoRaMacMibGetRequestConfirm( &mibReq );
-        // 30 dBm = TX_POWER_0, 28 dBm = TX_POWER_1, ..., 20 dBm = TX_POWER_5, ..., 10 dBm = TX_POWER_10
-        // The if condition is then "less than" to check if the power is greater than 20 dBm
-        if( mibReq.Param.ChannelsTxPower < TX_POWER_5 )
-        {
-            mibReq.Param.ChannelsTxPower = TX_POWER_5;
-            LoRaMacMibSetRequestConfirm( &mibReq );
-        }
-    }
-#endif
-
     switch( port )
     {
     case 2:
@@ -253,7 +236,7 @@ static void PrepareTxFrame( uint8_t port )
             uint16_t altitudeGps = 0xFFFF;
             uint8_t batteryLevel = 0;
 
-            temperature = ( int16_t )( MPL3115ReadTemperature( ) * 100 );       // in �C * 100
+            temperature = ( int16_t )( MPL3115ReadTemperature( ) * 100 );       // in °C * 100
 
             batteryLevel = BoardGetBatteryLevel( );                             // 1 (very low) to 254 (fully charged)
             GpsGetLatestGpsPositionBinary( &latitude, &longitude );
@@ -717,10 +700,12 @@ int Radio_routin(void *data){
                 LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_AS923 );
 #elif defined( REGION_AU915 )
                 LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_AU915 );
-#elif defined( REGION_CN779 )
-                LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_CN779 );
 #elif defined( REGION_CN470 )
                 LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_CN470 );
+#elif defined( REGION_CN779 )
+                LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_CN779 );
+#elif defined( REGION_EU433 )
+                LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_EU433 );
 #elif defined( REGION_EU868 )
                 LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_EU868 );
 #elif defined( REGION_IN865 )

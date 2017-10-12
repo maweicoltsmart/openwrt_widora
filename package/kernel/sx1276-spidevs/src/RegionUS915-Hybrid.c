@@ -585,7 +585,7 @@ bool RegionUS915HybridAdrNext( AdrNextParams_t* adrNext, int8_t* drOut, int8_t* 
 
 void RegionUS915HybridComputeRxWindowParameters( int8_t datarate, uint8_t minRxSymbols, uint32_t rxError, RxConfigParams_t *rxConfigParams )
 {
-    long tSymbol = 0.0;
+    double tSymbol = 0.0;
 
     // Get the datarate, perform a boundary check
     rxConfigParams->Datarate = MIN( datarate, US915_HYBRID_RX_MAX_DATARATE );

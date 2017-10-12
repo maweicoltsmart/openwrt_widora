@@ -272,7 +272,7 @@ RadioState_t SX1276GetStatus( void )
 void SX1276SetChannel( uint32_t freq )
 {
     SX1276.Settings.Channel = freq;
-    freq = ( uint32_t )( ( long )freq / ( long )FREQ_STEP );
+    freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
     SX1276Write( REG_FRFMSB, ( uint8_t )( ( freq >> 16 ) & 0xFF ) );
     SX1276Write( REG_FRFMID, ( uint8_t )( ( freq >> 8 ) & 0xFF ) );
     SX1276Write( REG_FRFLSB, ( uint8_t )( freq & 0xFF ) );
@@ -357,9 +357,9 @@ static void RxChainCalibration( void )
 
     // Save context
     regPaConfigInitVal = SX1276Read( REG_PACONFIG );
-    initialFreq = ( long )( ( ( uint32_t )SX1276Read( REG_FRFMSB ) << 16 ) |
+    initialFreq = ( double )( ( ( uint32_t )SX1276Read( REG_FRFMSB ) << 16 ) |
                               ( ( uint32_t )SX1276Read( REG_FRFMID ) << 8 ) |
-                              ( ( uint32_t )SX1276Read( REG_FRFLSB ) ) ) * ( long )FREQ_STEP;
+                              ( ( uint32_t )SX1276Read( REG_FRFLSB ) ) ) * ( double )FREQ_STEP;
 
     // Cut the PA just in case, RFO output, power = -1 dBm
     SX1276Write( REG_PACONFIG, 0x00 );
@@ -428,9 +428,9 @@ void SX1276SetRxConfig( RadioModems_t modem, uint32_t bandwidth,
             SX1276.Settings.Fsk.IqInverted = iqInverted;
             SX1276.Settings.Fsk.RxContinuous = rxContinuous;
             SX1276.Settings.Fsk.PreambleLen = preambleLen;
-            SX1276.Settings.Fsk.RxSingleTimeout = ( uint32_t )( symbTimeout * ( ( ( long )1.0 / ( long )datarate ) * ( long )8.0 ) * 1000 );
+            SX1276.Settings.Fsk.RxSingleTimeout = ( uint32_t )( symbTimeout * ( ( 1.0 / ( double )datarate ) * 8.0 ) * 1000 );
 
-            datarate = ( uint16_t )( ( long )XTAL_FREQ / ( long )datarate );
+            datarate = ( uint16_t )( ( double )XTAL_FREQ / ( double )datarate );
             SX1276Write( REG_BITRATEMSB, ( uint8_t )( datarate >> 8 ) );
             SX1276Write( REG_BITRATELSB, ( uint8_t )( datarate & 0xFF ) );
 
@@ -599,11 +599,11 @@ void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
             SX1276.Settings.Fsk.IqInverted = iqInverted;
             SX1276.Settings.Fsk.TxTimeout = timeout;
 
-            fdev = ( uint16_t )( ( long )fdev / ( long )FREQ_STEP );
+            fdev = ( uint16_t )( ( double )fdev / ( double )FREQ_STEP );
             SX1276Write( REG_FDEVMSB, ( uint8_t )( fdev >> 8 ) );
             SX1276Write( REG_FDEVLSB, ( uint8_t )( fdev & 0xFF ) );
 
-            datarate = ( uint16_t )( ( long )XTAL_FREQ / ( long )datarate );
+            datarate = ( uint16_t )( ( double )XTAL_FREQ / ( double )datarate );
             SX1276Write( REG_BITRATEMSB, ( uint8_t )( datarate >> 8 ) );
             SX1276Write( REG_BITRATELSB, ( uint8_t )( datarate & 0xFF ) );
 
@@ -711,7 +711,7 @@ void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
 uint32_t SX1276GetTimeOnAir( RadioModems_t modem, uint8_t pktLen )
 {
     uint32_t airTime = 0;
-#if 0
+
     switch( modem )
     {
     case MODEM_FSK:
@@ -727,7 +727,7 @@ uint32_t SX1276GetTimeOnAir( RadioModems_t modem, uint8_t pktLen )
         break;
     case MODEM_LORA:
         {
-            long bw = 0.0;
+            double bw = 0.0;
             // REMARK: When using LoRa modem only bandwidths 125, 250 and 500 kHz are supported
             switch( SX1276.Settings.LoRa.Bandwidth )
             {
@@ -764,27 +764,26 @@ uint32_t SX1276GetTimeOnAir( RadioModems_t modem, uint8_t pktLen )
             }
 
             // Symbol rate : time for one symbol (secs)
-            long rs = bw / ( 1 << SX1276.Settings.LoRa.Datarate );
-            long ts = 1 / rs;
+            double rs = bw / ( 1 << SX1276.Settings.LoRa.Datarate );
+            double ts = 1 / rs;
             // time of preamble
-            long tPreamble = ( SX1276.Settings.LoRa.PreambleLen + 4.25 ) * ts;
+            double tPreamble = ( SX1276.Settings.LoRa.PreambleLen + 4.25 ) * ts;
             // Symbol length of payload and time
-            long tmp = ceil( ( 8 * pktLen - 4 * SX1276.Settings.LoRa.Datarate +
+            double tmp = ceil( ( 8 * pktLen - 4 * SX1276.Settings.LoRa.Datarate +
                                  28 + 16 * SX1276.Settings.LoRa.CrcOn -
                                  ( SX1276.Settings.LoRa.FixLen ? 20 : 0 ) ) /
-                                 ( long )( 4 * ( SX1276.Settings.LoRa.Datarate -
+                                 ( double )( 4 * ( SX1276.Settings.LoRa.Datarate -
                                  ( ( SX1276.Settings.LoRa.LowDatarateOptimize > 0 ) ? 2 : 0 ) ) ) ) *
                                  ( SX1276.Settings.LoRa.Coderate + 4 );
-            long nPayload = 8 + ( ( tmp > 0 ) ? tmp : 0 );
-            long tPayload = nPayload * ts;
+            double nPayload = 8 + ( ( tmp > 0 ) ? tmp : 0 );
+            double tPayload = nPayload * ts;
             // Time on air
-            long tOnAir = tPreamble + tPayload;
+            double tOnAir = tPreamble + tPayload;
             // return ms secs
             airTime = floor( tOnAir * 1000 + 0.999 );
         }
         break;
     }
-	#endif
     return airTime;
 }
 
@@ -1698,9 +1697,9 @@ void SX1276OnDio2Irq( void )
 
                     SX1276.Settings.FskPacketHandler.RssiValue = -( SX1276Read( REG_RSSIVALUE ) >> 1 );
 
-                    SX1276.Settings.FskPacketHandler.AfcValue = ( int32_t )( long )( ( ( uint16_t )SX1276Read( REG_AFCMSB ) << 8 ) |
+                    SX1276.Settings.FskPacketHandler.AfcValue = ( int32_t )( double )( ( ( uint16_t )SX1276Read( REG_AFCMSB ) << 8 ) |
                                                                            ( uint16_t )SX1276Read( REG_AFCLSB ) ) *
-                                                                           ( long )FREQ_STEP;
+                                                                           ( double )FREQ_STEP;
                     SX1276.Settings.FskPacketHandler.RxGain = ( SX1276Read( REG_LNA ) >> 5 ) & 0x07;
                 }
                 break;

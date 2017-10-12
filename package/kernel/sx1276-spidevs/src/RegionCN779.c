@@ -17,12 +17,12 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 
 Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jaeckle ( STACKFORCE )
 */
-//#include <stdbool.h>
-//#include <string.h>
-//#include <stdint.h>
-//#include <math.h>
+#include <stdbool.h>
+#include <string.h>
+#include <stdint.h>
+#include <math.h>
 
-//#include "board.h"
+#include "board.h"
 #include "LoRaMac.h"
 
 #include "utilities.h"
@@ -511,7 +511,7 @@ bool RegionCN779AdrNext( AdrNextParams_t* adrNext, int8_t* drOut, int8_t* txPowO
 
 void RegionCN779ComputeRxWindowParameters( int8_t datarate, uint8_t minRxSymbols, uint32_t rxError, RxConfigParams_t *rxConfigParams )
 {
-    long tSymbol = 0.0;
+    double tSymbol = 0.0;
 
     // Get the datarate, perform a boundary check
     rxConfigParams->Datarate = MIN( datarate, CN779_RX_MAX_DATARATE );

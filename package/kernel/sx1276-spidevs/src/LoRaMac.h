@@ -311,11 +311,11 @@ typedef struct sLoRaMacParams
     /*!
      * Maximum possible EIRP
      */
-    long MaxEirp;
+    float MaxEirp;
     /*!
      * Antenna gain of the node
      */
-    long AntennaGain;
+    float AntennaGain;
 }LoRaMacParams_t;
 
 /*!
@@ -1524,7 +1524,7 @@ typedef union uMibParam
      *
      * Related MIB type: \ref MIB_ANTENNA_GAIN
      */
-    long AntennaGain;
+    float AntennaGain;
 }MibParam_t;
 
 /*!

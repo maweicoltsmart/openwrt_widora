@@ -99,12 +99,12 @@
 /*!
  * Default Max EIRP
  */
-#define CN470_DEFAULT_MAX_EIRP                      19//19.15f
+#define CN470_DEFAULT_MAX_EIRP                      19.15f
 
 /*!
  * Default antenna gain
  */
-#define CN470_DEFAULT_ANTENNA_GAIN                  2//2.15f
+#define CN470_DEFAULT_ANTENNA_GAIN                  2.15f
 
 /*!
  * ADR Ack limit

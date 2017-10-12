@@ -87,7 +87,7 @@ void AES_CMAC_Update(AES_CMAC_CTX *ctx, const uint8_t *data, uint32_t len)
                     len -= mlen;
             }
             while (len > 16) {      /* not last block */
-         
+
                     XOR(data, ctx->X);
                     //rijndael_encrypt(&ctx->rijndael, ctx->X, ctx->X);
 
@@ -120,7 +120,7 @@ void AES_CMAC_Final(uint8_t digest[AES_CMAC_DIGEST_LENGTH], AES_CMAC_CTX *ctx)
             } else
                     LSHIFT(K, K);
 
-       
+
             if (ctx->M_n == 16) {
                     /* last block was a complete block */
                     XOR(K, ctx->M_last);
@@ -139,13 +139,13 @@ void AES_CMAC_Final(uint8_t digest[AES_CMAC_DIGEST_LENGTH], AES_CMAC_CTX *ctx)
                          ctx->M_last[ctx->M_n] = 0;
    
                   XOR(K, ctx->M_last);
-          
-           
+
+
            }
            XOR(ctx->M_last, ctx->X);
-      
+
            //rijndael_encrypt(&ctx->rijndael, ctx->X, digest);
-    
+
        memcpy1(in, &ctx->X[0], 16); //Bestela ez du ondo iten
        aes_encrypt(in, digest, &ctx->rijndael);
            memset1(K, 0, sizeof K);

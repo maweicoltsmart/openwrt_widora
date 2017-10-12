@@ -534,7 +534,7 @@ bool RegionKR920AdrNext( AdrNextParams_t* adrNext, int8_t* drOut, int8_t* txPowO
 
 void RegionKR920ComputeRxWindowParameters( int8_t datarate, uint8_t minRxSymbols, uint32_t rxError, RxConfigParams_t *rxConfigParams )
 {
-    long tSymbol = 0.0;
+    double tSymbol = 0.0;
 
     // Get the datarate, perform a boundary check
     rxConfigParams->Datarate = MIN( datarate, KR920_RX_MAX_DATARATE );
@@ -587,7 +587,7 @@ bool RegionKR920TxConfig( TxConfigParams_t* txConfig, int8_t* txPower, TimerTime
     int8_t phyDr = DataratesKR920[txConfig->Datarate];
     int8_t txPowerLimited = LimitTxPower( txConfig->TxPower, Bands[Channels[txConfig->Channel].Band].TxMaxPower, txConfig->Datarate, ChannelsMask );
     uint32_t bandwidth = GetBandwidth( txConfig->Datarate );
-    long maxEIRP = GetMaxEIRP( Channels[txConfig->Channel].Frequency );
+    float maxEIRP = GetMaxEIRP( Channels[txConfig->Channel].Frequency );
     int8_t phyTxPower = 0;
 
     // Take the minimum between the maxEIRP and txConfig->MaxEirp.
@@ -1020,7 +1020,7 @@ bool RegionKR920ChannelsRemove( ChannelRemoveParams_t* channelRemove  )
 void RegionKR920SetContinuousWave( ContinuousWaveParams_t* continuousWave )
 {
     int8_t txPowerLimited = LimitTxPower( continuousWave->TxPower, Bands[Channels[continuousWave->Channel].Band].TxMaxPower, continuousWave->Datarate, ChannelsMask );
-    long maxEIRP = GetMaxEIRP( Channels[continuousWave->Channel].Frequency );
+    float maxEIRP = GetMaxEIRP( Channels[continuousWave->Channel].Frequency );
     int8_t phyTxPower = 0;
     uint32_t frequency = Channels[continuousWave->Channel].Frequency;
 
