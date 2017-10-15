@@ -21,7 +21,8 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 //#include <stdbool.h>
 //#include <string.h>
 //#include <stdint.h>
-//#include <math.h>
+#include <math.h>
+
 
 //#include "timer.h"
 #include "utilities.h"

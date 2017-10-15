@@ -16,7 +16,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/node-manage
 	SECTION:=utils
 	CATEGORY:=Utilities
-	DEPENDS:= 
+	DEPENDS:=+libpthread +librt
 	TITLE:=node-manage  manage lora node from webui
 endef
 
@@ -41,6 +41,7 @@ endef
 
 define Package/node-manage/install
 	$(INSTALL_DIR) $(1)/bin
+	$(CP) $(TOOLCHAIN_DIR)/lib/libpthread-*.so $(1)/bin/
 	$(INSTALL_BIN) $(PKG_BUILD_DIR)/node-manage $(1)/bin/
 endef
 

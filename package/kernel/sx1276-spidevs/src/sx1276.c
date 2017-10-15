@@ -271,8 +271,10 @@ RadioState_t SX1276GetStatus( void )
 
 void SX1276SetChannel( uint32_t freq )
 {
+#if 0
     SX1276.Settings.Channel = freq;
     freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
+#endif
     SX1276Write( REG_FRFMSB, ( uint8_t )( ( freq >> 16 ) & 0xFF ) );
     SX1276Write( REG_FRFMID, ( uint8_t )( ( freq >> 8 ) & 0xFF ) );
     SX1276Write( REG_FRFLSB, ( uint8_t )( freq & 0xFF ) );
@@ -354,13 +356,13 @@ static void RxChainCalibration( void )
 {
     uint8_t regPaConfigInitVal;
     uint32_t initialFreq;
-
+#if 0
     // Save context
     regPaConfigInitVal = SX1276Read( REG_PACONFIG );
     initialFreq = ( double )( ( ( uint32_t )SX1276Read( REG_FRFMSB ) << 16 ) |
                               ( ( uint32_t )SX1276Read( REG_FRFMID ) << 8 ) |
                               ( ( uint32_t )SX1276Read( REG_FRFLSB ) ) ) * ( double )FREQ_STEP;
-
+#endif
     // Cut the PA just in case, RFO output, power = -1 dBm
     SX1276Write( REG_PACONFIG, 0x00 );
 
@@ -419,6 +421,7 @@ void SX1276SetRxConfig( RadioModems_t modem, uint32_t bandwidth,
     {
     case MODEM_FSK:
         {
+#if 0
             SX1276.Settings.Fsk.Bandwidth = bandwidth;
             SX1276.Settings.Fsk.Datarate = datarate;
             SX1276.Settings.Fsk.BandwidthAfc = bandwidthAfc;
@@ -456,6 +459,7 @@ void SX1276SetRxConfig( RadioModems_t modem, uint32_t bandwidth,
                            ( ( fixLen == 1 ) ? RF_PACKETCONFIG1_PACKETFORMAT_FIXED : RF_PACKETCONFIG1_PACKETFORMAT_VARIABLE ) |
                            ( crcOn << 4 ) );
             SX1276Write( REG_PACKETCONFIG2, ( SX1276Read( REG_PACKETCONFIG2 ) | RF_PACKETCONFIG2_DATAMODE_PACKET ) );
+#endif
         }
         break;
     case MODEM_LORA:
@@ -589,6 +593,7 @@ void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
     {
     case MODEM_FSK:
         {
+#if 0
             SX1276.Settings.Fsk.Power = power;
             SX1276.Settings.Fsk.Fdev = fdev;
             SX1276.Settings.Fsk.Bandwidth = bandwidth;
@@ -600,6 +605,7 @@ void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
             SX1276.Settings.Fsk.TxTimeout = timeout;
 
             fdev = ( uint16_t )( ( double )fdev / ( double )FREQ_STEP );
+
             SX1276Write( REG_FDEVMSB, ( uint8_t )( fdev >> 8 ) );
             SX1276Write( REG_FDEVLSB, ( uint8_t )( fdev & 0xFF ) );
 
@@ -617,6 +623,7 @@ void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
                            ( ( fixLen == 1 ) ? RF_PACKETCONFIG1_PACKETFORMAT_FIXED : RF_PACKETCONFIG1_PACKETFORMAT_VARIABLE ) |
                            ( crcOn << 4 ) );
             SX1276Write( REG_PACKETCONFIG2, ( SX1276Read( REG_PACKETCONFIG2 ) | RF_PACKETCONFIG2_DATAMODE_PACKET ) );
+#endif
         }
         break;
     case MODEM_LORA:
@@ -711,7 +718,7 @@ void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
 uint32_t SX1276GetTimeOnAir( RadioModems_t modem, uint8_t pktLen )
 {
     uint32_t airTime = 0;
-
+#if 0
     switch( modem )
     {
     case MODEM_FSK:
@@ -784,6 +791,7 @@ uint32_t SX1276GetTimeOnAir( RadioModems_t modem, uint8_t pktLen )
         }
         break;
     }
+#endif
     return airTime;
 }
 
@@ -1696,10 +1704,11 @@ void SX1276OnDio2Irq( void )
                     SX1276.Settings.FskPacketHandler.SyncWordDetected = true;
 
                     SX1276.Settings.FskPacketHandler.RssiValue = -( SX1276Read( REG_RSSIVALUE ) >> 1 );
-
+#if 0
                     SX1276.Settings.FskPacketHandler.AfcValue = ( int32_t )( double )( ( ( uint16_t )SX1276Read( REG_AFCMSB ) << 8 ) |
                                                                            ( uint16_t )SX1276Read( REG_AFCLSB ) ) *
                                                                            ( double )FREQ_STEP;
+#endif
                     SX1276.Settings.FskPacketHandler.RxGain = ( SX1276Read( REG_LNA ) >> 5 ) & 0x07;
                 }
                 break;

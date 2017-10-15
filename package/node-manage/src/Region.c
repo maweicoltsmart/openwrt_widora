@@ -24,8 +24,6 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 //#include "timer.h"
 #include "typedef.h"
 #include <linux/time.h>
-#include <linux/timer.h>
-#include <linux/delay.h>
 
 #include "LoRaMac.h"
 
