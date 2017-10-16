@@ -241,7 +241,7 @@ void SX1276Init( RadioEvents_t *events )
     TxTimeoutTimer.function = SX1276OnTimeoutIrq;
     RxTimeoutTimer.function = SX1276OnTimeoutIrq;
     RxTimeoutSyncWord.function = SX1276OnTimeoutIrq;
-    
+    SX1276IoInit();
     SX1276Reset( );
 
 	chipversion1 = spi_w8r8(SX1276.Spi,0x42 & 0x7f);

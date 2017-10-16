@@ -14,7 +14,10 @@
 int Radio_routin(void *data){
 	while( 1 )
     {
-
+    	set_current_state(TASK_UNINTERRUPTIBLE);
+    	if(kthread_should_stop())
+			break;
+		schedule_timeout(HZ);
     }
 	return 0;
 }

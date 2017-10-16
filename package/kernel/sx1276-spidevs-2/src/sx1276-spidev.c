@@ -71,6 +71,7 @@
 #include <linux/spinlock.h>
 #include <linux/cdev.h>  
 #include "radio.h"
+#include "sx1276.h"
 
 DEFINE_SPINLOCK(spi_lock);
 
@@ -97,83 +98,7 @@ static unsigned int sx1278_dio0irq,sx1278_dio1irq,sx1278_dio2irq,sx1278_dio3irq,
 
 static int sx1276_spidevs_remove(struct spi_device *spi);
 static int sx1276_spidevs_probe(struct spi_device *spi);
-
-static void sx1276_spidevs_cleanup(void)
-{
-	int i;
-	kthread_stop(radio_routin);
-
-	free_irq(sx1278_dio0irq,NULL);
-	free_irq(sx1278_dio1irq,NULL);
-	free_irq(sx1278_dio2irq,NULL);
-	free_irq(sx1278_dio3irq,NULL);
-	free_irq(sx1278_dio4irq,NULL);
-	free_irq(sx1278_dio5irq,NULL);
-
-	gpio_free(SX1278_1_RST_PIN);
-	gpio_free(SX1278_1_DIO0_PIN);
-	gpio_free(SX1278_1_DIO1_PIN);
-	gpio_free(SX1278_1_DIO2_PIN);
-	gpio_free(SX1278_1_DIO3_PIN);
-	gpio_free(SX1278_1_DIO4_PIN);
-	gpio_free(SX1278_1_DIO5_PIN);
-}
-
-static int sx1276_spidevs_remove(struct spi_device *spi)
-{
-	sx1276_spidevs_cleanup();
-	return 0;
-}
-static int sx1276_spidevs_probe(struct spi_device *spi)
-{
-	int err;
-	slave = spi;
-	printk("%s, %d,slave[0] = %d, slave[1] = %d\r\n",__func__,__LINE__,slave[0],slave[1]);
-	printk(KERN_INFO DRV_DESC " version " DRV_VERSION "\n");
-	spi->bits_per_word = 8;
-    spi->mode = SPI_MODE_0;
-    spi_setup(spi);
-	printk("%s, %d\r\n",__func__,__LINE__);
-	radio_routin = kthread_create(Radio_routin, NULL, "Radio1 routin thread");
-	if(IS_ERR(radio_routin)){
-		printk("Unable to start kernel thread radio_routin./n");  
-		err = PTR_ERR(radio_routin);  
-		radio_routin = NULL;  
-		return err;
-	}
-	printk("%s, %d\r\n",__func__,__LINE__);
-	wake_up_process(radio_routin);
-	
-	return 0;
-
-err:
-	sx1276_spidevs_cleanup();
-	return err;
-}
-
-static const struct of_device_id lorawan_dt_ids[] = {
-        { .compatible = "semtech,sx1278-1" },
-        {},
-};
-
-MODULE_DEVICE_TABLE(of, lorawan_dt_ids);
-
-static struct spi_driver lorawan_spi_driver = {
-        .driver = {
-                .name =         "semtech,sx1278-1",
-                .owner =        THIS_MODULE,
-                .of_match_table = of_match_ptr(lorawan_dt_ids),
-        },
-        .probe =        sx1276_spidevs_probe,
-        .remove =       sx1276_spidevs_remove,
-
-        /* NOTE:  suspend/resume methods are not necessary here.
-         * We don't do anything except pass the requests to/from
-         * the underlying controller.  The refrigerator handles
-         * most issues; the controller driver handles the rest.
-         */
-};
-
+static RadioEvents_t RadioEvents;
 typedef enum
 {
     LOWPOWER,
@@ -201,7 +126,8 @@ int8_t SnrValue = 0;
 /*!
  * Radio events function pointer
  */
-static RadioEvents_t RadioEvents;
+
+bool isMaster = true;
 
 void OnTxDone( void )
 {
@@ -237,8 +163,27 @@ void OnRxError( void )
     State = RX_ERROR;
 }
 
-bool isMaster = true;
-  
+static void sx1276_spidevs_cleanup(void)
+{
+	int i;
+	kthread_stop(radio_routin);
+
+	free_irq(sx1278_dio0irq,NULL);
+	free_irq(sx1278_dio1irq,NULL);
+	free_irq(sx1278_dio2irq,NULL);
+	free_irq(sx1278_dio3irq,NULL);
+	free_irq(sx1278_dio4irq,NULL);
+	free_irq(sx1278_dio5irq,NULL);
+
+	gpio_free(SX1278_2_RST_PIN);
+	gpio_free(SX1278_2_DIO0_PIN);
+	gpio_free(SX1278_2_DIO1_PIN);
+	gpio_free(SX1278_2_DIO2_PIN);
+	gpio_free(SX1278_2_DIO3_PIN);
+	gpio_free(SX1278_2_DIO4_PIN);
+	gpio_free(SX1278_2_DIO5_PIN);
+}
+
 static struct fasync_struct *lora_node_event_button_fasync;  
 
 /* 定义并初始化等待队列头 */  
@@ -393,16 +338,75 @@ module_param(lora_major, int, S_IRUGO);
 struct lora_dev *lora_devp; /*设备结构体指针*/  
   
 struct cdev cdev;   
-static int __init lorawan_init(void)
+
+static int sx1276_spidevs_remove(struct spi_device *spi)
 {
+	sx1276_spidevs_cleanup();
+#if 1
+    device_unregister(lora_dev_device);  //卸载类下的设备  
+    class_destroy(lora_dev_class);      //卸载类 
+    cdev_del(&cdev);   /*注销设备*/  
+	kfree(lora_devp);	 /*释放设备结构体内存*/  
+	unregister_chrdev_region(MKDEV(lora_major, 0), 2); /*释放设备号*/  
+#endif
+	return 0;
+}
+static int sx1276_spidevs_probe(struct spi_device *spi)
+{
+	int err;
 	int ret;
 	int i;
-
-	printk("%s, %d\r\n",__func__,__LINE__);	
-	ret = spi_register_driver(&lorawan_spi_driver);
-	
+	slave = spi;
+	//printk("%s, %d,slave[0] = %d, slave[1] = %d\r\n",__func__,__LINE__,slave[0],slave[1]);
+	printk(KERN_INFO DRV_DESC " version " DRV_VERSION "\n");
+	spi->bits_per_word = 8;
+    spi->mode = SPI_MODE_0;
+    spi_setup(spi);
 	printk("%s, %d\r\n",__func__,__LINE__);
+    // Radio initialization
+    RadioEvents.TxDone = OnTxDone;
+    RadioEvents.RxDone = OnRxDone;
+    RadioEvents.TxTimeout = OnTxTimeout;
+    RadioEvents.RxTimeout = OnRxTimeout;
+    RadioEvents.RxError = OnRxError;
+#define RF_FREQUENCY								470000000 // Hz
+#define TX_OUTPUT_POWER 							14		  // dBm
+#define LORA_BANDWIDTH								0		  // [0: 125 kHz,
+																  //  1: 250 kHz,
+																  //  2: 500 kHz,
+																  //  3: Reserved]
+#define LORA_SPREADING_FACTOR						7		  // [SF7..SF12]
+#define LORA_CODINGRATE 							1		  // [1: 4/5,
+																  //  2: 4/6,
+																  //  3: 4/7,
+																  //  4: 4/8]
+#define LORA_PREAMBLE_LENGTH						8		  // Same for Tx and Rx
+#define LORA_SYMBOL_TIMEOUT 						5		  // Symbols
+#define LORA_FIX_LENGTH_PAYLOAD_ON					false
+#define LORA_IQ_INVERSION_ON						false
 
+    Radio.Init( &RadioEvents );
+
+    Radio.SetChannel( RF_FREQUENCY );
+    Radio.SetTxConfig( MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
+                                   LORA_SPREADING_FACTOR, LORA_CODINGRATE,
+                                   LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
+                                   true, 0, 0, LORA_IQ_INVERSION_ON, 3000 );
+
+    Radio.SetRxConfig( MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR,
+                                   LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
+                                   LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
+                                   0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
+	radio_routin = kthread_create(Radio_routin, NULL, "Radio1 routin thread");
+	if(IS_ERR(radio_routin)){
+		printk("Unable to start kernel thread radio_routin./n");  
+		err = PTR_ERR(radio_routin);  
+		radio_routin = NULL;  
+		return err;
+	}
+	printk("%s, %d\r\n",__func__,__LINE__);
+	wake_up_process(radio_routin);
+	#if 1
 	dev_t devno = MKDEV(lora_major, 0);	
 	
 	/* 静态申请设备号*/	
@@ -447,20 +451,55 @@ static int __init lorawan_init(void)
 	
 fail_malloc:   
 	unregister_chrdev_region(devno, 1);  
-	  
+	  #endif
+	return 0;
+
+err:
+	sx1276_spidevs_cleanup();
+	return err;
+}
+
+static const struct of_device_id lorawan_dt_ids[] = {
+        { .compatible = "semtech,sx1278-2" },
+        {},
+};
+
+MODULE_DEVICE_TABLE(of, lorawan_dt_ids);
+
+static struct spi_driver lorawan_spi_driver = {
+        .driver = {
+                .name =         "semtech,sx1278-2",
+                .owner =        THIS_MODULE,
+                .of_match_table = of_match_ptr(lorawan_dt_ids),
+        },
+        .probe =        sx1276_spidevs_probe,
+        .remove =       sx1276_spidevs_remove,
+
+        /* NOTE:  suspend/resume methods are not necessary here.
+         * We don't do anything except pass the requests to/from
+         * the underlying controller.  The refrigerator handles
+         * most issues; the controller driver handles the rest.
+         */
+};
+  
+static int __init lorawan_init(void)
+{
+	int ret;
+	printk("%s, %d\r\n",__func__,__LINE__);	
+	ret = spi_register_driver(&lorawan_spi_driver);
+	
+	printk("%s, %d\r\n",__func__,__LINE__);
+
 	return ret;	
 }
 
 static void __exit lorawan_exit(void)
 {
+	sx1276_spidevs_cleanup();
+
 	kthread_stop(radio_routin);
 	printk("%s, %d\r\n",__func__,__LINE__);
 	spi_unregister_driver(&lorawan_spi_driver);
-    device_unregister(lora_dev_device);  //卸载类下的设备  
-    class_destroy(lora_dev_class);      //卸载类 
-    cdev_del(&cdev);   /*注销设备*/  
-	kfree(lora_devp);	 /*释放设备结构体内存*/  
-	unregister_chrdev_region(MKDEV(lora_major, 0), 2); /*释放设备号*/  
 }
 
 module_init(lorawan_init);
