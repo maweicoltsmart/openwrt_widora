@@ -94,7 +94,7 @@ struct spi_device *slave = NULL;
 
 static struct task_struct *radio_routin;
 
-static unsigned int sx1278_dio0irq,sx1278_dio1irq,sx1278_dio2irq,sx1278_dio3irq,sx1278_dio4irq,sx1278_dio5irq;
+extern unsigned int SX1278_2_dio0irq,SX1278_2_dio1irq,SX1278_2_dio2irq,SX1278_2_dio3irq,SX1278_2_dio4irq,SX1278_2_dio5irq;
 
 static int sx1276_spidevs_remove(struct spi_device *spi);
 static int sx1276_spidevs_probe(struct spi_device *spi);
@@ -168,12 +168,12 @@ static void sx1276_spidevs_cleanup(void)
 	int i;
 	kthread_stop(radio_routin);
 
-	free_irq(sx1278_dio0irq,NULL);
-	free_irq(sx1278_dio1irq,NULL);
-	free_irq(sx1278_dio2irq,NULL);
-	free_irq(sx1278_dio3irq,NULL);
-	free_irq(sx1278_dio4irq,NULL);
-	free_irq(sx1278_dio5irq,NULL);
+	free_irq(SX1278_2_dio0irq,NULL);
+	free_irq(SX1278_2_dio1irq,NULL);
+	free_irq(SX1278_2_dio2irq,NULL);
+	free_irq(SX1278_2_dio3irq,NULL);
+	free_irq(SX1278_2_dio4irq,NULL);
+	//free_irq(SX1278_2_dio5irq,NULL);
 
 	gpio_free(SX1278_2_RST_PIN);
 	gpio_free(SX1278_2_DIO0_PIN);
@@ -342,6 +342,7 @@ struct cdev cdev;
 static int sx1276_spidevs_remove(struct spi_device *spi)
 {
 	sx1276_spidevs_cleanup();
+	kthread_stop(radio_routin);
 #if 1
     device_unregister(lora_dev_device);  //卸载类下的设备  
     class_destroy(lora_dev_class);      //卸载类 
@@ -485,20 +486,12 @@ static struct spi_driver lorawan_spi_driver = {
 static int __init lorawan_init(void)
 {
 	int ret;
-	printk("%s, %d\r\n",__func__,__LINE__);	
 	ret = spi_register_driver(&lorawan_spi_driver);
-	
-	printk("%s, %d\r\n",__func__,__LINE__);
-
 	return ret;	
 }
 
 static void __exit lorawan_exit(void)
 {
-	sx1276_spidevs_cleanup();
-
-	kthread_stop(radio_routin);
-	printk("%s, %d\r\n",__func__,__LINE__);
 	spi_unregister_driver(&lorawan_spi_driver);
 }
 
