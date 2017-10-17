@@ -322,16 +322,16 @@ static const struct file_operations lora_dev_fops = {
     .fasync     = lora_dev_fasync,
     .unlocked_ioctl      = lora_dev_ioctl,
 };
-#define MEMDEV_MAJOR 254   /*预设的mem的主设备号*/  
-#define MEMDEV_NR_DEVS 2    /*设备数*/  
-#define MEMDEV_SIZE 4096  
+#define LORADEV_MAJOR 0   /*预设的mem的主设备号*/  
+#define LORADEV_NR_DEVS 2    /*设备数*/  
+#define LORADEV_SIZE 4096  
 /*mem设备描述结构体*/  
 struct lora_dev                                       
 {                                                          
   char *data;                        
   unsigned long size;         
 };  
-static int lora_major = MEMDEV_MAJOR;  
+static int lora_major = LORADEV_MAJOR;  
   
 module_param(lora_major, int, S_IRUGO);  
   
@@ -411,10 +411,10 @@ static int sx1276_spidevs_probe(struct spi_device *spi)
 	
 	/* 静态申请设备号*/	
 	if (lora_major)	
-	  ret = register_chrdev_region(devno, 2, "lora dev");	
+	  ret = register_chrdev_region(devno, 2, "lora_dev_2");	
 	else  /* 动态分配设备号 */  
 	{  
-	  ret = alloc_chrdev_region(&devno, 0, 2, "lora dev");  
+	  ret = alloc_chrdev_region(&devno, 0, 2, "lora_dev_2");  
 	  lora_major = MAJOR(devno);  
 	}	 
 	  
@@ -427,11 +427,11 @@ static int sx1276_spidevs_probe(struct spi_device *spi)
 	cdev.ops = &lora_dev_fops;  
 	  
 	/* 注册字符设备 */  
-	cdev_add(&cdev, MKDEV(lora_major, 0), MEMDEV_NR_DEVS);  
-	lora_dev_class = class_create(THIS_MODULE, "lora_dev_class");
-	lora_dev_device = device_create(lora_dev_class, NULL, MKDEV(lora_major, 0), NULL, "lora_radio"); 
+	cdev_add(&cdev, MKDEV(lora_major, 0), LORADEV_NR_DEVS);  
+	lora_dev_class = class_create(THIS_MODULE, "lora_dev_class_2");
+	lora_dev_device = device_create(lora_dev_class, NULL, MKDEV(lora_major, 0), NULL, "lora_radio_2"); 
 	/* 为设备描述结构分配内存*/	
-	lora_devp = kmalloc(MEMDEV_NR_DEVS * sizeof(struct lora_dev), GFP_KERNEL);//目前为止我们始终用GFP_KERNEL  
+	lora_devp = kmalloc(LORADEV_NR_DEVS * sizeof(struct lora_dev), GFP_KERNEL);//目前为止我们始终用GFP_KERNEL  
 	if (!lora_devp)	  /*申请失败*/	
 	{  
 	  ret =	- ENOMEM;  
@@ -440,11 +440,11 @@ static int sx1276_spidevs_probe(struct spi_device *spi)
 	memset(lora_devp, 0, sizeof(struct lora_dev));  
 	  
 	/*为设备分配内存*/  
-	for (i=0; i < MEMDEV_NR_DEVS; i++)	 
+	for (i=0; i < LORADEV_NR_DEVS; i++)	 
 	{  
-		  lora_devp[i].size = MEMDEV_SIZE;  
-		  lora_devp[i].data = kmalloc(MEMDEV_SIZE, GFP_KERNEL);//分配出来的地址存在此	
-		  memset(lora_devp[i].data, 0, MEMDEV_SIZE);  
+		  lora_devp[i].size = LORADEV_SIZE;  
+		  lora_devp[i].data = kmalloc(LORADEV_SIZE, GFP_KERNEL);//分配出来的地址存在此	
+		  memset(lora_devp[i].data, 0, LORADEV_SIZE);  
 	}  
 		
 	return 0;  
