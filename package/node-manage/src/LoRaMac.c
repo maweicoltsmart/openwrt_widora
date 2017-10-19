@@ -25,7 +25,16 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 #include "radio.h"
 #include "utilities.h"
 #include "sx1276.h"
-#include <linux/time.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <sys/ioctl.h>
+
+SX1276_t SX1276;
+
 #ifndef NULL
 #define NULL	0
 #endif
@@ -603,9 +612,25 @@ LoRaMacStatus_t SetTxContinuousWave1( uint16_t timeout, uint32_t frequency, uint
  * \brief Resets MAC specific parameters to default
  */
 static void ResetMacParameters( void );
+extern int fd;
+#define LORADEV_IOC_MAGIC  'r'
+
+#define LORADEV_IOCPRINT   _IO(LORADEV_IOC_MAGIC, 0)  //没参数
+#define LORADEV_IOCGETDATA _IOR(LORADEV_IOC_MAGIC, 1, int)  //读
+#define LORADEV_IOCSETDATA _IOW(LORADEV_IOC_MAGIC, 2, int)  //写
+#define LORADEV_RADIO_INIT   _IOW(LORADEV_IOC_MAGIC, 3, int)  //没参数
+#define LORADEV_RADIO_STATE _IOW(LORADEV_IOC_MAGIC, 4, int)  //读
+#define LORADEV_RADIO_CHANNEL _IOW(LORADEV_IOC_MAGIC, 5, int)  //写
+#define LORADEV_RADIO_SET_PUBLIC _IOW(LORADEV_IOC_MAGIC, 6, int)  //写
+#define LORADEV_RADIO_SET_MODEM _IOW(LORADEV_IOC_MAGIC, 7, int)  //写
+#define LORADEV_RADIO_READ_REG _IOWR(LORADEV_IOC_MAGIC, 8, int)  //写
+
+#define LORADEV_IOC_MAXNR 9
 
 void SX1276Init( RadioEvents_t *events )
 {
+	printf("%s,%d,cmd = %d\r\n",__func__,__LINE__,LORADEV_RADIO_INIT);
+	ioctl(fd, LORADEV_RADIO_INIT, NULL);
 }
 
 /*!
@@ -624,6 +649,8 @@ RadioState_t SX1276GetStatus( void )
  */
 void SX1276SetModem( RadioModems_t modem )
 {
+	printf("%s,%d\r\n",__func__,__LINE__);
+	ioctl(fd, LORADEV_RADIO_SET_MODEM, &modem);
 }
 
 /*!
@@ -633,6 +660,10 @@ void SX1276SetModem( RadioModems_t modem )
  */
 void SX1276SetChannel( uint32_t freq )
 {
+    SX1276.Settings.Channel = freq;
+    freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
+	ioctl(fd, LORADEV_RADIO_CHANNEL, &freq);
+	printf("%s,%d,freq = %d\r\n",__func__,__LINE__,freq);
 }
 
 /*!
@@ -711,6 +742,7 @@ void SX1276SetRxConfig( RadioModems_t modem, uint32_t bandwidth,
                          bool crcOn, bool freqHopOn, uint8_t hopPeriod,
                          bool iqInverted, bool rxContinuous )
 {
+	printf("%s,%d\r\n",__func__,__LINE__);
 }
 /*!
  * \brief Sets the transmission parameters
@@ -755,6 +787,7 @@ void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
                         bool fixLen, bool crcOn, bool freqHopOn,
                         uint8_t hopPeriod, bool iqInverted, uint32_t timeout )
 {
+	printf("%s,%d\r\n",__func__,__LINE__);
 }
 
 /*!

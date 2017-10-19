@@ -81,13 +81,19 @@ DEFINE_SPINLOCK(spi_lock);
 
 //#define PFX		DRV_NAME ": "
 
-#define LORADEV_IOC_MAGIC  'l'
+#define LORADEV_IOC_MAGIC  'r'
 
-#define LORADEV_IOCPRINT   _IO(LORADEV_IOC_MAGIC, 1)  //没参数
-#define LORADEV_IOCGETDATA _IOR(LORADEV_IOC_MAGIC, 2, int)  //读
-#define LORADEV_IOCSETDATA _IOW(LORADEV_IOC_MAGIC, 3, int)  //写
+#define LORADEV_IOCPRINT   _IO(LORADEV_IOC_MAGIC, 0)  //没参数
+#define LORADEV_IOCGETDATA _IOR(LORADEV_IOC_MAGIC, 1, int)  //读
+#define LORADEV_IOCSETDATA _IOW(LORADEV_IOC_MAGIC, 2, int)  //写
+#define LORADEV_RADIO_INIT   _IOW(LORADEV_IOC_MAGIC, 3, int)  //没参数
+#define LORADEV_RADIO_STATE _IOW(LORADEV_IOC_MAGIC, 4, int)  //读
+#define LORADEV_RADIO_CHANNEL _IOW(LORADEV_IOC_MAGIC, 5, int)  //写
+#define LORADEV_RADIO_SET_PUBLIC _IOW(LORADEV_IOC_MAGIC, 6, int)  //写
+#define LORADEV_RADIO_SET_MODEM _IOW(LORADEV_IOC_MAGIC, 7, int)  //写
+#define LORADEV_RADIO_READ_REG _IOWR(LORADEV_IOC_MAGIC, 8, int)  //写
 
-#define LORADEV_IOC_MAXNR 3
+#define LORADEV_IOC_MAXNR 9
 
 static struct platform_device *devices;
 struct spi_device *slave = NULL;
@@ -194,7 +200,8 @@ static struct class *lora_dev_class;
 static struct device *lora_dev_device;  
 
 static int lora_dev_open(struct inode * inode, struct file * filp)  
-{  
+{
+#if 0
     // Radio initialization
     RadioEvents.TxDone = OnTxDone;
     RadioEvents.RxDone = OnRxDone;
@@ -229,11 +236,14 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
                                    LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
                                    LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
                                    0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
-    return 0;   
+#endif
+	printk("%s,%d\r\n",__func__,__LINE__);
+	return 0;   
 }  
 
 static ssize_t lora_dev_read(struct file *file, char __user *user, size_t size,loff_t *ppos)  
 {
+	printk("%s,%d\r\n",__func__,__LINE__);
     if (size != 1)  
             return -EINVAL;  
     char key_val = 'k';
@@ -249,25 +259,27 @@ static ssize_t lora_dev_read(struct file *file, char __user *user, size_t size,l
 
 static int lora_dev_close(struct inode *inode, struct file *file)  
 {
+	printk("%s,%d\r\n",__func__,__LINE__);
     return 0;
 }
 static int lora_dev_poll(struct file *file, poll_table *wait)  
 {
     unsigned int mask = 0;
+	printk("%s,%d\r\n",__func__,__LINE__);
     return mask;
 }
-static int lora_dev_ioctl(struct inode *inode, struct file *filp, unsigned int cmd, unsigned long arg)
+static int lora_dev_ioctl(struct file *filp,unsigned int cmd,unsigned long arg)
 {
     int err = 0;  
     int ret = 0;  
     int ioarg = 0;  
-      
-      
+	printk("%s,%d,cmd = %d\r\n",__func__,__LINE__,cmd);
     if (_IOC_TYPE(cmd) != LORADEV_IOC_MAGIC)   
-        return -EINVAL;  
+        return -EINVAL;
+	printk("%s,%d\r\n",__func__,__LINE__);
     if (_IOC_NR(cmd) > LORADEV_IOC_MAXNR)   
         return -EINVAL;  
-  
+	printk("%s,%d\r\n",__func__,__LINE__);
       
     if (_IOC_DIR(cmd) & _IOC_READ)  
         err = !access_ok(VERIFY_WRITE, (void *)arg, _IOC_SIZE(cmd));  
@@ -275,28 +287,55 @@ static int lora_dev_ioctl(struct inode *inode, struct file *filp, unsigned int c
         err = !access_ok(VERIFY_READ, (void *)arg, _IOC_SIZE(cmd));  
     if (err)   
         return -EFAULT;  
-  
+	printk("%s,%d\r\n",__func__,__LINE__);
       
-    switch(cmd) {  
-  
-        
-      case LORADEV_IOCPRINT:  
+    switch(cmd) {
+      case LORADEV_IOCPRINT:
         printk("<--- CMD LORADEV_IOCPRINT Done--->\n\n");  
-        break;  
-        
-        
+        break;
       case LORADEV_IOCGETDATA:   
         ioarg = 1101;  
         ret = __put_user(ioarg, (int *)arg);  
         break;  
-        
-        
       case LORADEV_IOCSETDATA:   
         ret = __get_user(ioarg, (int *)arg);  
         printk("<--- In Kernel LORADEV_IOCSETDATA ioarg = %d --->\n\n",ioarg);  
-        break;  
-  
-      default:    
+        break;
+      case LORADEV_RADIO_INIT:
+	  	printk("%s,%d\r\n",__func__,__LINE__);
+	  	// Initialize Radio driver
+    	RadioEvents.TxDone = OnTxDone;
+    	RadioEvents.RxDone = OnRxDone;
+    	RadioEvents.RxError = OnRxError;
+    	RadioEvents.TxTimeout = OnTxTimeout;
+    	RadioEvents.RxTimeout = OnRxTimeout;
+	  	Radio.Init(&RadioEvents);
+	  	break;
+      case LORADEV_RADIO_STATE:
+	  	printk("%s,%d\r\n",__func__,__LINE__);
+	  	Radio.Sleep( );
+      case LORADEV_RADIO_SET_PUBLIC:
+	  	printk("%s,%d\r\n",__func__,__LINE__);
+	  	// Random seed initialization
+    	//srand1( Radio.Random( ) );
+    	ret = __get_user(ioarg, (int *)arg);
+    	Radio.SetPublicNetwork( ioarg );
+      case LORADEV_RADIO_SET_MODEM:
+	  	printk("%s,%d\r\n",__func__,__LINE__);
+		ret = __get_user(ioarg, (int *)arg);
+	  	Radio.SetModem(ioarg);
+        break;
+      case LORADEV_RADIO_CHANNEL:
+	  	printk("%s,%d\r\n",__func__,__LINE__);
+		ret = __get_user(ioarg, (int *)arg);
+	  	Radio.SetChannel(ioarg);
+	  	break;
+      case LORADEV_RADIO_READ_REG:
+	  	ret = __get_user(ioarg, (int *)arg);
+		ioarg = spi_w8r8(SX1276.Spi,ioarg & 0x7f);
+	  	ret = __put_user(ioarg, (int *)arg);	
+      default:
+		printk("%s,%d\r\n",__func__,__LINE__);
         return -EINVAL;  
     }  
     return ret;  
@@ -343,13 +382,13 @@ static int sx1276_spidevs_remove(struct spi_device *spi)
 {
 	sx1276_spidevs_cleanup();
 	kthread_stop(radio_routin);
-	#if 1
+#if 1
     device_unregister(lora_dev_device);  //卸载类下的设备  
     class_destroy(lora_dev_class);      //卸载类 
     cdev_del(&cdev);   /*注销设备*/  
 	kfree(lora_devp);	 /*释放设备结构体内存*/  
 	unregister_chrdev_region(MKDEV(lora_major, 0), 2); /*释放设备号*/  
-	#endif
+#endif
 	return 0;
 }
 static int sx1276_spidevs_probe(struct spi_device *spi)
@@ -385,7 +424,7 @@ static int sx1276_spidevs_probe(struct spi_device *spi)
 #define LORA_SYMBOL_TIMEOUT 						5		  // Symbols
 #define LORA_FIX_LENGTH_PAYLOAD_ON					false
 #define LORA_IQ_INVERSION_ON						false
-
+/*
     Radio.Init( &RadioEvents );
 
     Radio.SetChannel( RF_FREQUENCY );
@@ -398,6 +437,7 @@ static int sx1276_spidevs_probe(struct spi_device *spi)
                                    LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
                                    LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
                                    0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
+*/
 	radio_routin = kthread_create(Radio_routin, NULL, "Radio1 routin thread");
 	if(IS_ERR(radio_routin)){
 		printk("Unable to start kernel thread radio_routin./n");  

@@ -7,7 +7,6 @@
 #include "unistd.h"
 
 
-#define REGION_CN470
 /*!
  * Defines the application data transmission duty cycle. 5s, value in [ms].
  */
@@ -677,16 +676,16 @@ void *Radio_routin(void *data){
 	LoRaMacCallback_t LoRaMacCallbacks;
 	MibRequestConfirm_t mibReq;
 	DeviceState = DEVICE_STATE_INIT;
-    sleep(100);
-	
+	printf("%s,%d\r\n",__func__,__LINE__);
 	while( 1 )
     {
-    	sleep(5);
+    	sleep(1);
 		
         switch( DeviceState )
         {
             case DEVICE_STATE_INIT:
             {
+            	printf("%s,%d\r\n",__func__,__LINE__);
                 LoRaMacPrimitives.MacMcpsConfirm = McpsConfirm;
                 LoRaMacPrimitives.MacMcpsIndication = McpsIndication;
                 LoRaMacPrimitives.MacMlmeConfirm = MlmeConfirm;
@@ -758,6 +757,7 @@ void *Radio_routin(void *data){
             }
             case DEVICE_STATE_JOIN:
             {
+            	printf("%s,%d\r\n",__func__,__LINE__);
 #if( OVER_THE_AIR_ACTIVATION != 0 )
                 MlmeReq_t mlmeReq;
 
@@ -813,6 +813,7 @@ void *Radio_routin(void *data){
             }
             case DEVICE_STATE_SEND:
             {
+            	printf("%s,%d\r\n",__func__,__LINE__);
                 if( NextTx == true )
                 {
                     PrepareTxFrame( AppPort );
@@ -834,6 +835,7 @@ void *Radio_routin(void *data){
             }
             case DEVICE_STATE_CYCLE:
             {
+            	printf("%s,%d\r\n",__func__,__LINE__);
                 DeviceState = DEVICE_STATE_SLEEP;
 #if 0
                 // Schedule next packet transmission
@@ -844,6 +846,7 @@ void *Radio_routin(void *data){
             }
             case DEVICE_STATE_SLEEP:
             {
+            	printf("%s,%d\r\n",__func__,__LINE__);
                 // Wake up through events
                 //TimerLowPowerHandler( );
                 break;

@@ -44,11 +44,13 @@ int main(int argc ,char *argv[])
 	
     signal(SIGIO,node_event_fun);
 	
-    fd = open("/dev/lora_radio",O_RDWR);
+    fd = open("/dev/lora_radio_1",O_RDWR);
     if (fd < 0)
     {
         printf("open error\n");
     }
+	
+	#if 0
     /* F_SETOWN:  Set the process ID
      *  告诉内核，发给谁
      */
@@ -64,7 +66,7 @@ int main(int argc ,char *argv[])
      * 修改当前文件的状态，添加异步通知功能 
      */  
     fcntl(fd,F_SETFL,flag | FASYNC);
-
+#endif
 	ret = pthread_create(&lora_handle, NULL, Radio_routin, NULL);
     while(1)
     {

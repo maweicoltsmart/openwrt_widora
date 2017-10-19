@@ -28,7 +28,7 @@ int Radio_routin(void *data){
 	while(!kthread_should_stop())  
 	{  
 		wait_event_interruptible_timeout(timeout_wq, 0,HZ);  
-		printk("[%d]sleeping..%d/n", k, j++);  
+		//printk("[%d]sleeping..%d/n", k, j++);  
 	}
 	printk("%s going stop\r\n",__func__);
 	return 0;  

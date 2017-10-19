@@ -82,6 +82,8 @@
 #ifndef __LORAMAC_H__
 #define __LORAMAC_H__
 #include "typedef.h"
+#define REGION_CN470
+
 /*!
  * Check the Mac layer state every MAC_STATE_CHECK_TIMEOUT in ms
  */
