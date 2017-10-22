@@ -20,7 +20,7 @@ define Package/webui
 	SECTION:=Ralink SDK Mango
 	CATEGORY:=Ralink SDK Mango
 	TITLE:=setwifi by web
-	DEPENDS :=
+	DEPENDS:=+libjson-c
 endef
 
 define Package/webui/description
