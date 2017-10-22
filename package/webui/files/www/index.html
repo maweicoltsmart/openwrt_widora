@@ -145,6 +145,30 @@
       </div>
       <hr>
     </div>
+     
+    <div class="col-xs-12 col-sm-12  col-md-12  main class="container-fluid"">
+     	<legend>已连接终端</legend>
+      <table class="table table-bordered">
+	<thead>
+		<tr>
+			<th>终端编号</th>
+			<th>APPEUI</th>
+			<th>DevEUI</th>
+			<th>DevAddr</th> 
+			<th>DevNonce </th> 
+			<th>LastComunication</th> 
+			<th>WakeupTime</th> 
+			<th>RX1 Window</th> 
+			<th>RX2 Window</th>
+		</tr>
+	</thead>
+	<tbody id="linked_devices">
+		
+			
+
+	</tbody>
+</table>
+</div>
 
   </body>
   <script type="text/javascript" src="js/jquery.min.js"></script>
@@ -211,6 +235,83 @@
         }
       });
 
+    });
+  </script>
+   
+    <script type="text/javascript">
+     	//获取已连接的设备信息
+    $(window).on('load', function () {
+     	
+     	$.ajax({
+        type: "GET",
+        url: "/cgi-bin/lora_dev_list",
+        dataType: "json",
+        contentType: "application/json; charset=utf-8",
+        success: function(json) {
+          
+          if (json.result == "success") {
+            //$("#ssidname").text(json.ssid)
+      
+      //var resdata="{'devices':[{'index':'1','appeui':'appeui-1','deveui':'deveui-1','devaddr':'devaddr-1','devnonce':'devnonce-1','lastcommunication':'lastcommunication-1','wakeuptime':'wakeuptaime-1','rx1window':'rx1window-1','rx2window':'rx2window-1'},{'index':'2','appeui':'appeui-2','deveui':'deveui-2','devaddr':'devaddr-2','devnonce':'devnonce-2','lastcommunication':'lastcommunication-2','wakeuptime':'wakeuptaime-2','rx1window':'rx1window-2','rx2window':'rx2window-2'}]}";       
+      var linked_devices_tbody =$('#linked_devices');
+     	//var devicesJson = JSON.parse(resdata);
+     	//var devicesJson = jQuery.parseJSON(resdata);
+     	//var devicesJson = eval('(' + resdata + ')');
+     	var devicesJson = json;
+      var rowCount = devicesJson.devices.length; 
+      var cellCount = 9;
+      
+      //alert(rowCount );
+      for (var i = 0; i < rowCount; i++) {
+         var tr = $("<tr></tr>");
+         tr.appendTo(linked_devices_tbody);
+         
+         var index =devicesJson.devices[i].index ;
+                var td_index = $("<td>" + index + "</td>");
+                td_index.appendTo(tr);
+                 
+                var appeui =devicesJson.devices[i].appeui ;
+                var td_appeui = $("<td>" + appeui + "</td>");
+                td_appeui.appendTo(tr);
+                 
+                var deveui =devicesJson.devices[i].deveui ;
+                var td_deveui = $("<td>" + deveui + "</td>");
+                td_deveui.appendTo(tr);
+                 
+                var devaddr =devicesJson.devices[i].devaddr ;
+                var td_devaddr = $("<td>" + devaddr + "</td>");
+                td_devaddr.appendTo(tr);
+                  
+                var devnonce =devicesJson.devices[i].devnonce ;
+                var td_devnonce = $("<td>" + devnonce + "</td>");
+                td_devnonce.appendTo(tr); 
+                 
+                var lastcommunication =devicesJson.devices[i].lastcommunication ;
+                var td_lastcommunication = $("<td>" + lastcommunication + "</td>");
+                td_lastcommunication.appendTo(tr); 
+                 
+                var wakeuptime =devicesJson.devices[i].wakeuptime ;
+                var td_wakeuptime = $("<td>" + wakeuptime + "</td>");
+                td_wakeuptime.appendTo(tr);
+                
+                var rx1window =devicesJson.devices[i].rx1window ;
+                var td_rx1window = $("<td>" + rx1window + "</td>");
+                td_rx1window.appendTo(tr);  
+                
+                var rx2window =devicesJson.devices[i].rx2window ;
+                var td_rx2window = $("<td>" + rx2window + "</td>");
+                td_rx2window.appendTo(tr);
+      }
+          }
+          else {
+            //$("#ssidname").text(json.message)
+          }
+        },
+        error: function(error) {
+          //alert("调用出错" + error.responseText);
+        }
+      });
+     	
     });
   </script>
 </html>
