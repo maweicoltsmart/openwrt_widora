@@ -155,7 +155,7 @@ typedef void ( DioIrqHandler )( void );
  *
  * \param [IN] events Structure containing the driver callback functions
  */
-void SX1276Init( RadioEvents_t *events );
+void SX1276Init( int fd );
 
 /*!
  * Return current radio status
@@ -169,14 +169,14 @@ RadioState_t SX1276GetStatus( void );
  *
  * \param [IN] modem Modem to be used [0: FSK, 1: LoRa]
  */
-void SX1276SetModem( RadioModems_t modem );
+void SX1276SetModem( int fd,RadioModems_t modem );
 
 /*!
  * \brief Sets the channel configuration
  *
  * \param [IN] freq         Channel RF frequency
  */
-void SX1276SetChannel( uint32_t freq );
+void SX1276SetChannel( int fd,uint32_t freq );
 
 /*!
  * \brief Checks if the channel is free for the given time
@@ -243,13 +243,7 @@ uint32_t SX1276Random( void );
  * \param [IN] rxContinuous Sets the reception in continuous mode
  *                          [false: single mode, true: continuous mode]
  */
-void SX1276SetRxConfig( RadioModems_t modem, uint32_t bandwidth,
-                         uint32_t datarate, uint8_t coderate,
-                         uint32_t bandwidthAfc, uint16_t preambleLen,
-                         uint16_t symbTimeout, bool fixLen,
-                         uint8_t payloadLen,
-                         bool crcOn, bool freqHopOn, uint8_t hopPeriod,
-                         bool iqInverted, bool rxContinuous );
+void SX1276SetRxConfig( int fd );
 
 /*!
  * \brief Sets the transmission parameters
@@ -288,11 +282,7 @@ void SX1276SetRxConfig( RadioModems_t modem, uint32_t bandwidth,
  *                          LoRa: [0: not inverted, 1: inverted]
  * \param [IN] timeout      Transmission timeout [ms]
  */
-void SX1276SetTxConfig( RadioModems_t modem, int8_t power, uint32_t fdev,
-                        uint32_t bandwidth, uint32_t datarate,
-                        uint8_t coderate, uint16_t preambleLen,
-                        bool fixLen, bool crcOn, bool freqHopOn,
-                        uint8_t hopPeriod, bool iqInverted, uint32_t timeout );
+void SX1276SetTxConfig( int fd );
 
 /*!
  * \brief Computes the packet time on air in ms for the given payload

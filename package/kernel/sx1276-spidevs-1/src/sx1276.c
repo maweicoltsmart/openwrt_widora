@@ -357,12 +357,12 @@ static void RxChainCalibration( void )
 {
     uint8_t regPaConfigInitVal;
     uint32_t initialFreq;
-#if 0
+#if 1
     // Save context
     regPaConfigInitVal = SX1276Read( REG_PACONFIG );
-    initialFreq = ( double )( ( ( uint32_t )SX1276Read( REG_FRFMSB ) << 16 ) |
+    initialFreq = ( ( ( uint32_t )SX1276Read( REG_FRFMSB ) << 16 ) |
                               ( ( uint32_t )SX1276Read( REG_FRFMID ) << 8 ) |
-                              ( ( uint32_t )SX1276Read( REG_FRFLSB ) ) ) * ( double )FREQ_STEP;
+                              ( ( uint32_t )SX1276Read( REG_FRFLSB ) ) ) * FREQ_STEP;
 #endif
     // Cut the PA just in case, RFO output, power = -1 dBm
     SX1276Write( REG_PACONFIG, 0x00 );

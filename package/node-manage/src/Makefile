@@ -1,10 +1,10 @@
 # build testio executable when user executes "make"
 
-appreg: node-manage.o LoRaMac.o aes.o cmac.o LoRaMacCrypto.o Region.o RegionCN470.o RegionCommon.o routin.o utilities.o
-	$(CC) $(LDFLAGS) -lm -lpthread node-manage.o LoRaMac.o aes.o cmac.o LoRaMacCrypto.o Region.o RegionCN470.o RegionCommon.o routin.o utilities.o -o node-manage
+appreg: node-manage.o LoRaMac.o aes.o cmac.o LoRaMacCrypto.o Region.o RegionCN470.o RegionCommon.o routin.o utilities.o tcp_client_fork.o tcp_server_fork.o
+	$(CC) $(LDFLAGS) -lm -lpthread node-manage.o LoRaMac.o aes.o cmac.o LoRaMacCrypto.o Region.o RegionCN470.o RegionCommon.o routin.o utilities.o tcp_client_fork.o tcp_server_fork.o -o node-manage
 
-appreg.o: node-manage.c LoRaMac.c aes.c cmac.c LoRaMacCrypto.c Region.c RegionCN470.c RegionCommon.c routin.c utilities.c
-	$(CC) $(CFLAGS) -c node-manage.c LoRaMac.c aes.c cmac.c LoRaMacCrypto.c Region.c RegionCN470.c RegionCommon.c routin.c utilities.c
+appreg.o: node-manage.c LoRaMac.c aes.c cmac.c LoRaMacCrypto.c Region.c RegionCN470.c RegionCommon.c routin.c utilities.c tcp_client_fork.c tcp_server_fork.c
+	$(CC) $(CFLAGS) -c node-manage.c LoRaMac.c aes.c cmac.c LoRaMacCrypto.c Region.c RegionCN470.c RegionCommon.c routin.c utilities.c tcp_client_fork.c tcp_server_fork.c
 
 # remove object files and executable when user executes "make clean"
 clean:

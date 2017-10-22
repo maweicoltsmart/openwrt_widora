@@ -5,6 +5,35 @@
 #include "Commissioning.h"
 #include "utilities.h"
 #include "unistd.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <strings.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <time.h>
+#include <sys/time.h>
+#include <signal.h>
+#include "pthread.h"
+#include <sys/socket.h>
+#include <linux/wireless.h>
+#include <sys/ioctl.h>
+#include <arpa/inet.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>   //sleep
+#include <poll.h>
+#include <signal.h>
+#include <fcntl.h>
+#include "routin.h"
+#include <pthread.h>
+#include <unistd.h>
 
 
 /*!
@@ -671,6 +700,60 @@ static void MlmeConfirm( MlmeConfirm_t *mlmeConfirm )
 /**
  * Main application entry point.
  */
+extern bool lora_rx_done;
+uint8_t radio2tcpbuffer[256];
+void *Radio_1_routin(void *data){
+	int fd = *(int*)data;
+    fd = open("/dev/lora_radio_1",O_RDWR);
+    if (fd < 0)
+    {
+        printf("open error\n");
+		return;
+    }
+	SX1276Init(fd);
+#define RF_FREQUENCY                                433000000 // Hz
+	SX1276SetChannel(fd,RF_FREQUENCY);
+	SX1276SetTxConfig(fd);
+	SX1276SetRxConfig(fd);
+	while(1)
+	{
+		memset(radio2tcpbuffer,0,256);
+		printf("%s\r\n",__func__);
+		if(read(fd,radio2tcpbuffer,256) > 0)
+		{
+			lora_rx_done = 1;
+			printf("%s:%s\r\n",__func__,radio2tcpbuffer);
+		}
+		sleep(1);
+	}
+
+}
+
+void *Radio_2_routin(void *data){
+	int fd = *(int*)data;;
+	uint8_t buffer[256];
+    fd = open("/dev/lora_radio_1",O_RDWR);
+    if (fd < 0)
+    {
+        printf("open error\n");
+		return;
+    }
+	SX1276Init(fd);
+#define RF_FREQUENCY                                433000000 // Hz
+	SX1276SetChannel(fd,RF_FREQUENCY);
+	SX1276SetTxConfig(fd);
+	SX1276SetRxConfig(fd);
+	while(1)
+	{
+		memset(buffer,0,256);
+		if(read(fd,buffer,256) != 0)
+		{
+			printf("%s:%s\r\n",__func__,buffer);
+		}
+		sleep(1);
+	}
+}
+
 void *Radio_routin(void *data){
 	LoRaMacPrimitives_t LoRaMacPrimitives;
 	LoRaMacCallback_t LoRaMacCallbacks;
