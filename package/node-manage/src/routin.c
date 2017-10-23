@@ -34,7 +34,11 @@
 #include "routin.h"
 #include <pthread.h>
 #include <unistd.h>
-
+#include <errno.h>
+#include <sys/ipc.h>  
+#include <sys/stat.h>  
+#include <sys/msg.h>  
+#include "typedef.h"
 
 /*!
  * Defines the application data transmission duty cycle. 5s, value in [ms].
@@ -700,10 +704,22 @@ static void MlmeConfirm( MlmeConfirm_t *mlmeConfirm )
 /**
  * Main application entry point.
  */
-extern bool lora_rx_done;
+bool lora_rx_done;
+uint8_t lora_rx_len;
 uint8_t radio2tcpbuffer[256];
-void *Radio_1_routin(void *data){
-	int fd = *(int*)data;
+#define MAX_TEXT 512 
+
+void *Radio_1_routin(void *arg){
+	int fd = *(int*)arg;
+	int msgid = -1;
+	struct msg_st data;
+	int len;
+	//建立消息队列  
+    msgid = msgget((key_t)1234, 0666 | IPC_CREAT);  
+    if(msgid == -1)  
+    {  
+        fprintf(stderr, "msgget failed with error: %d\n", errno);  
+    }  
     fd = open("/dev/lora_radio_1",O_RDWR);
     if (fd < 0)
     {
@@ -719,10 +735,16 @@ void *Radio_1_routin(void *data){
 	{
 		memset(radio2tcpbuffer,0,256);
 		printf("%s\r\n",__func__);
-		if(read(fd,radio2tcpbuffer,256) > 0)
+		if((len = read(fd,radio2tcpbuffer,256)) > 0)
 		{
-			lora_rx_done = 1;
-			printf("%s:%s\r\n",__func__,radio2tcpbuffer);
+			data.msg_type = 1;    //注意2  
+        	memcpy(data.text, radio2tcpbuffer,len);  
+        	//向队列发送数据  
+        	if(msgsnd(msgid, (void*)&data, len, 0) == -1)  
+        	{  
+            	fprintf(stderr, "msgsnd failed\n");  
+        	}  
+			printf("%s:%s,%d\r\n",__func__,radio2tcpbuffer,len);
 		}
 		sleep(1);
 	}

@@ -164,7 +164,7 @@ void OnRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
     BufferSize = size;
 	memset(Buffer,0,BUFFER_SIZE);
     memcpy( Buffer, payload, BufferSize );
-	printk("%s\r\n",Buffer);
+	//printk("%s\r\n",Buffer);
     RssiValue = rssi;
     SnrValue = snr;
 	rx_done = 1;
@@ -283,7 +283,7 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
 
 static ssize_t lora_dev_read(struct file *file, char __user *user, size_t size,loff_t *ppos)  
 {
-	printk("%s,%d\r\n",__func__,__LINE__);
+	//printk("%s,%d\r\n",__func__,__LINE__);
     /*if (size != 1)  
             return -EINVAL;  
     char key_val = 'k';*/
@@ -299,7 +299,7 @@ static ssize_t lora_dev_read(struct file *file, char __user *user, size_t size,l
     }
     copy_to_user(user, &Buffer, BufferSize);
 	rx_done = 0;
-    return 1;
+    return BufferSize;
 }
 
 static ssize_t lora_dev_write(struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
