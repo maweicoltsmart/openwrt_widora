@@ -40,7 +40,7 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 static uint8_t CountChannels( uint16_t mask, uint8_t nbBits )
 {
     uint8_t nbActiveBits = 0;
-	uint8_t j = 0;
+    uint8_t j = 0;
     for( j = 0; j < nbBits; j++ )
     {
         if( ( mask & ( 1 << j ) ) == ( 1 << j ) )
@@ -74,7 +74,7 @@ uint16_t RegionCommonGetJoinDc( TimerTime_t elapsedTime )
 
 bool RegionCommonChanVerifyDr( uint8_t nbChannels, uint16_t* channelsMask, int8_t dr, int8_t minDr, int8_t maxDr, ChannelParams_t* channels )
 {
-	uint8_t i = 0,k = 0,j = 0;
+    uint8_t i = 0,k = 0,j = 0;
     if( RegionCommonValueInRange( dr, minDr, maxDr ) == 0 )
     {
         return false;
@@ -125,8 +125,8 @@ bool RegionCommonChanDisable( uint16_t* channelsMask, uint8_t id, uint8_t maxCha
 uint8_t RegionCommonCountChannels( uint16_t* channelsMask, uint8_t startIdx, uint8_t stopIdx )
 {
     uint8_t nbChannels = 0;
-	uint8_t i = 0;
-	
+    uint8_t i = 0;
+
     if( channelsMask == NULL )
     {
         return 0;
@@ -142,7 +142,7 @@ uint8_t RegionCommonCountChannels( uint16_t* channelsMask, uint8_t startIdx, uin
 
 void RegionCommonChanMaskCopy( uint16_t* channelsMaskDest, uint16_t* channelsMaskSrc, uint8_t len )
 {
-	uint8_t i = 0;
+    uint8_t i = 0;
     if( ( channelsMaskDest != NULL ) && ( channelsMaskSrc != NULL ) )
     {
         for( i = 0; i < len; i++ )
@@ -168,8 +168,8 @@ void RegionCommonSetBandTxDone( bool joined, Band_t* band, TimerTime_t lastTxDon
 TimerTime_t RegionCommonUpdateBandTimeOff( bool joined, bool dutyCycle, Band_t* bands, uint8_t nbBands )
 {
     TimerTime_t nextTxDelay = ( TimerTime_t )( -1 );
-	uint8_t i = 0;
-	
+    uint8_t i = 0;
+
     // Update bands Time OFF
     for( i = 0; i < nbBands; i++ )
     {

@@ -25,7 +25,7 @@ endef
 define Package/node-manage/description
 endef
 
- 
+
 
 # Specify what needs to be done to prepare for building the package.
 # In our case, we need to copy the source files to the build directory.

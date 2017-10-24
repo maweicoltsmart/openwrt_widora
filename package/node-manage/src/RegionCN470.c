@@ -102,8 +102,8 @@ static uint8_t CountNbOfEnabledChannels( uint8_t datarate, uint16_t* channelsMas
 {
     uint8_t nbEnabledChannels = 0;
     uint8_t delayTransmission = 0;
-	uint8_t i = 0,k = 0,j= 0;
-	
+    uint8_t i = 0,k = 0,j= 0;
+
     for( i = 0, k = 0; i < CN470_MAX_NB_CHANNELS; i += 16, k++ )
     {
         for( j = 0; j < 16; j++ )
@@ -287,7 +287,7 @@ void RegionCN470SetBandTxDone( SetBandTxDoneParams_t* txDone )
 
 void RegionCN470InitDefaults( InitType_t type )
 {
-	uint8_t i = 0;
+    uint8_t i = 0;
     switch( type )
     {
         case INIT_TYPE_INIT:
@@ -538,8 +538,8 @@ uint8_t RegionCN470LinkAdrReq( LinkAdrReqParams_t* linkAdrReq, int8_t* drOut, in
     GetPhyParams_t getPhy;
     PhyParam_t phyParam;
     RegionCommonLinkAdrReqVerifyParams_t linkAdrVerifyParams;
-	uint8_t i = 0;
-	
+    uint8_t i = 0;
+
     // Initialize local copy of channels mask
     RegionCommonChanMaskCopy( channelsMask, ChannelsMask, 6 );
 

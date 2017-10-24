@@ -35,9 +35,9 @@
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
-#include <sys/ipc.h>  
-#include <sys/stat.h>  
-#include <sys/msg.h>  
+#include <sys/ipc.h>
+#include <sys/stat.h>
+#include <sys/msg.h>
 #include "typedef.h"
 
 /*!
@@ -455,7 +455,7 @@ static void McpsConfirm( McpsConfirm_t *mcpsConfirm )
  */
 static void McpsIndication( McpsIndication_t *mcpsIndication )
 {
-	uint8_t i = 0;
+    uint8_t i = 0;
     if( mcpsIndication->Status != LORAMAC_EVENT_INFO_STATUS_OK )
     {
         return;
@@ -707,90 +707,90 @@ static void MlmeConfirm( MlmeConfirm_t *mlmeConfirm )
 bool lora_rx_done;
 uint8_t lora_rx_len;
 uint8_t radio2tcpbuffer[256];
-#define MAX_TEXT 512 
+#define MAX_TEXT 512
 
 void *Radio_1_routin(void *arg){
-	int fd = *(int*)arg;
-	int msgid = -1;
-	struct msg_st data;
-	int len;
-	//建立消息队列  
-    msgid = msgget((key_t)1234, 0666 | IPC_CREAT);  
-    if(msgid == -1)  
-    {  
-        fprintf(stderr, "msgget failed with error: %d\n", errno);  
-    }  
+    int fd = *(int*)arg;
+    int msgid = -1;
+    struct msg_st data;
+    int len;
+    //建立消息队列
+    msgid = msgget((key_t)1234, 0666 | IPC_CREAT);
+    if(msgid == -1)
+    {
+        fprintf(stderr, "msgget failed with error: %d\n", errno);
+    }
     fd = open("/dev/lora_radio_1",O_RDWR);
     if (fd < 0)
     {
         printf("open error\n");
-		return;
+        return;
     }
-	SX1276Init(fd);
+    SX1276Init(fd);
 #define RF_FREQUENCY                                433000000 // Hz
-	SX1276SetChannel(fd,RF_FREQUENCY);
-	SX1276SetTxConfig(fd);
-	SX1276SetRxConfig(fd);
-	while(1)
-	{
-		memset(radio2tcpbuffer,0,256);
-		printf("%s\r\n",__func__);
-		if((len = read(fd,radio2tcpbuffer,256)) > 0)
-		{
-			data.msg_type = 1;    //注意2  
-        	memcpy(data.text, radio2tcpbuffer,len);  
-        	//向队列发送数据  
-        	if(msgsnd(msgid, (void*)&data, len, 0) == -1)  
-        	{  
-            	fprintf(stderr, "msgsnd failed\n");  
-        	}  
-			printf("%s:%s,%d\r\n",__func__,radio2tcpbuffer,len);
-		}
-		sleep(1);
-	}
+    SX1276SetChannel(fd,RF_FREQUENCY);
+    SX1276SetTxConfig(fd);
+    SX1276SetRxConfig(fd);
+    while(1)
+    {
+        memset(radio2tcpbuffer,0,256);
+        printf("%s\r\n",__func__);
+        if((len = read(fd,radio2tcpbuffer,256)) > 0)
+        {
+            data.msg_type = 1;    //注意2
+            memcpy(data.text, radio2tcpbuffer,len);
+            //向队列发送数据
+            if(msgsnd(msgid, (void*)&data, len, 0) == -1)
+            {
+                fprintf(stderr, "msgsnd failed\n");
+            }
+            printf("%s:%s,%d\r\n",__func__,radio2tcpbuffer,len);
+        }
+        sleep(1);
+    }
 
 }
 
 void *Radio_2_routin(void *data){
-	int fd = *(int*)data;;
-	uint8_t buffer[256];
+    int fd = *(int*)data;;
+    uint8_t buffer[256];
     fd = open("/dev/lora_radio_1",O_RDWR);
     if (fd < 0)
     {
         printf("open error\n");
-		return;
+        return;
     }
-	SX1276Init(fd);
+    SX1276Init(fd);
 #define RF_FREQUENCY                                433000000 // Hz
-	SX1276SetChannel(fd,RF_FREQUENCY);
-	SX1276SetTxConfig(fd);
-	SX1276SetRxConfig(fd);
-	while(1)
-	{
-		memset(buffer,0,256);
-		if(read(fd,buffer,256) != 0)
-		{
-			printf("%s:%s\r\n",__func__,buffer);
-		}
-		sleep(1);
-	}
+    SX1276SetChannel(fd,RF_FREQUENCY);
+    SX1276SetTxConfig(fd);
+    SX1276SetRxConfig(fd);
+    while(1)
+    {
+        memset(buffer,0,256);
+        if(read(fd,buffer,256) != 0)
+        {
+            printf("%s:%s\r\n",__func__,buffer);
+        }
+        sleep(1);
+    }
 }
 
 void *Radio_routin(void *data){
-	LoRaMacPrimitives_t LoRaMacPrimitives;
-	LoRaMacCallback_t LoRaMacCallbacks;
-	MibRequestConfirm_t mibReq;
-	DeviceState = DEVICE_STATE_INIT;
-	printf("%s,%d\r\n",__func__,__LINE__);
-	while( 1 )
+    LoRaMacPrimitives_t LoRaMacPrimitives;
+    LoRaMacCallback_t LoRaMacCallbacks;
+    MibRequestConfirm_t mibReq;
+    DeviceState = DEVICE_STATE_INIT;
+    printf("%s,%d\r\n",__func__,__LINE__);
+    while( 1 )
     {
-    	sleep(1);
-		
+        sleep(1);
+
         switch( DeviceState )
         {
             case DEVICE_STATE_INIT:
             {
-            	printf("%s,%d\r\n",__func__,__LINE__);
+                printf("%s,%d\r\n",__func__,__LINE__);
                 LoRaMacPrimitives.MacMcpsConfirm = McpsConfirm;
                 LoRaMacPrimitives.MacMcpsIndication = McpsIndication;
                 LoRaMacPrimitives.MacMlmeConfirm = MlmeConfirm;
@@ -822,9 +822,9 @@ void *Radio_routin(void *data){
 
                 init_timer( &Led1Timer );
                 Led1Timer.funciton = OnLed1TimerEvent;
-				Led1Timer.expires = jiffies + 25;
+                Led1Timer.expires = jiffies + 25;
                 init_timer( &Led2Timer );
-				Led2Timer.funciton = OnLed2TimerEvent;
+                Led2Timer.funciton = OnLed2TimerEvent;
                 Led2Timer.expires = jiffies + 25;
 */
                 mibReq.Type = MIB_ADR;
@@ -862,7 +862,7 @@ void *Radio_routin(void *data){
             }
             case DEVICE_STATE_JOIN:
             {
-            	printf("%s,%d\r\n",__func__,__LINE__);
+                printf("%s,%d\r\n",__func__,__LINE__);
 #if( OVER_THE_AIR_ACTIVATION != 0 )
                 MlmeReq_t mlmeReq;
 
@@ -918,7 +918,7 @@ void *Radio_routin(void *data){
             }
             case DEVICE_STATE_SEND:
             {
-            	printf("%s,%d\r\n",__func__,__LINE__);
+                printf("%s,%d\r\n",__func__,__LINE__);
                 if( NextTx == true )
                 {
                     PrepareTxFrame( AppPort );
@@ -940,18 +940,18 @@ void *Radio_routin(void *data){
             }
             case DEVICE_STATE_CYCLE:
             {
-            	printf("%s,%d\r\n",__func__,__LINE__);
+                printf("%s,%d\r\n",__func__,__LINE__);
                 DeviceState = DEVICE_STATE_SLEEP;
 #if 0
                 // Schedule next packet transmission
-				TxNextPacketTimer.expires = jiffies + TxDutyCycleTime;
-				add_timer( &TxNextPacketTimer );
+                TxNextPacketTimer.expires = jiffies + TxDutyCycleTime;
+                add_timer( &TxNextPacketTimer );
 #endif
-				break;
+                break;
             }
             case DEVICE_STATE_SLEEP:
             {
-            	printf("%s,%d\r\n",__func__,__LINE__);
+                printf("%s,%d\r\n",__func__,__LINE__);
                 // Wake up through events
                 //TimerLowPowerHandler( );
                 break;
@@ -963,5 +963,5 @@ void *Radio_routin(void *data){
             }
         }
     }
-	return 0;
+    return 0;
 }

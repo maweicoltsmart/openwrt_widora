@@ -36,7 +36,7 @@ Maintainer: Miguel Luis ( Semtech ), Gregory Cristian ( Semtech ) and Daniel Jae
 SX1276_t SX1276;
 
 #ifndef NULL
-#define NULL	0
+#define NULL    0
 #endif
 /*!
  * Maximum PHY layer payload size
@@ -629,8 +629,8 @@ static void ResetMacParameters( void );
 
 void SX1276Init( int fd )
 {
-	printf("%s,%d,cmd = %d\r\n",__func__,__LINE__,LORADEV_RADIO_INIT);
-	ioctl(fd, LORADEV_RADIO_INIT, NULL);
+    printf("%s,%d,cmd = %d\r\n",__func__,__LINE__,LORADEV_RADIO_INIT);
+    ioctl(fd, LORADEV_RADIO_INIT, NULL);
 }
 
 /*!
@@ -649,8 +649,8 @@ RadioState_t SX1276GetStatus( void )
  */
 void SX1276SetModem( int fd,RadioModems_t modem )
 {
-	printf("%s,%d\r\n",__func__,__LINE__);
-	ioctl(fd, LORADEV_RADIO_SET_MODEM, &modem);
+    printf("%s,%d\r\n",__func__,__LINE__);
+    ioctl(fd, LORADEV_RADIO_SET_MODEM, &modem);
 }
 
 /*!
@@ -662,8 +662,8 @@ void SX1276SetChannel( int fd,uint32_t freq )
 {
     SX1276.Settings.Channel = freq;
     freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
-	ioctl(fd, LORADEV_RADIO_CHANNEL, &freq);
-	printf("%s,%d,freq = %d\r\n",__func__,__LINE__,freq);
+    ioctl(fd, LORADEV_RADIO_CHANNEL, &freq);
+    printf("%s,%d,freq = %d\r\n",__func__,__LINE__,freq);
 }
 
 /*!
@@ -744,8 +744,8 @@ uint32_t SX1276Random( void )
 */
 void SX1276SetRxConfig( int fd )
 {
-	printf("%s,%d\r\n",__func__,__LINE__);
-	ioctl(fd, LORADEV_RADIO_SET_RXCFG, NULL);
+    printf("%s,%d\r\n",__func__,__LINE__);
+    ioctl(fd, LORADEV_RADIO_SET_RXCFG, NULL);
 }
 /*!
  * \brief Sets the transmission parameters
@@ -792,8 +792,8 @@ void SX1276SetRxConfig( int fd )
 */
 void SX1276SetTxConfig( int fd )
 {
-	printf("%s,%d\r\n",__func__,__LINE__);
-	ioctl(fd, LORADEV_RADIO_SET_TXCFG, NULL);
+    printf("%s,%d\r\n",__func__,__LINE__);
+    ioctl(fd, LORADEV_RADIO_SET_TXCFG, NULL);
 }
 
 /*!
@@ -972,7 +972,7 @@ static void OnRadioTxDone( void )
     GetPhyParams_t getPhy;
     PhyParam_t phyParam;
     SetBandTxDoneParams_t txDone;
-	TimerTime_t curTime = jiffies;
+    TimerTime_t curTime = jiffies;
     //TimerTime_t curTime = TimerGetCurrentTime( );
 
     if( LoRaMacDeviceClass != CLASS_C )
@@ -987,19 +987,19 @@ static void OnRadioTxDone( void )
     // Setup timers
     if( IsRxWindowsEnabled == true )
     {
-		RxWindowTimer1.expires = jiffies + RxWindow1Delay;        //定时时间
-		add_timer( &RxWindowTimer1 );
+        RxWindowTimer1.expires = jiffies + RxWindow1Delay;        //定时时间
+        add_timer( &RxWindowTimer1 );
         if( LoRaMacDeviceClass != CLASS_C )
         {
-			RxWindowTimer2.expires = jiffies + RxWindow2Delay;
-			add_timer( &RxWindowTimer2 );
+            RxWindowTimer2.expires = jiffies + RxWindow2Delay;
+            add_timer( &RxWindowTimer2 );
         }
         if( ( LoRaMacDeviceClass == CLASS_C ) || ( NodeAckRequested == true ) )
         {
             getPhy.Attribute = PHY_ACK_TIMEOUT;
             phyParam.Value = RegionGetPhyParam( LoRaMacRegion, &getPhy );
-			AckTimeoutTimer.expires = jiffies + RxWindow2Delay + phyParam.Value;
-			add_timer( &AckTimeoutTimer );
+            AckTimeoutTimer.expires = jiffies + RxWindow2Delay + phyParam.Value;
+            add_timer( &AckTimeoutTimer );
         }
     }
     else
@@ -1056,8 +1056,8 @@ static void PrepareRxDoneAbort( void )
     LoRaMacFlags.Bits.MacDone = 1;
 
     // Trig OnMacCheckTimerEvent call as soon as possible
-	MacStateCheckTimer.expires = jiffies + 1;
-	add_timer( &MacStateCheckTimer );
+    MacStateCheckTimer.expires = jiffies + 1;
+    add_timer( &MacStateCheckTimer );
 #endif
 }
 
@@ -1477,8 +1477,8 @@ static void OnRadioRxDone( uint8_t *payload, uint16_t size, int16_t rssi, int8_t
 
     // Trig OnMacCheckTimerEvent call as soon as possible
 #if 0
-	MacStateCheckTimer.expires = jiffies + 1;
-	add_timer( &MacStateCheckTimer );
+    MacStateCheckTimer.expires = jiffies + 1;
+    add_timer( &MacStateCheckTimer );
 #endif
 }
 
@@ -1759,8 +1759,8 @@ static void OnMacStateCheckTimerEvent( void )
     else
     {
         // Operation not finished restart timer
-		MacStateCheckTimer.expires = jiffies + MAC_STATE_CHECK_TIMEOUT;
-		add_timer( &MacStateCheckTimer );
+        MacStateCheckTimer.expires = jiffies + MAC_STATE_CHECK_TIMEOUT;
+        add_timer( &MacStateCheckTimer );
     }
 
     if( LoRaMacFlags.Bits.McpsInd == 1 )
@@ -2068,7 +2068,7 @@ static uint8_t ParseMacCommandsToRepeat( uint8_t* cmdBufIn, uint8_t length, uint
 static void ProcessMacCommands( uint8_t *payload, uint8_t macIndex, uint8_t commandsSize, uint8_t snr )
 {
     uint8_t status = 0;
-	uint8_t i = 0;
+    uint8_t i = 0;
     while( macIndex < commandsSize )
     {
         // Decode Frame MAC commands
@@ -2347,8 +2347,8 @@ static LoRaMacStatus_t ScheduleTx( void )
     {
         // Send later - prepare timer
         LoRaMacState |= LORAMAC_TX_DELAYED;
-		TxDelayedTimer.expires = jiffies + dutyCycleTimeOff;
-		add_timer( &TxDelayedTimer );
+        TxDelayedTimer.expires = jiffies + dutyCycleTimeOff;
+        add_timer( &TxDelayedTimer );
 
         return LORAMAC_STATUS_OK;
     }
@@ -2612,8 +2612,8 @@ LoRaMacStatus_t SendFrameOnChannel( uint8_t channel )
     MlmeConfirm.TxTimeOnAir = TxTimeOnAir;
 #if 0
     // Starts the MAC layer status check timer
-	MacStateCheckTimer.expires = jiffies + MAC_STATE_CHECK_TIMEOUT;
-	add_timer( &MacStateCheckTimer );
+    MacStateCheckTimer.expires = jiffies + MAC_STATE_CHECK_TIMEOUT;
+    add_timer( &MacStateCheckTimer );
 #endif
     if( IsLoRaMacNetworkJoined == false )
     {
@@ -2642,8 +2642,8 @@ LoRaMacStatus_t SetTxContinuousWave( uint16_t timeout )
     RegionSetContinuousWave( LoRaMacRegion, &continuousWave );
 #if 0
     // Starts the MAC layer status check timer
-	MacStateCheckTimer.expires = jiffies + MAC_STATE_CHECK_TIMEOUT;
-	add_timer( &MacStateCheckTimer );
+    MacStateCheckTimer.expires = jiffies + MAC_STATE_CHECK_TIMEOUT;
+    add_timer( &MacStateCheckTimer );
 #endif
     LoRaMacState |= LORAMAC_TX_RUNNING;
 
@@ -2655,8 +2655,8 @@ LoRaMacStatus_t SetTxContinuousWave1( uint16_t timeout, uint32_t frequency, uint
     Radio.SetTxContinuousWave( frequency, power, timeout );
 #if 0
     // Starts the MAC layer status check timer
-	MacStateCheckTimer.expires = jiffies + MAC_STATE_CHECK_TIMEOUT;
-	add_timer( &MacStateCheckTimer );
+    MacStateCheckTimer.expires = jiffies + MAC_STATE_CHECK_TIMEOUT;
+    add_timer( &MacStateCheckTimer );
 #endif
     LoRaMacState |= LORAMAC_TX_RUNNING;
 
@@ -2780,21 +2780,21 @@ LoRaMacStatus_t LoRaMacInitialization( LoRaMacPrimitives_t *primitives, LoRaMacC
     LoRaMacParams.ChannelsNbRep = LoRaMacParamsDefaults.ChannelsNbRep;
 
     ResetMacParameters( );
-	//do_gettimeofday(&oldtv);
+    //do_gettimeofday(&oldtv);
     // Initialize timers
     #if 0
     init_timer( &MacStateCheckTimer );
-	MacStateCheckTimer.function = OnMacStateCheckTimerEvent;
-	MacStateCheckTimer.expires = jiffies + MAC_STATE_CHECK_TIMEOUT;
+    MacStateCheckTimer.function = OnMacStateCheckTimerEvent;
+    MacStateCheckTimer.expires = jiffies + MAC_STATE_CHECK_TIMEOUT;
 
     init_timer( &TxDelayedTimer );
-	TxDelayedTimer.function = OnTxDelayedTimerEvent;
+    TxDelayedTimer.function = OnTxDelayedTimerEvent;
     init_timer( &RxWindowTimer1 );
-	RxWindowTimer1.function = OnRxWindow1TimerEvent;
+    RxWindowTimer1.function = OnRxWindow1TimerEvent;
     init_timer( &RxWindowTimer2 );
-	RxWindowTimer2.function = OnRxWindow2TimerEvent;
+    RxWindowTimer2.function = OnRxWindow2TimerEvent;
     init_timer( &AckTimeoutTimer );
-	AckTimeoutTimer.function = OnAckTimeoutTimerEvent;
+    AckTimeoutTimer.function = OnAckTimeoutTimerEvent;
 
     // Store the current initialization time
     //LoRaMacInitializationTime = TimerGetCurrentTime( );
