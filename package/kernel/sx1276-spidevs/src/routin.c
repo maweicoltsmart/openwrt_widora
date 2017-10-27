@@ -17,7 +17,7 @@
  */
 int Radio_routin(void *data){
     int j,k;
-    int timeout;
+    //int timeout;
     wait_queue_head_t timeout_wq;
     static int i = 0;
     i++;

@@ -61,6 +61,7 @@ const struct Radio_s Radio =
 };
 
 unsigned int sx1278_1_dio0irq = 0,sx1278_1_dio1irq = 0,sx1278_1_dio2irq = 0,sx1278_1_dio3irq = 0,sx1278_1_dio4irq = 0,sx1278_1_dio5irq = 0;
+unsigned int sx1278_2_dio0irq = 0,sx1278_2_dio1irq = 0,sx1278_2_dio2irq = 0,sx1278_2_dio3irq = 0,sx1278_2_dio4irq = 0,sx1278_2_dio5irq = 0;
 
 extern void SX1276OnDio0Irq(unsigned long);
 extern void SX1276OnDio1Irq(unsigned long);
@@ -68,13 +69,18 @@ extern void SX1276OnDio2Irq(unsigned long);
 extern void SX1276OnDio3Irq(unsigned long);
 extern void SX1276OnDio4Irq(unsigned long);
 extern void SX1276OnDio5Irq(unsigned long);
-
 DECLARE_TASKLET(sx1276_1OnDio0,SX1276OnDio0Irq,0);
 DECLARE_TASKLET(sx1276_1OnDio1,SX1276OnDio1Irq,0);
 DECLARE_TASKLET(sx1276_1OnDio2,SX1276OnDio2Irq,0);
 DECLARE_TASKLET(sx1276_1OnDio3,SX1276OnDio3Irq,0);
 DECLARE_TASKLET(sx1276_1OnDio4,SX1276OnDio4Irq,0);
 DECLARE_TASKLET(sx1276_1OnDio5,SX1276OnDio5Irq,0);
+DECLARE_TASKLET(sx1276_2OnDio0,SX1276OnDio0Irq,1);
+DECLARE_TASKLET(sx1276_2OnDio1,SX1276OnDio1Irq,1);
+DECLARE_TASKLET(sx1276_2OnDio2,SX1276OnDio2Irq,1);
+DECLARE_TASKLET(sx1276_2OnDio3,SX1276OnDio3Irq,1);
+DECLARE_TASKLET(sx1276_2OnDio4,SX1276OnDio4Irq,1);
+DECLARE_TASKLET(sx1276_2OnDio5,SX1276OnDio5Irq,1);
 
 static irqreturn_t sx1278_1_dio0irq_handler(int irq, void *dev_id)
 {
@@ -113,148 +119,319 @@ static irqreturn_t sx1278_1_dio5irq_handler(int irq, void *dev_id)
     return 0;
 }
 
+static irqreturn_t sx1278_2_dio0irq_handler(int irq, void *dev_id)
+{
+    tasklet_schedule(&sx1276_2OnDio0);//调度底半部
+    //printk("%s, %d\r\n",__func__,__LINE__);
+    return 0;
+}
+static irqreturn_t sx1278_2_dio1irq_handler(int irq, void *dev_id)
+{
+    tasklet_schedule(&sx1276_2OnDio1);//调度底半部
+    //printk("%s, %d\r\n",__func__,__LINE__);
+    return 0;
+}
+static irqreturn_t sx1278_2_dio2irq_handler(int irq, void *dev_id)
+{
+    tasklet_schedule(&sx1276_2OnDio2);//调度底半部
+    //printk("%s, %d\r\n",__func__,__LINE__);
+    return 0;
+}
+static irqreturn_t sx1278_2_dio3irq_handler(int irq, void *dev_id)
+{
+    tasklet_schedule(&sx1276_2OnDio3);//调度底半部
+    //printk("%s, %d\r\n",__func__,__LINE__);
+    return 0;
+}
+static irqreturn_t sx1278_2_dio4irq_handler(int irq, void *dev_id)
+{
+    tasklet_schedule(&sx1276_2OnDio4);//调度底半部
+    //printk("%s, %d\r\n",__func__,__LINE__);
+    return 0;
+}
+static irqreturn_t sx1278_2_dio5irq_handler(int irq, void *dev_id)
+{
+    tasklet_schedule(&sx1276_2OnDio5);//调度底半部
+    //printk("%s, %d\r\n",__func__,__LINE__);
+    return 0;
+}
 /*!
  * Antenna switch GPIO pins objects
  */
 //Gpio_t AntSwitchLf;
 //Gpio_t AntSwitchHf;
 
-void SX1276IoInit( void )
+void SX1276IoInit( int chip )
 {
     int err;
-    err = gpio_request(SX1278_1_RST_PIN, "SX1278_1_RST_PIN");
-    if(err)
+    switch(chip)
     {
-        printk("%s,%d\r\n",__func__,__LINE__);
-    }
-    err = gpio_direction_output(SX1278_1_RST_PIN,0);
-    if(err)
-    {
-        printk("%s,%d\r\n",__func__,__LINE__);
-    }
-    SX1276.Spi = slave;
-    err = gpio_request(SX1278_1_DIO0_PIN, "SX1278_1_DIO0_PIN");
-    if(err)
-    {
-        printk("%s,%d\r\n",__func__,__LINE__);
-    }
-    err = gpio_direction_input(SX1278_1_DIO0_PIN);
-    if(err)
-    {
-        printk("%s,%d\r\n",__func__,__LINE__);
-    }
-    err = gpio_request(SX1278_1_DIO1_PIN, "SX1278_1_DIO1_PIN");
-    if(err)
-    {
-        printk("%s,%d\r\n",__func__,__LINE__);
-    }
-    err = gpio_direction_input(SX1278_1_DIO1_PIN);
-    if(err)
-    {
-        printk("%s,%d\r\n",__func__,__LINE__);
-    }
-    err = gpio_request(SX1278_1_DIO2_PIN, "SX1278_1_DIO2_PIN");
-    if(err)
-    {
-        printk("%s,%d\r\n",__func__,__LINE__);
-    }
-    err = gpio_direction_input(SX1278_1_DIO2_PIN);
-    if(err)
-    {
-        printk("%s,%d\r\n",__func__,__LINE__);
-    }
-    err = gpio_request(SX1278_1_DIO3_PIN, "SX1278_1_DIO3_PIN");
-    if(err)
-    {
-        printk("%s,%d\r\n",__func__,__LINE__);
-    }
-    err = gpio_direction_input(SX1278_1_DIO3_PIN);
-    if(err)
-    {
-        printk("%s,%d\r\n",__func__,__LINE__);
-    }
-    err = gpio_request(SX1278_1_DIO4_PIN, "SX1278_1_DIO4_PIN");
-    if(err)
-    {
-        printk("%s,%d\r\n",__func__,__LINE__);
-    }
-    err = gpio_direction_input(SX1278_1_DIO4_PIN);
-    if(err)
-    {
-        printk("%s,%d\r\n",__func__,__LINE__);
-    }
-    err = gpio_request(SX1278_1_DIO5_PIN, "SX1278_1_DIO5_PIN");
-    if(err)
-    {
-        printk("%s,%d\r\n",__func__,__LINE__);
-    }
-    err = gpio_direction_input(SX1278_1_DIO5_PIN);
-    if(err)
-    {
-        printk("%s,%d\r\n",__func__,__LINE__);
+        case 0:
+            err = gpio_request(SX1278_1_RST_PIN, "SX1278_1_RST_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_output(SX1278_1_RST_PIN,0);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            //SX1276.Spi = slave;
+            err = gpio_request(SX1278_1_DIO0_PIN, "SX1278_1_DIO0_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_1_DIO0_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_1_DIO1_PIN, "SX1278_1_DIO1_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_1_DIO1_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_1_DIO2_PIN, "SX1278_1_DIO2_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_1_DIO2_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_1_DIO3_PIN, "SX1278_1_DIO3_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_1_DIO3_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_1_DIO4_PIN, "SX1278_1_DIO4_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_1_DIO4_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_1_DIO5_PIN, "SX1278_1_DIO5_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_1_DIO5_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            break;
+        case 1:
+            err = gpio_request(SX1278_2_RST_PIN, "SX1278_2_RST_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_output(SX1278_2_RST_PIN,0);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            //SX1276.Spi = slave;
+            err = gpio_request(SX1278_2_DIO0_PIN, "SX1278_2_DIO0_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_2_DIO0_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_2_DIO1_PIN, "SX1278_2_DIO1_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_2_DIO1_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_2_DIO2_PIN, "SX1278_2_DIO2_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_2_DIO2_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_2_DIO3_PIN, "SX1278_2_DIO3_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_2_DIO3_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_2_DIO4_PIN, "SX1278_2_DIO4_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_2_DIO4_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_2_DIO5_PIN, "SX1278_2_DIO5_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_2_DIO5_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            break;
+        case 2:
+            break;
+        default:
+            break;
     }
 }
 
-void SX1276IoIrqInit( void )
+void SX1276IoIrqInit( int chip )
 {
     int err;
-    sx1278_1_dio0irq = gpio_to_irq(SX1278_1_DIO0_PIN);
-    err = request_irq(sx1278_1_dio0irq,sx1278_1_dio0irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio0irq",NULL);
-    //disable_irq(sx1278_1_dio0irq);
-    if(err)
+    switch(chip)
     {
-        printk( "sx1278_1_dio0irq request failed\r\n");
+        case 0:
+            sx1278_1_dio0irq = gpio_to_irq(SX1278_1_DIO0_PIN);
+            err = request_irq(sx1278_1_dio0irq,sx1278_1_dio0irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio0irq",NULL);
+            //disable_irq(sx1278_1_dio0irq);
+            if(err)
+            {
+                printk( "sx1278_1_dio0irq request failed\r\n");
+            }
+            sx1278_1_dio1irq = gpio_to_irq(SX1278_1_DIO1_PIN);
+            err = request_irq(sx1278_1_dio1irq,sx1278_1_dio1irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio1irq",NULL);
+            //disable_irq(sx1278_1_dio1irq);
+            if(err)
+            {
+                printk( "sx1278_1_dio1irq request failed\r\n");
+            }
+            sx1278_1_dio2irq = gpio_to_irq(SX1278_1_DIO2_PIN);
+            err = request_irq(sx1278_1_dio2irq,sx1278_1_dio2irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio2irq",NULL);
+            //disable_irq(sx1278_1_dio2irq);
+            if(err)
+            {
+                printk( "sx1278_1_dio2irq request failed\r\n");
+            }
+            sx1278_1_dio3irq = gpio_to_irq(SX1278_1_DIO3_PIN);
+            err = request_irq(sx1278_1_dio3irq,sx1278_1_dio3irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio3irq",NULL);
+            //disable_irq(sx1278_1_dio3irq);
+            if(err)
+            {
+                printk( "sx1278_1_dio3irq request failed\r\n");
+            }
+            sx1278_1_dio4irq = gpio_to_irq(SX1278_1_DIO4_PIN);
+            err = request_irq(sx1278_1_dio4irq,sx1278_1_dio4irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio4irq",NULL);
+            //disable_irq(sx1278_1_dio4irq);
+            if(err)
+            {
+                printk( "sx1278_1_dio4irq request failed\r\n");
+            }
+            /*sx1278_1_dio5irq = gpio_to_irq(SX1278_1_DIO5_PIN);
+            err = request_irq(sx1278_1_dio5irq,sx1278_1_dio5irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio5irq",NULL);*/
+            //disable_irq(sx1278_1_dio5irq);
+            //if(err)
+            //{
+            //    printk( "sx1278_1_dio5irq request failed\r\n");
+            //}
+            break;
+        case 1:
+            sx1278_2_dio0irq = gpio_to_irq(SX1278_2_DIO0_PIN);
+            err = request_irq(sx1278_2_dio0irq,sx1278_2_dio0irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio0irq",NULL);
+            //disable_irq(sx1278_2_dio0irq);
+            if(err)
+            {
+                printk( "sx1278_2_dio0irq request failed\r\n");
+            }
+            sx1278_2_dio1irq = gpio_to_irq(SX1278_2_DIO1_PIN);
+            err = request_irq(sx1278_2_dio1irq,sx1278_2_dio1irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio1irq",NULL);
+            //disable_irq(sx1278_2_dio1irq);
+            if(err)
+            {
+                printk( "sx1278_2_dio1irq request failed\r\n");
+            }
+            sx1278_2_dio2irq = gpio_to_irq(SX1278_2_DIO2_PIN);
+            err = request_irq(sx1278_2_dio2irq,sx1278_2_dio2irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio2irq",NULL);
+            //disable_irq(sx1278_2_dio2irq);
+            if(err)
+            {
+                printk( "sx1278_2_dio2irq request failed\r\n");
+            }
+            sx1278_2_dio3irq = gpio_to_irq(SX1278_2_DIO3_PIN);
+            err = request_irq(sx1278_2_dio3irq,sx1278_2_dio3irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio3irq",NULL);
+            //disable_irq(sx1278_2_dio3irq);
+            if(err)
+            {
+                printk( "sx1278_2_dio3irq request failed\r\n");
+            }
+            sx1278_2_dio4irq = gpio_to_irq(SX1278_2_DIO4_PIN);
+            err = request_irq(sx1278_2_dio4irq,sx1278_2_dio4irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio4irq",NULL);
+            //disable_irq(sx1278_2_dio4irq);
+            if(err)
+            {
+                printk( "sx1278_2_dio4irq request failed\r\n");
+            }
+            /*sx1278_2_dio5irq = gpio_to_irq(SX1278_2_DIO5_PIN);
+            err = request_irq(sx1278_2_dio5irq,sx1278_2_dio5irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio5irq",NULL);*/
+            //disable_irq(sx1278_2_dio5irq);
+            //if(err)
+            //{
+            //    printk( "sx1278_2_dio5irq request failed\r\n");
+            //}
+            break;
+        case 2:
+            break;
+        default:
+            break;
     }
-    sx1278_1_dio1irq = gpio_to_irq(SX1278_1_DIO1_PIN);
-    err = request_irq(sx1278_1_dio1irq,sx1278_1_dio1irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio1irq",NULL);
-    //disable_irq(sx1278_1_dio1irq);
-    if(err)
-    {
-        printk( "sx1278_1_dio1irq request failed\r\n");
-    }
-    sx1278_1_dio2irq = gpio_to_irq(SX1278_1_DIO2_PIN);
-    err = request_irq(sx1278_1_dio2irq,sx1278_1_dio2irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio2irq",NULL);
-    //disable_irq(sx1278_1_dio2irq);
-    if(err)
-    {
-        printk( "sx1278_1_dio2irq request failed\r\n");
-    }
-    sx1278_1_dio3irq = gpio_to_irq(SX1278_1_DIO3_PIN);
-    err = request_irq(sx1278_1_dio3irq,sx1278_1_dio3irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio3irq",NULL);
-    //disable_irq(sx1278_1_dio3irq);
-    if(err)
-    {
-        printk( "sx1278_1_dio3irq request failed\r\n");
-    }
-    sx1278_1_dio4irq = gpio_to_irq(SX1278_1_DIO4_PIN);
-    err = request_irq(sx1278_1_dio4irq,sx1278_1_dio4irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio4irq",NULL);
-    //disable_irq(sx1278_1_dio4irq);
-    if(err)
-    {
-        printk( "sx1278_1_dio4irq request failed\r\n");
-    }
-    /*sx1278_1_dio5irq = gpio_to_irq(SX1278_1_DIO5_PIN);
-    err = request_irq(sx1278_1_dio5irq,sx1278_1_dio5irq_handler,IRQF_TRIGGER_RISING,"sx1278_1_dio5irq",NULL);*/
-    //disable_irq(sx1278_1_dio5irq);
-    //if(err)
-    //{
-    //    printk( "sx1278_1_dio5irq request failed\r\n");
-    //}
 }
 void SX1276IoDeInit( void )
 {
 
 }
 
-void SX1276SetRfTxPower( int8_t power )
+void SX1276SetRfTxPower( int chip ,int8_t power )
 {
     uint8_t paConfig = 0;
     uint8_t paDac = 0;
 
-    paConfig = SX1276Read( REG_PACONFIG );
-    paDac = SX1276Read( REG_PADAC );
+    paConfig = SX1276Read( chip,REG_PACONFIG );
+    paDac = SX1276Read( chip,REG_PADAC );
 
-    paConfig = ( paConfig & RF_PACONFIG_PASELECT_MASK ) | SX1276GetPaSelect( SX1276.Settings.Channel );
+    paConfig = ( paConfig & RF_PACONFIG_PASELECT_MASK ) | SX1276GetPaSelect( chip,SX1276[chip].Settings.Channel );
     paConfig = ( paConfig & RF_PACONFIG_MAX_POWER_MASK ) | 0x70;
 
     if( ( paConfig & RF_PACONFIG_PASELECT_PABOOST ) == RF_PACONFIG_PASELECT_PABOOST )
@@ -304,11 +481,11 @@ void SX1276SetRfTxPower( int8_t power )
         }
         paConfig = ( paConfig & RF_PACONFIG_OUTPUTPOWER_MASK ) | ( uint8_t )( ( uint16_t )( power + 1 ) & 0x0F );
     }
-    SX1276Write( REG_PACONFIG, paConfig );
-    SX1276Write( REG_PADAC, paDac );
+    SX1276Write( chip,REG_PACONFIG, paConfig );
+    SX1276Write( chip,REG_PADAC, paDac );
 }
 
-uint8_t SX1276GetPaSelect( uint32_t channel )
+uint8_t SX1276GetPaSelect( int chip,uint32_t channel )
 {
     if( channel < RF_MID_BAND_THRESH )
     {
@@ -320,7 +497,7 @@ uint8_t SX1276GetPaSelect( uint32_t channel )
     }
 }
 
-void SX1276SetAntSwLowPower( bool status )
+void SX1276SetAntSwLowPower( int chip,bool status )
 {
     if( RadioIsActive != status )
     {
@@ -328,28 +505,28 @@ void SX1276SetAntSwLowPower( bool status )
 
         if( status == false )
         {
-            SX1276AntSwInit( );
+            SX1276AntSwInit( chip);
         }
         else
         {
-            SX1276AntSwDeInit( );
+            SX1276AntSwDeInit( chip);
         }
     }
 }
 
-void SX1276AntSwInit( void )
+void SX1276AntSwInit( int chip )
 {
     //GpioInit( &AntSwitchLf, RADIO_ANT_SWITCH_LF, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 1 );
     //GpioInit( &AntSwitchHf, RADIO_ANT_SWITCH_HF, PIN_OUTPUT, PIN_PUSH_PULL, PIN_PULL_UP, 0 );
 }
 
-void SX1276AntSwDeInit( void )
+void SX1276AntSwDeInit( int chip )
 {
     //GpioInit( &AntSwitchLf, RADIO_ANT_SWITCH_LF, PIN_OUTPUT, PIN_OPEN_DRAIN, PIN_NO_PULL, 0 );
     //GpioInit( &AntSwitchHf, RADIO_ANT_SWITCH_HF, PIN_OUTPUT, PIN_OPEN_DRAIN, PIN_NO_PULL, 0 );
 }
 
-void SX1276SetAntSw( uint8_t opMode )
+void SX1276SetAntSw( int chip,uint8_t opMode )
 {
     switch( opMode )
     {
@@ -367,8 +544,64 @@ void SX1276SetAntSw( uint8_t opMode )
     }
 }
 
-bool SX1276CheckRfFrequency( uint32_t frequency )
+bool SX1276CheckRfFrequency( int chip,uint32_t frequency )
 {
     // Implement check. Currently all frequencies are supported
     return true;
+}
+
+void SX1276IoFree(int chip)
+{
+    switch(chip)
+    {
+        case 0:
+            gpio_free(SX1278_1_RST_PIN);
+            gpio_free(SX1278_1_DIO0_PIN);
+            gpio_free(SX1278_1_DIO1_PIN);
+            gpio_free(SX1278_1_DIO2_PIN);
+            gpio_free(SX1278_1_DIO3_PIN);
+            gpio_free(SX1278_1_DIO4_PIN);
+            gpio_free(SX1278_1_DIO5_PIN);
+            break;
+        case 1:
+            gpio_free(SX1278_2_RST_PIN);
+            gpio_free(SX1278_2_DIO0_PIN);
+            gpio_free(SX1278_2_DIO1_PIN);
+            gpio_free(SX1278_2_DIO2_PIN);
+            gpio_free(SX1278_2_DIO3_PIN);
+            gpio_free(SX1278_2_DIO4_PIN);
+            gpio_free(SX1278_2_DIO5_PIN);
+            break;
+        case 2:
+            break;
+        default:
+            break;
+    }
+}
+
+void SX1276IoIrqFree(int chip)
+{
+    switch(chip)
+    {
+        case 0:
+            free_irq(sx1278_1_dio0irq,NULL);
+            free_irq(sx1278_1_dio1irq,NULL);
+            free_irq(sx1278_1_dio2irq,NULL);
+            free_irq(sx1278_1_dio3irq,NULL);
+            free_irq(sx1278_1_dio4irq,NULL);
+            //free_irq(sx1278_1_dio5irq,NULL);
+            break;
+        case 1:
+            free_irq(sx1278_2_dio0irq,NULL);
+            free_irq(sx1278_2_dio1irq,NULL);
+            free_irq(sx1278_2_dio2irq,NULL);
+            free_irq(sx1278_2_dio3irq,NULL);
+            free_irq(sx1278_2_dio4irq,NULL);
+            //free_irq(sx1278_2_dio5irq,NULL);
+            break;
+        case 2:
+            break;
+        default:
+            break;
+    }
 }

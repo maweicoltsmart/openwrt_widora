@@ -45,14 +45,14 @@ Maintainer: Miguel Luis and Gregory Cristian
 /*!
  * \brief Initializes the radio I/Os pins interface
  */
-void SX1276IoInit( void );
+void SX1276IoInit( int );
 
 /*!
  * \brief Initializes DIO IRQ handlers
  *
  * \param [IN] irqHandlers Array containing the IRQ callback functions
  */
-void SX1276IoIrqInit(  void);
+void SX1276IoIrqInit(  int);
 
 /*!
  * \brief De-initializes the radio I/Os pins interface.
@@ -66,7 +66,7 @@ void SX1276IoDeInit( void );
  *
  * \param [IN] power Sets the RF output power
  */
-void SX1276SetRfTxPower( int8_t power );
+void SX1276SetRfTxPower( int chip,int8_t power );
 
 /*!
  * \brief Gets the board PA selection configuration
@@ -74,26 +74,26 @@ void SX1276SetRfTxPower( int8_t power );
  * \param [IN] channel Channel frequency in Hz
  * \retval PaSelect RegPaConfig PaSelect value
  */
-uint8_t SX1276GetPaSelect( uint32_t channel );
+uint8_t SX1276GetPaSelect( int chip,uint32_t channel );
 
 /*!
  * \brief Set the RF Switch I/Os pins in Low Power mode
  *
  * \param [IN] status enable or disable
  */
-void SX1276SetAntSwLowPower( bool status );
+void SX1276SetAntSwLowPower( int chip,bool status );
 
 /*!
  * \brief Initializes the RF Switch I/Os pins interface
  */
-void SX1276AntSwInit( void );
+void SX1276AntSwInit( int chip );
 
 /*!
  * \brief De-initializes the RF Switch I/Os pins interface
  *
  * \remark Needed to decrease the power consumption in MCU low power modes
  */
-void SX1276AntSwDeInit( void );
+void SX1276AntSwDeInit( int chip );
 
 /*!
  * \brief Controls the antenna switch if necessary.
@@ -102,7 +102,7 @@ void SX1276AntSwDeInit( void );
  *
  * \param [IN] opMode Current radio operating mode
  */
-void SX1276SetAntSw( uint8_t opMode );
+void SX1276SetAntSw( int chip,uint8_t opMode );
 
 /*!
  * \brief Checks if the given RF frequency is supported by the hardware
@@ -110,11 +110,13 @@ void SX1276SetAntSw( uint8_t opMode );
  * \param [IN] frequency RF frequency to be checked
  * \retval isSupported [true: supported, false: unsupported]
  */
-bool SX1276CheckRfFrequency( uint32_t frequency);
+bool SX1276CheckRfFrequency( int chip,uint32_t frequency);
 
+void SX1276IoFree(int chip);
+void SX1276IoIrqFree(int chip);
 /*!
  * Radio hardware and global parameters
  */
-extern SX1276_t SX1276;
+extern SX1276_t SX1276[];
 
 #endif // __SX1276_ARCH_H__
