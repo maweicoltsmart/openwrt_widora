@@ -214,10 +214,10 @@ SX1276_t SX1276[2];
 /*!
  * Tx and Rx timers
  */
-static struct timer_list TxTimeoutTimer[2];
-//static struct timer_list RxTimeoutTimer;
-static struct timer_list RxTimeoutSyncWord[2];
-static struct timeval oldtv;
+struct timer_list TxTimeoutTimer[2];
+//struct timer_list RxTimeoutTimer;
+struct timer_list RxTimeoutSyncWord[2];
+struct timeval oldtv;
 
 
 /*
@@ -247,7 +247,7 @@ void SX1276Init( int chip,RadioEvents_t *events )
     SX1276Reset(chip );
 
     chipversion1 = spi_w8r8(SX1276[chip].Spi,0x42 & 0x7f);
-    printk(KERN_INFO "sx1278_1 chipversion is 0x%02x\r\n",chipversion1);
+    printk(KERN_INFO "sx1278_%d chipversion is 0x%02x\r\n",chip,chipversion1);
 
     RxChainCalibration(chip );
 
@@ -273,7 +273,7 @@ RadioState_t SX1276GetStatus( int chip )
 
 void SX1276SetChannel( int chip,uint32_t freq )
 {
-    printk("%s,%d,freq = %d\r\n",__func__,__LINE__,freq);
+    printk("%s,chip = %d,freq = %d\r\n",__func__,chip,freq);
 #if 0
     SX1276[chip].Settings.Channel = freq;
     freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
@@ -1200,12 +1200,29 @@ int16_t SX1276ReadRssi( int chip,RadioModems_t modem )
 
 void SX1276Reset( int chip )
 {
-    gpio_set_value(SX1278_1_RST_PIN,0);
-    //gpio_set_value(SX1278_2_RST_PIN,0);
-    udelay(1000);
-    gpio_set_value(SX1278_1_RST_PIN,1);
-    //gpio_set_value(SX1278_2_RST_PIN,1);
-    udelay(6000);
+	switch(chip)
+	{
+		case 0:
+    	gpio_set_value(SX1278_1_RST_PIN,0);
+    	//gpio_set_value(SX1278_2_RST_PIN,0);
+    	udelay(1000);
+    	gpio_set_value(SX1278_1_RST_PIN,1);
+    	//gpio_set_value(SX1278_2_RST_PIN,1);
+    	udelay(6000);
+		break;
+		case 1:
+		//gpio_set_value(SX1278_1_RST_PIN,0);
+		gpio_set_value(SX1278_2_RST_PIN,0);
+		udelay(1000);
+		//gpio_set_value(SX1278_1_RST_PIN,1);
+		gpio_set_value(SX1278_2_RST_PIN,1);
+		udelay(6000);
+		break;
+		case 3:
+		break;
+		default:
+		break;
+	}
 }
 
 void SX1276SetOpMode( int chip,uint8_t opMode )

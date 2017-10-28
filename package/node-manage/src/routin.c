@@ -720,7 +720,7 @@ void *Radio_1_routin(void *arg){
     {
         fprintf(stderr, "msgget failed with error: %d\n", errno);
     }
-    fd = open("/dev/lora_radio_1",O_RDWR);
+    fd = open("/dev/lora_radio",O_RDWR);
     if (fd < 0)
     {
         printf("open error\n");

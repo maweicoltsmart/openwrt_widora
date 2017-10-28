@@ -658,10 +658,11 @@ void SX1276SetModem( int fd,RadioModems_t modem )
  *
  * \param [IN] freq         Channel RF frequency
  */
-void SX1276SetChannel( int fd,uint32_t freq )
+void SX1276SetChannel( int chip,int fd,uint32_t freq )
 {
     SX1276.Settings.Channel = freq;
     freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
+	freq = freq | (chip << 31);
     ioctl(fd, LORADEV_RADIO_CHANNEL, &freq);
     printf("%s,%d,freq = %d\r\n",__func__,__LINE__,freq);
 }

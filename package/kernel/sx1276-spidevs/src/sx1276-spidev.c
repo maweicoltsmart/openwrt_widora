@@ -88,6 +88,7 @@ DEFINE_SPINLOCK(spi_lock);
 //static struct task_struct *radio_routin;
 
 extern unsigned int sx1278_1_dio0irq,sx1278_1_dio1irq,sx1278_1_dio2irq,sx1278_1_dio3irq,sx1278_1_dio4irq,sx1278_1_dio5irq;
+extern RadioEvents_t RadioEvents;
 
 static int sx1276_spidevs_remove_1(struct spi_device *spi);
 static int sx1276_spidevs_probe_1(struct spi_device *spi);
@@ -98,6 +99,10 @@ static int sx1276_spidevs_remove_1(struct spi_device *spi)
 {
     //kthread_stop(radio_routin);
     //unregister_sx1276_cdev();
+    del_timer(&TxTimeoutTimer[0]);
+	del_timer(&RxTimeoutSyncWord[0]);
+    SX1276IoIrqFree(0);
+    SX1276IoFree(0);
     return 0;
 }
 static int sx1276_spidevs_probe_1(struct spi_device *spi)
@@ -112,24 +117,37 @@ static int sx1276_spidevs_probe_1(struct spi_device *spi)
     spi->mode = SPI_MODE_0;
     err = spi_setup(spi);
     printk("%s, %d\r\n",__func__,__LINE__);
+	
+	// Initialize Radio driver
+	RadioEvents.TxDone = OnTxDone;
+	RadioEvents.RxDone = OnRxDone;
+	RadioEvents.RxError = OnRxError;
+	RadioEvents.TxTimeout = OnTxTimeout;
+	RadioEvents.RxTimeout = OnRxTimeout;
+	Radio.Init(0,&RadioEvents);
+	Radio.SetChannel(0,RF_FREQUENCY);
+	Radio.SetTxConfig( 0,MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
+							   LORA_SPREADING_FACTOR, LORA_CODINGRATE,
+							   LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
+							   true, 0, 0, LORA_IQ_INVERSION_ON, 3000 );
+	Radio.SetRxConfig( 0,MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR,
+							   LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
+							   LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
+							   0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
+	//Radio.Rx( 0,RX_TIMEOUT_VALUE );
+
     //register_sx1276_cdev();
-#if 0
-    radio_routin = kthread_create(Radio_routin, NULL, "Radio1 routin thread");
-    if(IS_ERR(radio_routin)){
-        printk("Unable to start kernel thread radio_routin./n");
-        err = PTR_ERR(radio_routin);
-        radio_routin = NULL;
-        return err;
-    }
-    printk("%s, %d\r\n",__func__,__LINE__);
-    wake_up_process(radio_routin);
-#endif
     return err;
 }
 
 static int sx1276_spidevs_remove_2(struct spi_device *spi)
 {
     //kthread_stop(radio_routin);
+    
+    del_timer(&TxTimeoutTimer[1]);
+	del_timer(&RxTimeoutSyncWord[1]);
+    SX1276IoIrqFree(1);
+    SX1276IoFree(1);
     unregister_sx1276_cdev();
     return 0;
 }
@@ -145,18 +163,25 @@ static int sx1276_spidevs_probe_2(struct spi_device *spi)
     spi->mode = SPI_MODE_0;
     err = spi_setup(spi);
     printk("%s, %d\r\n",__func__,__LINE__);
-    register_sx1276_cdev();
-#if 0
-    radio_routin = kthread_create(Radio_routin, NULL, "Radio1 routin thread");
-    if(IS_ERR(radio_routin)){
-        printk("Unable to start kernel thread radio_routin./n");
-        err = PTR_ERR(radio_routin);
-        radio_routin = NULL;
-        return err;
-    }
-    printk("%s, %d\r\n",__func__,__LINE__);
-    wake_up_process(radio_routin);
-#endif
+	
+	// Initialize Radio driver
+	RadioEvents.TxDone = OnTxDone;
+	RadioEvents.RxDone = OnRxDone;
+	RadioEvents.RxError = OnRxError;
+	RadioEvents.TxTimeout = OnTxTimeout;
+	RadioEvents.RxTimeout = OnRxTimeout;
+	Radio.Init(1,&RadioEvents);
+	Radio.SetChannel(1,RF_FREQUENCY);
+	Radio.SetTxConfig( 1,MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
+							   LORA_SPREADING_FACTOR, LORA_CODINGRATE,
+							   LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
+							   true, 0, 0, LORA_IQ_INVERSION_ON, 3000 );
+	Radio.SetRxConfig( 1,MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR,
+							   LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
+							   LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
+							   0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
+	//Radio.Rx( 1,RX_TIMEOUT_VALUE );
+	register_sx1276_cdev();
     return err;
 }
 

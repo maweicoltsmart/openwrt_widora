@@ -52,19 +52,20 @@ static struct device *lora_dev_device;
 #define LORADEV_MAJOR 0   /*预设的mem的主设备号*/
 #define LORADEV_NR_DEVS 2    /*设备数*/
 #define LORADEV_SIZE 4096
-/*mem设备描述结构体*/
-struct lora_dev
-{
-    char *data;
-    unsigned long size;
-};
+
 static int lora_major = LORADEV_MAJOR;
 
 module_param(lora_major, int, S_IRUGO);
 
 struct cdev cdev;
 
-static RadioEvents_t RadioEvents;
+/*!
+ * Radio events function pointer
+ */
+
+bool isMaster = true;
+bool rx_done = 0;
+RadioEvents_t RadioEvents;
 
 
 const uint8_t PingMsg[] = "PING";
@@ -75,20 +76,7 @@ States_t State = LOWPOWER;
 int8_t RssiValue = 0;
 int8_t SnrValue = 0;
 
-#define LORA_RX_PKG_MAX_SIZE    256
-struct lora_rx_data{
-    int chip;
-    int len;
-    unsigned char *buffer;
-    struct list_head list;
-};
-struct list_head lora_rx_list;
-/*!
- * Radio events function pointer
- */
-
-bool isMaster = true;
-static bool rx_done = 0;
+struct lora_rx_data lora_rx_list;
 
 void OnTxDone( int chip )
 {
@@ -100,18 +88,29 @@ void OnTxDone( int chip )
 void OnRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
     struct lora_rx_data *new;
+	printk("%s, %d bytes\r\n",__func__,size);
     Radio.Sleep( chip);
     new = (struct lora_rx_data *)kmalloc(sizeof(struct lora_rx_data),GFP_KERNEL);
+	if(!new)
+	{
+		return;
+	}
     new->buffer = kmalloc(size,GFP_KERNEL);
+	if(!(new->buffer))
+	{
+		kfree(new);
+		return;
+	}
     memcpy(new->buffer,payload,size);
     new->chip = chip;
     new->len = size;
-    list_add_tail(&(new->list), &lora_rx_list);//使用尾插法
+    list_add_tail(&(new->list), &lora_rx_list.list);//使用尾插法
     RssiValue = rssi;
     SnrValue = snr;
     Radio.Rx( chip,RX_TIMEOUT_VALUE );
     State = RX;
     rx_done = 1;
+	wake_up(&lora_wait);
 }
 
 void OnTxTimeout( int chip )
@@ -137,8 +136,12 @@ void OnRxError( int chip )
 
 static int lora_dev_open(struct inode * inode, struct file * filp)
 {
-    INIT_LIST_HEAD(&lora_rx_list);
+    INIT_LIST_HEAD(&lora_rx_list.list);
     printk("%s,%d\r\n",__func__,__LINE__);
+	//SX1276IoIrqInit(0);
+	//SX1276IoIrqInit(1);
+	Radio.Rx( 0,RX_TIMEOUT_VALUE );
+	Radio.Rx( 1,RX_TIMEOUT_VALUE );
     return 0;
 }
 
@@ -146,16 +149,21 @@ static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,l
 {
     int ret = 0;
     struct lora_rx_data *get;
-    while (list_empty(&lora_rx_list)) /* 没有数据可读，考虑为什么不用if，而用while */
+	struct list_head *pos;
+    while (list_empty(&lora_rx_list.list)) /* 没有数据可读，考虑为什么不用if，而用while */
     {
+    	printk("%s,%d\r\n",__func__,__LINE__);
         if (filp->f_flags & O_NONBLOCK)
             return -EAGAIN;
         rx_done = 0;
         wait_event_interruptible(lora_wait,rx_done);
     }
-    get = list_entry(&lora_rx_list, struct lora_rx_data, list);
+	printk("%s,%d\r\n",__func__,__LINE__);
+	pos = lora_rx_list.list.next;
+    get = list_entry(pos, struct lora_rx_data, list);
     /*读数据到用户空间*/
-    if (copy_to_user(user, (void*)(get->buffer), get->len))
+	printk("%s,%d\r\n",__func__,__LINE__);
+	if (copy_to_user(user, (void*)(get->buffer), get->len))
     {
         ret =  - EFAULT;
     }
@@ -164,7 +172,12 @@ static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,l
         printk(KERN_INFO "read %d bytes(s) from list\n", get->len);
         ret = get->len;
     }
-    kfree(get->buffer);
+	printk("%s,%d\r\n",__func__,__LINE__);
+	list_del(&get->list);
+	if(get->len > 0)
+	{
+    	kfree(get->buffer);
+	}
     kfree(get);
     return ret;
 }
@@ -186,8 +199,8 @@ static int lora_dev_close(struct inode *inode, struct file *file)
 {
     printk("%s,%d\r\n",__func__,__LINE__);
 
-    SX1276IoIrqFree(0);
-    SX1276IoFree(0);
+    //SX1276IoIrqFree(0);
+    //SX1276IoFree(0);
     //kthread_stop(radio_routin);
     return 0;
 }
@@ -232,54 +245,36 @@ static long lora_dev_ioctl(struct file *filp,unsigned int cmd,unsigned long arg)
         break;
         case LORADEV_RADIO_INIT:
         printk("%s,%d\r\n",__func__,__LINE__);
-        // Initialize Radio driver
-        RadioEvents.TxDone = OnTxDone;
-        RadioEvents.RxDone = OnRxDone;
-        RadioEvents.RxError = OnRxError;
-        RadioEvents.TxTimeout = OnTxTimeout;
-        RadioEvents.RxTimeout = OnRxTimeout;
-        Radio.Init(0,&RadioEvents);
         break;
         case LORADEV_RADIO_STATE:
         printk("%s,%d\r\n",__func__,__LINE__);
-        Radio.Sleep( 0);
+		break;
         case LORADEV_RADIO_SET_PUBLIC:
         printk("%s,%d\r\n",__func__,__LINE__);
-        // Random seed initialization
-        //srand1( Radio.Random( ) );
-        ret = __get_user(ioarg, (int *)arg);
-        Radio.SetPublicNetwork( 0,ioarg );
+		break;
         case LORADEV_RADIO_SET_MODEM:
         printk("%s,%d\r\n",__func__,__LINE__);
-        ret = __get_user(ioarg, (int *)arg);
-        Radio.SetModem(0,ioarg);
-        break;
+		break;
         case LORADEV_RADIO_CHANNEL:
+		ret = __get_user(ioarg, (int *)arg);
+		int chip = (ioarg & 0x80000000) >> 31;
+		int channel = ioarg & 0x7fffffff;
+		Radio.Sleep(chip);
+		Radio.SetChannel(chip,channel);
+		Radio.Rx( chip,RX_TIMEOUT_VALUE );
         printk("%s,%d\r\n",__func__,__LINE__);
-        ret = __get_user(ioarg, (int *)arg);
-        Radio.SetChannel(0,ioarg);
-        break;
+		break;
         case LORADEV_RADIO_SET_TXCFG:
         printk("%s,%d\r\n",__func__,__LINE__);
-        ret = __get_user(ioarg, (int *)arg);
-        Radio.SetTxConfig( 0,MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
-                                   LORA_SPREADING_FACTOR, LORA_CODINGRATE,
-                                   LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
-                                   true, 0, 0, LORA_IQ_INVERSION_ON, 3000 );
-        break;
+		break;
         case LORADEV_RADIO_SET_RXCFG:
         printk("%s,%d\r\n",__func__,__LINE__);
-        ret = __get_user(ioarg, (int *)arg);
-        Radio.SetRxConfig( 0,MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR,
-                                   LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
-                                   LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
-                                   0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
-        Radio.Rx( 0,RX_TIMEOUT_VALUE );
-        break;
+		break;
         case LORADEV_RADIO_READ_REG:
         ret = __get_user(ioarg, (int *)arg);
         ioarg = spi_w8r8(SX1276[0].Spi,ioarg & 0x7f);
         ret = __put_user(ioarg, (int *)arg);
+		break;
         default:
         printk("%s,%d\r\n",__func__,__LINE__);
         return -EINVAL;

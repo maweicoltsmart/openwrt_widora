@@ -176,7 +176,7 @@ void SX1276SetModem( int fd,RadioModems_t modem );
  *
  * \param [IN] freq         Channel RF frequency
  */
-void SX1276SetChannel( int fd,uint32_t freq );
+void SX1276SetChannel( int chip,int fd,uint32_t freq );
 
 /*!
  * \brief Checks if the channel is free for the given time

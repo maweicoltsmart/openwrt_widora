@@ -18,6 +18,9 @@ Maintainer: Miguel Luis and Gregory Cristian
 #include "sx1276Regs-Fsk.h"
 #include "sx1276Regs-LoRa.h"
 #include "typedef.h"
+#include <linux/time.h>
+#include <linux/timer.h>
+
 /*!
  * Radio wake-up time from sleep
  */
@@ -404,5 +407,10 @@ void SX1276SetMaxPayloadLength( int chip,RadioModems_t modem, uint8_t max );
 void SX1276SetPublicNetwork( int chip,bool enable );
 
 extern SX1276_t SX1276[];
+extern struct timer_list TxTimeoutTimer[2];
+//struct timer_list RxTimeoutTimer;
+extern struct timer_list RxTimeoutSyncWord[2];
+extern struct timeval oldtv;
+
 
 #endif // __SX1276_H__
