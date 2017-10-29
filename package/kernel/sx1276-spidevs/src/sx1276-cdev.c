@@ -88,7 +88,7 @@ void OnTxDone( int chip )
 void OnRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
     struct lora_rx_data *new;
-	printk("%s, %d bytes\r\n",__func__,size);
+	//printk("%s, %d bytes\r\n",__func__,size);
     Radio.Sleep( chip);
     new = (struct lora_rx_data *)kmalloc(sizeof(struct lora_rx_data),GFP_KERNEL);
 	if(!new)
@@ -152,27 +152,26 @@ static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,l
 	struct list_head *pos;
     while (list_empty(&lora_rx_list.list)) /* 没有数据可读，考虑为什么不用if，而用while */
     {
-    	printk("%s,%d\r\n",__func__,__LINE__);
+    	//printk("%s,%d\r\n",__func__,__LINE__);
         if (filp->f_flags & O_NONBLOCK)
             return -EAGAIN;
         rx_done = 0;
         wait_event_interruptible(lora_wait,rx_done);
     }
-	printk("%s,%d\r\n",__func__,__LINE__);
+	//printk("%s,%d\r\n",__func__,__LINE__);
 	pos = lora_rx_list.list.next;
     get = list_entry(pos, struct lora_rx_data, list);
     /*读数据到用户空间*/
-	printk("%s,%d\r\n",__func__,__LINE__);
 	if (copy_to_user(user, (void*)(get->buffer), get->len))
     {
         ret =  - EFAULT;
     }
     else
     {
-        printk(KERN_INFO "read %d bytes(s) from list\n", get->len);
+        //printk(KERN_INFO "read %d bytes(s) from list\n", get->len);
         ret = get->len;
     }
-	printk("%s,%d\r\n",__func__,__LINE__);
+	//printk("%s,%d\r\n",__func__,__LINE__);
 	list_del(&get->list);
 	if(get->len > 0)
 	{

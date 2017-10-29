@@ -38,35 +38,34 @@ void *server_send(void *arg)
     long int msgtype = 0; //注意1
     int msgid = -1;
     memset(data.text,0,BUFFER_SIZE);
+creat_msg_q:
     //建立消息队列
-    msgid = msgget((key_t)1234, 0666 | IPC_CREAT);
-    if(msgid == -1)
+    while((msgid = msgget((key_t)1234, 0666 | IPC_CREAT) == -1))
     {
-        fprintf(stderr, "msgget failed with error: %d\n", errno);
-        exit(EXIT_FAILURE);
+        printf( "msgget failed with error: %d\n", errno);
+        sleep(1);
     }
     //从队列中获取消息，直到遇到end消息为止
     while(1)
     {
         if(msgrcv(msgid, (void*)&data, BUFFER_SIZE, msgtype, 0) == -1)
         {
-            fprintf(stderr, "msgrcv failed with errno: %d\n", errno);
-            exit(EXIT_FAILURE);
+            printf("msgrcv failed with errno: %d\n", errno);
+            goto creat_msg_q;
         }
-        printf("You wrote: %s\n",data.text);
         len = send(sockfd, data.text, strlen(data.text), 0);
         if(len < 1)
         {
-            break;
+            pthread_exit(NULL);
         }
         memset(data.text,0,BUFFER_SIZE);
     }
     //删除消息队列
-    if(msgctl(msgid, IPC_RMID, 0) == -1)
+    /*if(msgctl(msgid, IPC_RMID, 0) == -1)
     {
         fprintf(stderr, "msgctl(IPC_RMID) failed\n");
         exit(EXIT_FAILURE);
-    }
+    }*/
 }
 
 void str_echo(int sockfd)

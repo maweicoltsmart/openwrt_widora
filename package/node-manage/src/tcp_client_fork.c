@@ -33,35 +33,35 @@ void *client_send(void *arg)
     long int msgtype = 0; //注意1
     int msgid = -1;
     memset(data.text,0,BUFFER_SIZE);
+creat_msg_q:
     //建立消息队列
-    msgid = msgget((key_t)1234, 0666 | IPC_CREAT);
-    if(msgid == -1)
+    while((msgid = msgget((key_t)1234, 0666 | IPC_CREAT) == -1))
     {
-        fprintf(stderr, "msgget failed with error: %d\n", errno);
-        exit(EXIT_FAILURE);
+        printf( "msgget failed with error: %d\n", errno);
+        sleep(1);
     }
     //从队列中获取消息，直到遇到end消息为止
     while(1)
     {
         if(msgrcv(msgid, (void*)&data, BUFFER_SIZE, msgtype, 0) == -1)
         {
-            fprintf(stderr, "msgrcv failed with errno: %d\n", errno);
-            exit(EXIT_FAILURE);
+			printf("recreat msg q %d\r\n",__LINE__);
+			goto creat_msg_q;
         }
-        printf("You wrote: %s\n",data.text);
         len = send(sockfd, data.text, strlen(data.text), 0);
         if(len < 1)
         {
-            break;
+        	printf("reconnect %d\r\n",__LINE__);
+            pthread_exit(NULL);
         }
         memset(data.text,0,BUFFER_SIZE);
     }
     //删除消息队列
-    if(msgctl(msgid, IPC_RMID, 0) == -1)
+    /*if(msgctl(msgid, IPC_RMID, 0) == -1)
     {
         fprintf(stderr, "msgctl(IPC_RMID) failed\n");
         exit(EXIT_FAILURE);
-    }
+    }*/
 }
 
 void *tcp_client_routin(void *data)
@@ -70,6 +70,8 @@ void *tcp_client_routin(void *data)
     int sock_cli;
     struct sockaddr_in servaddr;
     int err;
+	int flag,old_flag; 
+	int ret;
     pthread_t main_tid;
     int fd = *(int*)data;
 connect:
@@ -81,15 +83,80 @@ connect:
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = inet_addr("192.168.1.149");
     servaddr.sin_port = htons(PORT);  //服务器端口
-
+	flag |= O_NONBLOCK;  
+    old_flag = flag = fcntl(sock_cli, F_SETFL, O_NONBLOCK ); //将连接套接字设置为非阻塞。 
     //连接服务器，成功返回0，错误返回-1
-    if (connect(sock_cli, (struct sockaddr *)&servaddr, sizeof(servaddr)) < 0)
-    {
+    ret = connect(sock_cli, (struct sockaddr *)&servaddr, sizeof(servaddr));
+	if(ret != 0)  
+	{  
+		if(errno != EINPROGRESS) //connect返回错误。  
+		{  
+			printf("connect failed\n");  
+		}  
+		//连接正在建立  
+		else  
+		{  
+			struct timeval tm;	//1.定时	
+			tm.tv_sec = 5;  
+			tm.tv_usec = 0;  
+		  
+			fd_set wset;  
+			FD_ZERO(&wset);  
+			FD_SET(sock_cli,&wset);   
+			printf("selcet start\n");  
+			int res = select(sock_cli+1, NULL, &wset, NULL, &tm);  
+			printf("select end\n");  
+			if(res <= 0)  
+			{  
+				printf("res <= 0\n");  
+				close(sock_cli);  
+				sleep(1);
+				goto connect;
+				//return 2;  
+			}  
+					  
+			if(FD_ISSET(sock_cli,&wset))  
+			{  
+				printf("test \n");	
+				int err = -1;  
+				socklen_t len = sizeof(int);  
+						  
+				if(getsockopt(sock_cli, SOL_SOCKET, SO_ERROR, &err, &len ) < 0) //两种错误处理方式	
+				{  
+					printf("errno :%d %s\n",errno, strerror(errno));  
+					close(sock_cli);  
+					sleep(1);
+					goto connect;
+					//return 3;  
+				}  
+		  
+				if(err)  
+				{  
+					printf("connect faile\n");	
+					errno = err;  
+					close(sock_cli);  
+					//return 4;  
+					sleep(1);
+					goto connect;
+				}  
+		  
+				printf("connetct success\n");  
+			}  
+		  
+		}  
+		  
+	}  
+		  
+	fcntl(sock_cli, F_SETFL, old_flag); //最后恢复sock的阻塞属性。  
+#if 0
+	{
         perror("connect");
-    close(sock_cli);
-    sleep(1);
+    	close(sock_cli);
+    	sleep(1);
+		printf("reconnect %d\r\n",__LINE__);
         goto connect;//exit(1);
     }
+#endif
     printf("connect server(IP:%s).\r\n","192.168.1.149");
     err = pthread_create(&main_tid, NULL, client_send, &sock_cli); //创建线程
     strcpy(sendbuf,"hello\r\n");
@@ -97,11 +164,11 @@ connect:
     while(1)// (fgets(sendbuf, sizeof(sendbuf), stdin) != NULL)
     {
         /*len = send(sock_cli, sendbuf, strlen(sendbuf),0); ///发送
-    if(len < 1)
-    {
-        close(sock_cli);
+    	if(len < 1)
+    	{
+        	close(sock_cli);
             goto connect;
-    }
+    	}
         if(strcmp(sendbuf,"exit\n")==0)
         {
         printf("client exited.\n");
@@ -113,6 +180,7 @@ connect:
         if(len < 1)
         {
             close(sock_cli);
+			printf("reconnect %d\r\n",__LINE__);
             goto connect;
         }
         fputs(recvbuf, stdout);

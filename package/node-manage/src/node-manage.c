@@ -53,12 +53,6 @@ int main(int argc ,char *argv[])
 	int msgid = -1;
 	struct msg_st data;
 	int len;
-	//建立消息队列
-	msgid = msgget((key_t)1234, 0666 | IPC_CREAT);
-	if(msgid == -1)
-	{
-		printf("msgget failed with error: %d\r\n", errno);
-	}
 	fd = open("/dev/lora_radio",O_RDWR);
 	if (fd < 0)
 	{
@@ -71,21 +65,26 @@ int main(int argc ,char *argv[])
 #define RF_FREQUENCY                                433000000 // Hz
 	SX1276SetChannel(0,fd,RF_FREQUENCY);
 	SX1276SetChannel(1,fd,RF_FREQUENCY + FREQ_STEP * 10);
+creat_msg_q:
+	//建立消息队列
+	while((msgid = msgget((key_t)1234, 0666 | IPC_CREAT) == -1))
+	{
+		printf("msgget failed with error: %d\r\n", errno);
+		sleep(1);
+	}
 	while(1)
 	{
 		memset(radio2tcpbuffer,0,256);
-		printf("%s read\r\n",__func__);
 		if((len = read(fd,radio2tcpbuffer,256)) > 0)
 		{
-			printf("read one msg\r\n");
 			data.msg_type = 1;	  //注意2
 			memcpy(data.text, radio2tcpbuffer,len);
 			//向队列发送数据
 			if(msgsnd(msgid, (void*)&data, len, 0) == -1)
 			{
 				printf("msgsnd failed\r\n");
+				goto creat_msg_q;
 			}
-			printf("%s:%s,%d\r\n",__func__,radio2tcpbuffer,len);
 		}
 		else
 		{
