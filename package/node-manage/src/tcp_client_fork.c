@@ -103,12 +103,12 @@ connect:
 			fd_set wset;  
 			FD_ZERO(&wset);  
 			FD_SET(sock_cli,&wset);   
-			printf("selcet start\n");  
+			//printf("selcet start\n");  
 			int res = select(sock_cli+1, NULL, &wset, NULL, &tm);  
-			printf("select end\n");  
+			//printf("select end\n");  
 			if(res <= 0)  
 			{  
-				printf("res <= 0\n");  
+				//printf("res <= 0\n");  
 				close(sock_cli);  
 				sleep(1);
 				goto connect;

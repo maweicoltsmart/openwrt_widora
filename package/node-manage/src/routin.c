@@ -318,7 +318,7 @@ static void PrepareTxFrame( uint8_t port )
  *
  * \retval  [0: frame could be send, 1: error]
  */
-static bool SendFrame( void )
+static bool SendFrame(int chip  )
 {
     McpsReq_t mcpsReq;
     LoRaMacTxInfo_t txInfo;
@@ -352,7 +352,7 @@ static bool SendFrame( void )
         }
     }
 
-    if( LoRaMacMcpsRequest( &mcpsReq ) == LORAMAC_STATUS_OK )
+    if( LoRaMacMcpsRequest( chip, &mcpsReq ) == LORAMAC_STATUS_OK )
     {
         return false;
     }
@@ -453,7 +453,7 @@ static void McpsConfirm( McpsConfirm_t *mcpsConfirm )
  * \param   [IN] mcpsIndication - Pointer to the indication structure,
  *               containing indication attributes.
  */
-static void McpsIndication( McpsIndication_t *mcpsIndication )
+static void McpsIndication(int chip, McpsIndication_t *mcpsIndication )
 {
     uint8_t i = 0;
     if( mcpsIndication->Status != LORAMAC_EVENT_INFO_STATUS_OK )
@@ -533,7 +533,7 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
                     MibRequestConfirm_t mibReq;
                     mibReq.Type = MIB_ADR;
                     mibReq.Param.AdrEnable = true;
-                    LoRaMacMibSetRequestConfirm( &mibReq );
+                    LoRaMacMibSetRequestConfirm( chip, &mibReq );
 
 #if defined( REGION_EU868 )
                     LoRaMacTestSetDutyCycleOn( false );
@@ -556,7 +556,7 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
                     MibRequestConfirm_t mibReq;
                     mibReq.Type = MIB_ADR;
                     mibReq.Param.AdrEnable = LORAWAN_ADR_ON;
-                    LoRaMacMibSetRequestConfirm( &mibReq );
+                    LoRaMacMibSetRequestConfirm( chip, &mibReq );
 #if defined( REGION_EU868 )
                     LoRaMacTestSetDutyCycleOn( LORAWAN_DUTYCYCLE_ON );
 #endif
@@ -586,7 +586,7 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
                     {
                         MlmeReq_t mlmeReq;
                         mlmeReq.Type = MLME_LINK_CHECK;
-                        LoRaMacMlmeRequest( &mlmeReq );
+                        LoRaMacMlmeRequest( chip, &mlmeReq );
                     }
                     break;
                 case 6: // (ix)
@@ -603,7 +603,7 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
                         MibRequestConfirm_t mibReq;
                         mibReq.Type = MIB_ADR;
                         mibReq.Param.AdrEnable = LORAWAN_ADR_ON;
-                        LoRaMacMibSetRequestConfirm( &mibReq );
+                        LoRaMacMibSetRequestConfirm( chip, &mibReq );
 #if defined( REGION_EU868 )
                         LoRaMacTestSetDutyCycleOn( LORAWAN_DUTYCYCLE_ON );
 #endif
@@ -616,7 +616,7 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
                         mlmeReq.Req.Join.AppKey = AppKey;
                         mlmeReq.Req.Join.NbTrials = 3;
 
-                        LoRaMacMlmeRequest( &mlmeReq );
+                        LoRaMacMlmeRequest( chip, &mlmeReq );
                         DeviceState = DEVICE_STATE_SLEEP;
                     }
                     break;
@@ -627,7 +627,7 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
                             MlmeReq_t mlmeReq;
                             mlmeReq.Type = MLME_TXCW;
                             mlmeReq.Req.TxCw.Timeout = ( uint16_t )( ( mcpsIndication->Buffer[1] << 8 ) | mcpsIndication->Buffer[2] );
-                            LoRaMacMlmeRequest( &mlmeReq );
+                            LoRaMacMlmeRequest( chip, &mlmeReq );
                         }
                         else if( mcpsIndication->BufferSize == 7 )
                         {
@@ -636,7 +636,7 @@ static void McpsIndication( McpsIndication_t *mcpsIndication )
                             mlmeReq.Req.TxCw.Timeout = ( uint16_t )( ( mcpsIndication->Buffer[1] << 8 ) | mcpsIndication->Buffer[2] );
                             mlmeReq.Req.TxCw.Frequency = ( uint32_t )( ( mcpsIndication->Buffer[3] << 16 ) | ( mcpsIndication->Buffer[4] << 8 ) | mcpsIndication->Buffer[5] ) * 100;
                             mlmeReq.Req.TxCw.Power = mcpsIndication->Buffer[6];
-                            LoRaMacMlmeRequest( &mlmeReq );
+                            LoRaMacMlmeRequest( chip, &mlmeReq );
                         }
                         ComplianceTest.State = 1;
                     }
@@ -780,6 +780,8 @@ void *Radio_routin(void *data){
     LoRaMacPrimitives_t LoRaMacPrimitives;
     LoRaMacCallback_t LoRaMacCallbacks;
     MibRequestConfirm_t mibReq;
+	int fd = *(int *)data;
+	int chip = 0;
     DeviceState = DEVICE_STATE_INIT;
     printf("%s,%d\r\n",__func__,__LINE__);
     while( 1 )
@@ -796,25 +798,25 @@ void *Radio_routin(void *data){
                 LoRaMacPrimitives.MacMlmeConfirm = MlmeConfirm;
                 LoRaMacCallbacks.GetBatteryLevel = NULL;//BoardGetBatteryLevel;
 #if defined( REGION_AS923 )
-                LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_AS923 );
+                LoRaMacInitialization(int chip, &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_AS923 );
 #elif defined( REGION_AU915 )
-                LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_AU915 );
+                LoRaMacInitialization(int chip, &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_AU915 );
 #elif defined( REGION_CN470 )
-                LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_CN470 );
+                LoRaMacInitialization( chip, &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_CN470 );
 #elif defined( REGION_CN779 )
-                LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_CN779 );
+                LoRaMacInitialization(int chip, &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_CN779 );
 #elif defined( REGION_EU433 )
-                LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_EU433 );
+                LoRaMacInitialization(int chip, &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_EU433 );
 #elif defined( REGION_EU868 )
-                LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_EU868 );
+                LoRaMacInitialization(int chip, &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_EU868 );
 #elif defined( REGION_IN865 )
-                LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_IN865 );
+                LoRaMacInitialization(int chip, &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_IN865 );
 #elif defined( REGION_KR920 )
-                LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_KR920 );
+                LoRaMacInitialization(int chip, &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_KR920 );
 #elif defined( REGION_US915 )
-                LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_US915 );
+                LoRaMacInitialization(int chip, &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_US915 );
 #elif defined( REGION_US915_HYBRID )
-                LoRaMacInitialization( &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_US915_HYBRID );
+                LoRaMacInitialization(int chip, &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_US915_HYBRID );
 #else
     #error "Please define a region in the compiler options."
 #endif
@@ -829,11 +831,11 @@ void *Radio_routin(void *data){
 */
                 mibReq.Type = MIB_ADR;
                 mibReq.Param.AdrEnable = LORAWAN_ADR_ON;
-                LoRaMacMibSetRequestConfirm( &mibReq );
+                LoRaMacMibSetRequestConfirm( chip, &mibReq );
 
                 mibReq.Type = MIB_PUBLIC_NETWORK;
                 mibReq.Param.EnablePublicNetwork = LORAWAN_PUBLIC_NETWORK;
-                LoRaMacMibSetRequestConfirm( &mibReq );
+                LoRaMacMibSetRequestConfirm( chip, &mibReq );
 
 #if defined( REGION_EU868 )
                 LoRaMacTestSetDutyCycleOn( LORAWAN_DUTYCYCLE_ON );
@@ -849,15 +851,15 @@ void *Radio_routin(void *data){
 
                 mibReq.Type = MIB_RX2_DEFAULT_CHANNEL;
                 mibReq.Param.Rx2DefaultChannel = ( Rx2ChannelParams_t ){ 869525000, DR_3 };
-                LoRaMacMibSetRequestConfirm( &mibReq );
+                LoRaMacMibSetRequestConfirm( chip, &mibReq );
 
                 mibReq.Type = MIB_RX2_CHANNEL;
                 mibReq.Param.Rx2Channel = ( Rx2ChannelParams_t ){ 869525000, DR_3 };
-                LoRaMacMibSetRequestConfirm( &mibReq );
+                LoRaMacMibSetRequestConfirm( chip, &mibReq );
 #endif
 
 #endif
-                DeviceState = DEVICE_STATE_JOIN;
+                DeviceState = DEVICE_STATE_SLEEP;
                 break;
             }
             case DEVICE_STATE_JOIN:
@@ -878,7 +880,7 @@ void *Radio_routin(void *data){
 
                 if( NextTx == true )
                 {
-                    LoRaMacMlmeRequest( &mlmeReq );
+                    LoRaMacMlmeRequest( chip, &mlmeReq );
                 }
                 DeviceState = DEVICE_STATE_SLEEP;
 #else
@@ -894,23 +896,23 @@ void *Radio_routin(void *data){
 
                 mibReq.Type = MIB_NET_ID;
                 mibReq.Param.NetID = LORAWAN_NETWORK_ID;
-                LoRaMacMibSetRequestConfirm( &mibReq );
+                LoRaMacMibSetRequestConfirm( chip, &mibReq );
 
                 mibReq.Type = MIB_DEV_ADDR;
                 mibReq.Param.DevAddr = DevAddr;
-                LoRaMacMibSetRequestConfirm( &mibReq );
+                LoRaMacMibSetRequestConfirm( chip, &mibReq );
 
                 mibReq.Type = MIB_NWK_SKEY;
                 mibReq.Param.NwkSKey = NwkSKey;
-                LoRaMacMibSetRequestConfirm( &mibReq );
+                LoRaMacMibSetRequestConfirm( chip, &mibReq );
 
                 mibReq.Type = MIB_APP_SKEY;
                 mibReq.Param.AppSKey = AppSKey;
-                LoRaMacMibSetRequestConfirm( &mibReq );
+                LoRaMacMibSetRequestConfirm( chip, &mibReq );
 
                 mibReq.Type = MIB_NETWORK_JOINED;
                 mibReq.Param.IsNetworkJoined = true;
-                LoRaMacMibSetRequestConfirm( &mibReq );
+                LoRaMacMibSetRequestConfirm( chip, &mibReq );
 
                 DeviceState = DEVICE_STATE_SEND;
 #endif
@@ -923,7 +925,7 @@ void *Radio_routin(void *data){
                 {
                     PrepareTxFrame( AppPort );
 
-                    NextTx = SendFrame( );
+                    NextTx = SendFrame( chip );
                 }
                 if( ComplianceTest.Running == true )
                 {

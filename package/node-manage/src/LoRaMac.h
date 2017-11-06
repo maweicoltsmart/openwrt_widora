@@ -1670,19 +1670,19 @@ typedef struct sLoRaMacPrimitives
      *
      * \param   [OUT] MCPS-Confirm parameters
      */
-    void ( *MacMcpsConfirm )( McpsConfirm_t *McpsConfirm );
+    void ( *MacMcpsConfirm )( int chip,McpsConfirm_t *McpsConfirm );
     /*!
      * \brief   MCPS-Indication primitive
      *
      * \param   [OUT] MCPS-Indication parameters
      */
-    void ( *MacMcpsIndication )( McpsIndication_t *McpsIndication );
+    void ( *MacMcpsIndication )( int chip,McpsIndication_t *McpsIndication );
     /*!
      * \brief   MLME-Confirm primitive
      *
      * \param   [OUT] MLME-Confirm parameters
      */
-    void ( *MacMlmeConfirm )( MlmeConfirm_t *MlmeConfirm );
+    void ( *MacMlmeConfirm )( int chip,MlmeConfirm_t *MlmeConfirm );
 }LoRaMacPrimitives_t;
 
 /*!
@@ -1730,7 +1730,7 @@ static const uint8_t LoRaMacMaxEirpTable[] = { 8, 10, 12, 13, 14, 16, 18, 20, 21
  *          \ref LORAMAC_STATUS_PARAMETER_INVALID,
  *          \ref LORAMAC_STATUS_REGION_NOT_SUPPORTED.
  */
-LoRaMacStatus_t LoRaMacInitialization( LoRaMacPrimitives_t *primitives, LoRaMacCallback_t *callbacks, LoRaMacRegion_t region );
+LoRaMacStatus_t LoRaMacInitialization(int chip, LoRaMacPrimitives_t *primitives, LoRaMacCallback_t *callbacks, LoRaMacRegion_t region );
 
 /*!
  * \brief   Queries the LoRaMAC if it is possible to send the next frame with
@@ -1874,7 +1874,7 @@ LoRaMacStatus_t LoRaMacMibGetRequestConfirm( MibRequestConfirm_t *mibGet );
  *          \ref LORAMAC_STATUS_SERVICE_UNKNOWN,
  *          \ref LORAMAC_STATUS_PARAMETER_INVALID.
  */
-LoRaMacStatus_t LoRaMacMibSetRequestConfirm( MibRequestConfirm_t *mibSet );
+LoRaMacStatus_t LoRaMacMibSetRequestConfirm(int chip, MibRequestConfirm_t *mibSet );
 
 /*!
  * \brief   LoRaMAC MLME-Request
@@ -1904,7 +1904,7 @@ LoRaMacStatus_t LoRaMacMibSetRequestConfirm( MibRequestConfirm_t *mibSet );
  * mlmeReq.Req.Join.AppEui = AppEui;
  * mlmeReq.Req.Join.AppKey = AppKey;
  *
- * if( LoRaMacMlmeRequest( &mlmeReq ) == LORAMAC_STATUS_OK )
+ * if( LoRaMacMlmeRequest(int chip, &mlmeReq ) == LORAMAC_STATUS_OK )
  * {
  *   // Service started successfully. Waiting for the Mlme-Confirm event
  * }
@@ -1921,7 +1921,7 @@ LoRaMacStatus_t LoRaMacMibSetRequestConfirm( MibRequestConfirm_t *mibSet );
  *          \ref LORAMAC_STATUS_LENGTH_ERROR,
  *          \ref LORAMAC_STATUS_DEVICE_OFF.
  */
-LoRaMacStatus_t LoRaMacMlmeRequest( MlmeReq_t *mlmeRequest );
+LoRaMacStatus_t LoRaMacMlmeRequest(int chip, MlmeReq_t *mlmeRequest );
 
 /*!
  * \brief   LoRaMAC MCPS-Request
@@ -1939,7 +1939,7 @@ LoRaMacStatus_t LoRaMacMlmeRequest( MlmeReq_t *mlmeRequest );
  * mcpsReq.Req.Unconfirmed.fBuffer = myBuffer;
  * mcpsReq.Req.Unconfirmed.fBufferSize = sizeof( myBuffer );
  *
- * if( LoRaMacMcpsRequest( &mcpsReq ) == LORAMAC_STATUS_OK )
+ * if( LoRaMacMcpsRequest(int chip, &mcpsReq ) == LORAMAC_STATUS_OK )
  * {
  *   // Service started successfully. Waiting for the MCPS-Confirm event
  * }
@@ -1956,7 +1956,7 @@ LoRaMacStatus_t LoRaMacMlmeRequest( MlmeReq_t *mlmeRequest );
  *          \ref LORAMAC_STATUS_LENGTH_ERROR,
  *          \ref LORAMAC_STATUS_DEVICE_OFF.
  */
-LoRaMacStatus_t LoRaMacMcpsRequest( McpsReq_t *mcpsRequest );
+LoRaMacStatus_t LoRaMacMcpsRequest(int chip, McpsReq_t *mcpsRequest );
 
 /*! \} defgroup LORAMAC */
 

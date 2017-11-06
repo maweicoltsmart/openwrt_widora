@@ -26,7 +26,7 @@ Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
 #include <linux/spi/spi.h>
 #include <linux/spi/spi_gpio.h>
 #include "utilities.h"
-
+#include <asm/ptrace.h>
 /*
  * Local types definition
  */
@@ -216,7 +216,7 @@ SX1276_t SX1276[2];
  */
 struct timer_list TxTimeoutTimer[2];
 //struct timer_list RxTimeoutTimer;
-struct timer_list RxTimeoutSyncWord[2];
+//struct timer_list RxTimeoutSyncWord[2];
 struct timeval oldtv;
 
 
@@ -236,13 +236,13 @@ void SX1276Init( int chip,RadioEvents_t *events )
     // Initialize driver timeout timers
     init_timer(&TxTimeoutTimer[chip]);
     //init_timer(&RxTimeoutTimer);
-    init_timer(&RxTimeoutSyncWord[chip]);
+    //init_timer(&RxTimeoutSyncWord[chip]);
     do_gettimeofday(&oldtv);
     TxTimeoutTimer[chip].function = SX1276OnTimeoutIrq;
     TxTimeoutTimer[chip].data = chip;
     //RxTimeoutTimer.function = SX1276OnTimeoutIrq;
-    RxTimeoutSyncWord[chip].function = SX1276OnTimeoutIrq;
-    RxTimeoutSyncWord[chip].data = chip;
+    //RxTimeoutSyncWord[chip].function = SX1276OnTimeoutIrq;
+    //RxTimeoutSyncWord[chip].data = chip;
     SX1276IoInit(chip);
     SX1276Reset(chip );
 
@@ -274,6 +274,7 @@ RadioState_t SX1276GetStatus( int chip )
 void SX1276SetChannel( int chip,uint32_t freq )
 {
     printk("%s,chip = %d,freq = %d\r\n",__func__,chip,freq);
+	dump_stack();
 #if 0
     SX1276[chip].Settings.Channel = freq;
     freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
@@ -1041,8 +1042,8 @@ void SX1276SetRx( int chip,uint32_t timeout )
 
         if( rxContinuous == false )
         {
-            RxTimeoutSyncWord[chip].expires = jiffies + SX1276[chip].Settings.Fsk.RxSingleTimeout;
-            add_timer( &RxTimeoutSyncWord[chip] );
+            //RxTimeoutSyncWord[chip].expires = jiffies + SX1276[chip].Settings.Fsk.RxSingleTimeout;
+            //add_timer( &RxTimeoutSyncWord[chip] );
         }
     }
     else
@@ -1354,6 +1355,7 @@ void SX1276SetPublicNetwork( int chip,bool enable )
 void SX1276OnTimeoutIrq( unsigned long chip )
 {
     uint8_t i = 0;
+	//printk("%s, %d\r\n",__func__,chip);
     switch( SX1276[chip].Settings.State )
     {
     case RF_RX_RUNNING:
@@ -1374,12 +1376,12 @@ void SX1276OnTimeoutIrq( unsigned long chip )
             {
                 // Continuous mode restart Rx chain
                 SX1276Write(chip, REG_RXCONFIG, SX1276Read(chip, REG_RXCONFIG ) | RF_RXCONFIG_RESTARTRXWITHOUTPLLLOCK );
-                add_timer( &RxTimeoutSyncWord[chip] );
+                //add_timer( &RxTimeoutSyncWord[chip] );
             }
             else
             {
                 SX1276[chip].Settings.State = RF_IDLE;
-                del_timer( &RxTimeoutSyncWord[chip] );
+                //del_timer( &RxTimeoutSyncWord[chip] );
             }
         }
         if( ( RadioEvents != NULL ) && ( RadioEvents->RxTimeout != NULL ) )
@@ -1431,6 +1433,7 @@ void SX1276OnDio0Irq( int chip )
 {
     volatile uint8_t irqFlags = 0;
     int16_t rssi;
+	//printk("%s,%d\r\n",__func__,chip);
     switch( SX1276[chip].Settings.State )
     {
         case RF_RX_RUNNING:
@@ -1454,14 +1457,14 @@ void SX1276OnDio0Irq( int chip )
 
                         if( SX1276[chip].Settings.Fsk.RxContinuous == false )
                         {
-                            del_timer( &RxTimeoutSyncWord[chip] );
+                            //del_timer( &RxTimeoutSyncWord[chip] );
                             SX1276[chip].Settings.State = RF_IDLE;
                         }
                         else
                         {
                             // Continuous mode restart Rx chain
                             SX1276Write(chip, REG_RXCONFIG, SX1276Read(chip, REG_RXCONFIG ) | RF_RXCONFIG_RESTARTRXWITHOUTPLLLOCK );
-                            add_timer( &RxTimeoutSyncWord[chip] );
+                            //add_timer( &RxTimeoutSyncWord[chip] );
                         }
 
                         if( ( RadioEvents != NULL ) && ( RadioEvents->RxError != NULL ) )
@@ -1501,13 +1504,13 @@ void SX1276OnDio0Irq( int chip )
                 if( SX1276[chip].Settings.Fsk.RxContinuous == false )
                 {
                     SX1276[chip].Settings.State = RF_IDLE;
-                    del_timer( &RxTimeoutSyncWord[chip] );
+                    //del_timer( &RxTimeoutSyncWord[chip] );
                 }
                 else
                 {
                     // Continuous mode restart Rx chain
                     SX1276Write(chip, REG_RXCONFIG, SX1276Read(chip, REG_RXCONFIG ) | RF_RXCONFIG_RESTARTRXWITHOUTPLLLOCK );
-                    add_timer( &RxTimeoutSyncWord[chip] );
+                    //add_timer( &RxTimeoutSyncWord[chip] );
                 }
 
                 if( ( RadioEvents != NULL ) && ( RadioEvents->RxDone != NULL ) )
@@ -1630,6 +1633,7 @@ void SX1276OnDio0Irq( int chip )
 
 void SX1276OnDio1Irq( int chip )
 {
+	//printk("%s,%d\r\n",__func__,chip);
     switch( SX1276[chip].Settings.State )
     {
         case RF_RX_RUNNING:
@@ -1707,6 +1711,7 @@ void SX1276OnDio1Irq( int chip )
 
 void SX1276OnDio2Irq( int chip )
 {
+	//printk("%s,%d\r\n",__func__,chip);
     switch( SX1276[chip].Settings.State )
     {
         case RF_RX_RUNNING:
@@ -1721,7 +1726,7 @@ void SX1276OnDio2Irq( int chip )
 
                 if( ( SX1276[chip].Settings.FskPacketHandler.PreambleDetected == true ) && ( SX1276[chip].Settings.FskPacketHandler.SyncWordDetected == false ) )
                 {
-                    del_timer( &RxTimeoutSyncWord[chip] );
+                    //del_timer( &RxTimeoutSyncWord[chip] );
 
                     SX1276[chip].Settings.FskPacketHandler.SyncWordDetected = true;
 
@@ -1778,6 +1783,7 @@ void SX1276OnDio2Irq( int chip )
 
 void SX1276OnDio3Irq( int chip )
 {
+	//printk("%s,%d\r\n",__func__,chip);
     switch( SX1276[chip].Settings.Modem )
     {
     case MODEM_FSK:
@@ -1809,6 +1815,7 @@ void SX1276OnDio3Irq( int chip )
 
 void SX1276OnDio4Irq( int chip )
 {
+	//printk("%s,%d\r\n",__func__,chip);
     switch( SX1276[chip].Settings.Modem )
     {
     case MODEM_FSK:

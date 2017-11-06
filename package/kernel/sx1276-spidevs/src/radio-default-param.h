@@ -6,7 +6,7 @@
 
 #define RX_TIMEOUT_VALUE                            1000
 #define BUFFER_SIZE                                 64          // Define the payload size here
-#define RF_FREQUENCY                                433000000   // Hz
+#define RF_FREQUENCY                                470000000   // Hz
 #define TX_OUTPUT_POWER                             20          // dBm
 #define LORA_BANDWIDTH                              0           // [0: 125 kHz,
                                                                 //  1: 250 kHz,

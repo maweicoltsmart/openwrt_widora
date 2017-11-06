@@ -88,7 +88,7 @@ void OnTxDone( int chip )
 void OnRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
     struct lora_rx_data *new;
-	//printk("%s, %d bytes\r\n",__func__,size);
+	printk("%s, %d bytes\r\n",__func__,size);
     Radio.Sleep( chip);
     new = (struct lora_rx_data *)kmalloc(sizeof(struct lora_rx_data),GFP_KERNEL);
 	if(!new)
@@ -140,8 +140,8 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
     printk("%s,%d\r\n",__func__,__LINE__);
 	//SX1276IoIrqInit(0);
 	//SX1276IoIrqInit(1);
-	Radio.Rx( 0,RX_TIMEOUT_VALUE );
-	Radio.Rx( 1,RX_TIMEOUT_VALUE );
+	//Radio.Rx( 0,RX_TIMEOUT_VALUE );
+	//Radio.Rx( 1,RX_TIMEOUT_VALUE );
     return 0;
 }
 
@@ -214,6 +214,7 @@ static long lora_dev_ioctl(struct file *filp,unsigned int cmd,unsigned long arg)
     int err = 0;
     int ret = 0;
     int ioarg = 0;
+	int chip;
     printk("%s,%d,cmd = %d\r\n",__func__,__LINE__,cmd);
     if (_IOC_TYPE(cmd) != LORADEV_IOC_MAGIC)
         return -EINVAL;
@@ -250,17 +251,21 @@ static long lora_dev_ioctl(struct file *filp,unsigned int cmd,unsigned long arg)
 		break;
         case LORADEV_RADIO_SET_PUBLIC:
         printk("%s,%d\r\n",__func__,__LINE__);
+		ret = __get_user(ioarg, (int *)arg);
+		chip = (ioarg & 0x80000000) >> 31;
+		int enable = ioarg & 0x7fffffff;
+		Radio.SetPublicNetwork(chip,enable);
 		break;
         case LORADEV_RADIO_SET_MODEM:
         printk("%s,%d\r\n",__func__,__LINE__);
 		break;
         case LORADEV_RADIO_CHANNEL:
 		ret = __get_user(ioarg, (int *)arg);
-		int chip = (ioarg & 0x80000000) >> 31;
+		chip = (ioarg & 0x80000000) >> 31;
 		int channel = ioarg & 0x7fffffff;
 		Radio.Sleep(chip);
 		Radio.SetChannel(chip,channel);
-		Radio.Rx( chip,RX_TIMEOUT_VALUE );
+		Radio.Rx( chip,0 );
         printk("%s,%d\r\n",__func__,__LINE__);
 		break;
         case LORADEV_RADIO_SET_TXCFG:

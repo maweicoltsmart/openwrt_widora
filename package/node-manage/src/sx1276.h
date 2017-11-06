@@ -15,9 +15,8 @@ Maintainer: Miguel Luis and Gregory Cristian
 #ifndef __SX1276_H__
 #define __SX1276_H__
 
-//#include "sx1276Regs-Fsk.h"
-//#include "sx1276Regs-LoRa.h"
 #include "typedef.h"
+
 /*!
  * Radio wake-up time from sleep
  */
@@ -127,7 +126,7 @@ typedef struct SX1276_s
     //Gpio_t        DIO3;
     //Gpio_t        DIO4;
     //Gpio_t        DIO5;
-    struct spi_device *         Spi;
+    struct spi_device *Spi;
     RadioSettings_t Settings;
 }SX1276_t;
 
@@ -140,7 +139,7 @@ typedef void ( DioIrqHandler )( void );
  * SX1276 definitions
  */
 #define XTAL_FREQ                                   32000000
-#define FREQ_STEP                                   61.03515625
+#define FREQ_STEP                                   61
 
 #define RX_BUFFER_SIZE                              256
 
@@ -155,28 +154,28 @@ typedef void ( DioIrqHandler )( void );
  *
  * \param [IN] events Structure containing the driver callback functions
  */
-void SX1276Init( int fd );
+void SX1276Init( int chip,RadioEvents_t *events );
 
 /*!
  * Return current radio status
  *
  * \param status Radio status.[RF_IDLE, RF_RX_RUNNING, RF_TX_RUNNING]
  */
-RadioState_t SX1276GetStatus( void );
+RadioState_t SX1276GetStatus( int chip );
 
 /*!
  * \brief Configures the radio with the given modem
  *
  * \param [IN] modem Modem to be used [0: FSK, 1: LoRa]
  */
-void SX1276SetModem( int fd,RadioModems_t modem );
+void SX1276SetModem( int chip,RadioModems_t modem );
 
 /*!
  * \brief Sets the channel configuration
  *
  * \param [IN] freq         Channel RF frequency
  */
-void SX1276SetChannel( int chip,int fd,uint32_t freq );
+void SX1276SetChannel( int chip,uint32_t freq );
 
 /*!
  * \brief Checks if the channel is free for the given time
@@ -188,7 +187,7 @@ void SX1276SetChannel( int chip,int fd,uint32_t freq );
  *
  * \retval isFree         [true: Channel is free, false: Channel is not free]
  */
-bool SX1276IsChannelFree( RadioModems_t modem, uint32_t freq, int16_t rssiThresh, uint32_t maxCarrierSenseTime );
+bool SX1276IsChannelFree( int chip,RadioModems_t modem, uint32_t freq, int16_t rssiThresh, uint32_t maxCarrierSenseTime );
 
 /*!
  * \brief Generates a 32 bits random value based on the RSSI readings
@@ -200,7 +199,7 @@ bool SX1276IsChannelFree( RadioModems_t modem, uint32_t freq, int16_t rssiThresh
  *
  * \retval randomValue    32 bits random value
  */
-uint32_t SX1276Random( void );
+uint32_t SX1276Random( int chip );
 
 /*!
  * \brief Sets the reception parameters
@@ -243,7 +242,13 @@ uint32_t SX1276Random( void );
  * \param [IN] rxContinuous Sets the reception in continuous mode
  *                          [false: single mode, true: continuous mode]
  */
-void SX1276SetRxConfig( int fd );
+void SX1276SetRxConfig( int chip,RadioModems_t modem, uint32_t bandwidth,
+                         uint32_t datarate, uint8_t coderate,
+                         uint32_t bandwidthAfc, uint16_t preambleLen,
+                         uint16_t symbTimeout, bool fixLen,
+                         uint8_t payloadLen,
+                         bool crcOn, bool freqHopOn, uint8_t hopPeriod,
+                         bool iqInverted, bool rxContinuous );
 
 /*!
  * \brief Sets the transmission parameters
@@ -282,7 +287,13 @@ void SX1276SetRxConfig( int fd );
  *                          LoRa: [0: not inverted, 1: inverted]
  * \param [IN] timeout      Transmission timeout [ms]
  */
-void SX1276SetTxConfig( int fd );
+void SX1276SetTxConfig( int chip,RadioModems_t modem, int8_t power, uint32_t fdev,
+                        uint32_t bandwidth, uint32_t datarate,
+                        uint8_t coderate, uint16_t preambleLen,
+                        bool fixLen, bool crcOn, bool freqHopOn,
+                        uint8_t hopPeriod, bool iqInverted, uint32_t timeout );
+
+bool SX1276CheckRfFrequency( int chip,uint32_t frequency );
 
 /*!
  * \brief Computes the packet time on air in ms for the given payload
@@ -294,7 +305,7 @@ void SX1276SetTxConfig( int fd );
  *
  * \retval airTime        Computed airTime (ms) for the given packet payload length
  */
-uint32_t SX1276GetTimeOnAir( RadioModems_t modem, uint8_t pktLen );
+uint32_t SX1276GetTimeOnAir( int chip,RadioModems_t modem, uint8_t pktLen );
 
 /*!
  * \brief Sends the buffer of size. Prepares the packet to be sent and sets
@@ -303,28 +314,28 @@ uint32_t SX1276GetTimeOnAir( RadioModems_t modem, uint8_t pktLen );
  * \param [IN]: buffer     Buffer pointer
  * \param [IN]: size       Buffer size
  */
-void SX1276Send( uint8_t *buffer, uint8_t size );
+void SX1276Send( int chip,uint8_t *buffer, uint8_t size );
 
 /*!
  * \brief Sets the radio in sleep mode
  */
-void SX1276SetSleep( void );
+void SX1276SetSleep( int chip );
 
 /*!
  * \brief Sets the radio in standby mode
  */
-void SX1276SetStby( void );
+void SX1276SetStby( int chip );
 
 /*!
  * \brief Sets the radio in reception mode for the given time
  * \param [IN] timeout Reception timeout [ms] [0: continuous, others timeout]
  */
-void SX1276SetRx( uint32_t timeout );
+void SX1276SetRx( int chip,uint32_t timeout );
 
 /*!
  * \brief Start a Channel Activity Detection
  */
-void SX1276StartCad( void );
+void SX1276StartCad( int chip );
 
 /*!
  * \brief Sets the radio in continuous wave transmission mode
@@ -333,14 +344,14 @@ void SX1276StartCad( void );
  * \param [IN]: power      Sets the output power [dBm]
  * \param [IN]: time       Transmission mode timeout [s]
  */
-void SX1276SetTxContinuousWave( uint32_t freq, int8_t power, uint16_t time );
+void SX1276SetTxContinuousWave( int chip,uint32_t freq, int8_t power, uint16_t time );
 
 /*!
  * \brief Reads the current RSSI value
  *
  * \retval rssiValue Current RSSI value in [dBm]
  */
-int16_t SX1276ReadRssi( RadioModems_t modem );
+int16_t SX1276ReadRssi( int chip,RadioModems_t modem );
 
 /*!
  * \brief Writes the radio register at the specified address
@@ -348,7 +359,7 @@ int16_t SX1276ReadRssi( RadioModems_t modem );
  * \param [IN]: addr Register address
  * \param [IN]: data New register value
  */
-void SX1276Write( uint8_t addr, uint8_t data );
+void SX1276Write( int chip,uint8_t addr, uint8_t data );
 
 /*!
  * \brief Reads the radio register at the specified address
@@ -356,7 +367,7 @@ void SX1276Write( uint8_t addr, uint8_t data );
  * \param [IN]: addr Register address
  * \retval data Register value
  */
-uint8_t SX1276Read( uint8_t addr );
+uint8_t SX1276Read( int chip,uint8_t addr );
 
 /*!
  * \brief Writes multiple radio registers starting at address
@@ -365,7 +376,7 @@ uint8_t SX1276Read( uint8_t addr );
  * \param [IN] buffer Buffer containing the new register's values
  * \param [IN] size   Number of registers to be written
  */
-void SX1276WriteBuffer( uint8_t addr, uint8_t *buffer, uint8_t size );
+void SX1276WriteBuffer( int chip,uint8_t addr, uint8_t *buffer, uint8_t size );
 
 /*!
  * \brief Reads multiple radio registers starting at address
@@ -374,7 +385,7 @@ void SX1276WriteBuffer( uint8_t addr, uint8_t *buffer, uint8_t size );
  * \param [OUT] buffer Buffer where to copy the registers data
  * \param [IN] size Number of registers to be read
  */
-void SX1276ReadBuffer( uint8_t addr, uint8_t *buffer, uint8_t size );
+void SX1276ReadBuffer( int chip,uint8_t addr, uint8_t *buffer, uint8_t size );
 
 /*!
  * \brief Sets the maximum payload length.
@@ -382,7 +393,7 @@ void SX1276ReadBuffer( uint8_t addr, uint8_t *buffer, uint8_t size );
  * \param [IN] modem      Radio modem to be used [0: FSK, 1: LoRa]
  * \param [IN] max        Maximum payload length in bytes
  */
-void SX1276SetMaxPayloadLength( RadioModems_t modem, uint8_t max );
+void SX1276SetMaxPayloadLength( int chip,RadioModems_t modem, uint8_t max );
 
 /*!
  * \brief Sets the network to public or private. Updates the sync byte.
@@ -391,8 +402,56 @@ void SX1276SetMaxPayloadLength( RadioModems_t modem, uint8_t max );
  *
  * \param [IN] enable if true, it enables a public network
  */
-void SX1276SetPublicNetwork( bool enable );
+void SX1276SetPublicNetwork( int chip,bool enable );
 
-extern SX1276_t SX1276;
+extern SX1276_t SX1276[];
+extern int fd_proc;
+extern int fd_cdev;
+
+#define LORA_PROCFS_NAME_LEN 32  
+
+typedef struct{
+	int chip;
+	RadioModems_t modem;
+	uint32_t bandwidth;
+	uint32_t datarate;
+	uint8_t coderate;
+	uint32_t bandwidthAfc;
+	uint16_t preambleLen;
+    uint16_t symbTimeout;
+    bool fixLen;
+    uint8_t payloadLen;
+    bool crcOn;
+    bool freqHopOn;
+    uint8_t hopPeriod;
+    bool iqInverted;
+    bool rxContinuous;
+}st_rxconfig,*pst_rxconfig;
+
+typedef struct{
+	int chip;
+	RadioModems_t modem;
+	int8_t power;
+	uint32_t fdev;
+    uint32_t bandwidth;
+	uint32_t datarate;
+    uint8_t coderate;
+	uint16_t preambleLen;
+    bool fixLen;
+	bool crcOn;
+	bool freqHopOn;
+    uint8_t hopPeriod;
+	bool iqInverted;
+	uint32_t timeout;
+}st_txconfig,*pst_txconfig;
+
+typedef struct{  
+    char name[LORA_PROCFS_NAME_LEN + 1];
+	union
+	{
+		st_rxconfig stRxconfig;
+		st_txconfig stTxconfig;
+	}proc_value;
+}lora_proc_data_t;  
 
 #endif // __SX1276_H__

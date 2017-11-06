@@ -466,14 +466,14 @@ void RegionCN470ComputeRxWindowParameters( int8_t datarate, uint8_t minRxSymbols
     RegionCommonComputeRxWindowParameters( tSymbol, minRxSymbols, rxError, RADIO_WAKEUP_TIME, &rxConfigParams->WindowTimeout, &rxConfigParams->WindowOffset );
 }
 
-bool RegionCN470RxConfig( RxConfigParams_t* rxConfig, int8_t* datarate )
+bool RegionCN470RxConfig(int chip, RxConfigParams_t* rxConfig, int8_t* datarate )
 {
     int8_t dr = rxConfig->Datarate;
     uint8_t maxPayload = 0;
     int8_t phyDr = 0;
     uint32_t frequency = rxConfig->Frequency;
 
-    if( Radio.GetStatus( ) != RF_IDLE )
+    if( Radio.GetStatus(chip ) != RF_IDLE )
     {
         return false;
     }
@@ -487,10 +487,10 @@ bool RegionCN470RxConfig( RxConfigParams_t* rxConfig, int8_t* datarate )
     // Read the physical datarate from the datarates table
     phyDr = DataratesCN470[dr];
 
-    Radio.SetChannel( frequency );
+    Radio.SetChannel(chip, frequency );
 
     // Radio configuration
-    Radio.SetRxConfig( MODEM_LORA, rxConfig->Bandwidth, phyDr, 1, 0, 8, rxConfig->WindowTimeout, false, 0, false, 0, 0, true, rxConfig->RxContinuous );
+    Radio.SetRxConfig(chip, MODEM_LORA, rxConfig->Bandwidth, phyDr, 1, 0, 8, rxConfig->WindowTimeout, false, 0, false, 0, 0, true, rxConfig->RxContinuous );
 
     if( rxConfig->RepeaterSupport == true )
     {
@@ -500,13 +500,13 @@ bool RegionCN470RxConfig( RxConfigParams_t* rxConfig, int8_t* datarate )
     {
         maxPayload = MaxPayloadOfDatarateCN470[dr];
     }
-    Radio.SetMaxPayloadLength( MODEM_LORA, maxPayload + LORA_MAC_FRMPAYLOAD_OVERHEAD );
+    Radio.SetMaxPayloadLength(chip, MODEM_LORA, maxPayload + LORA_MAC_FRMPAYLOAD_OVERHEAD );
 
     *datarate = (uint8_t) dr;
     return true;
 }
 
-bool RegionCN470TxConfig( TxConfigParams_t* txConfig, int8_t* txPower, TimerTime_t* txTimeOnAir )
+bool RegionCN470TxConfig(int chip, TxConfigParams_t* txConfig, int8_t* txPower, TimerTime_t* txTimeOnAir )
 {
     int8_t phyDr = DataratesCN470[txConfig->Datarate];
     int8_t txPowerLimited = LimitTxPower( txConfig->TxPower, Bands[Channels[txConfig->Channel].Band].TxMaxPower, txConfig->Datarate, ChannelsMask );
@@ -516,13 +516,13 @@ bool RegionCN470TxConfig( TxConfigParams_t* txConfig, int8_t* txPower, TimerTime
     phyTxPower = RegionCommonComputeTxPower( txPowerLimited, txConfig->MaxEirp, txConfig->AntennaGain );
 
     // Setup the radio frequency
-    Radio.SetChannel( Channels[txConfig->Channel].Frequency );
+    Radio.SetChannel(chip, Channels[txConfig->Channel].Frequency );
 
-    Radio.SetTxConfig( MODEM_LORA, phyTxPower, 0, 0, phyDr, 1, 8, false, true, 0, 0, false, 3000 );
+    Radio.SetTxConfig(chip, MODEM_LORA, phyTxPower, 0, 0, phyDr, 1, 8, false, true, 0, 0, false, 3000 );
     // Setup maximum payload lenght of the radio driver
-    Radio.SetMaxPayloadLength( MODEM_LORA, txConfig->PktLen );
+    Radio.SetMaxPayloadLength(chip, MODEM_LORA, txConfig->PktLen );
     // Get the time-on-air of the next tx frame
-    *txTimeOnAir = Radio.TimeOnAir( MODEM_LORA, txConfig->PktLen );
+    *txTimeOnAir = Radio.TimeOnAir(chip, MODEM_LORA, txConfig->PktLen );
     *txPower = txPowerLimited;
 
     return true;
@@ -625,13 +625,13 @@ uint8_t RegionCN470LinkAdrReq( LinkAdrReqParams_t* linkAdrReq, int8_t* drOut, in
     return status;
 }
 
-uint8_t RegionCN470RxParamSetupReq( RxParamSetupReqParams_t* rxParamSetupReq )
+uint8_t RegionCN470RxParamSetupReq(int chip, RxParamSetupReqParams_t* rxParamSetupReq )
 {
     uint8_t status = 0x07;
     uint32_t freq = rxParamSetupReq->Frequency;
 
     // Verify radio frequency
-    if( ( Radio.CheckRfFrequency( freq ) == false ) ||
+    if( ( Radio.CheckRfFrequency(chip, freq ) == false ) ||
         ( freq < CN470_FIRST_RX1_CHANNEL ) ||
         ( freq > CN470_LAST_RX1_CHANNEL ) ||
         ( ( ( freq - ( uint32_t ) CN470_FIRST_RX1_CHANNEL ) % ( uint32_t ) CN470_STEPWIDTH_RX1_CHANNEL ) != 0 ) )
@@ -786,7 +786,7 @@ bool RegionCN470ChannelsRemove( ChannelRemoveParams_t* channelRemove  )
     return LORAMAC_STATUS_PARAMETER_INVALID;
 }
 
-void RegionCN470SetContinuousWave( ContinuousWaveParams_t* continuousWave )
+void RegionCN470SetContinuousWave(int chip, ContinuousWaveParams_t* continuousWave )
 {
     int8_t txPowerLimited = LimitTxPower( continuousWave->TxPower, Bands[Channels[continuousWave->Channel].Band].TxMaxPower, continuousWave->Datarate, ChannelsMask );
     int8_t phyTxPower = 0;
@@ -795,7 +795,7 @@ void RegionCN470SetContinuousWave( ContinuousWaveParams_t* continuousWave )
     // Calculate physical TX power
     phyTxPower = RegionCommonComputeTxPower( txPowerLimited, continuousWave->MaxEirp, continuousWave->AntennaGain );
 
-    Radio.SetTxContinuousWave( frequency, phyTxPower, continuousWave->Timeout );
+    Radio.SetTxContinuousWave(chip, frequency, phyTxPower, continuousWave->Timeout );
 }
 
 uint8_t RegionCN470ApplyDrOffset( uint8_t downlinkDwellTime, int8_t dr, int8_t drOffset )

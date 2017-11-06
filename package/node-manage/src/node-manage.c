@@ -38,6 +38,9 @@
 #include "typedef.h"
 #include "Region.h"
 
+int fd_proc;
+int fd_cdev;
+
 void node_event_fun(int signum)
 {
     unsigned char key_val;
@@ -49,22 +52,23 @@ int main(int argc ,char *argv[])
     int flag;
     int ret;
     int fd;
-    pthread_t lora_1_handle,lora_2_handle,tcp_client_handle,tcp_server_handle;
+    pthread_t lora_1_handle,lora_2_handle,tcp_client_handle,tcp_server_handle,radio_routin_handle;
 	int msgid = -1;
 	struct msg_st data;
 	int len;
-	fd = open("/dev/lora_radio",O_RDWR);
-	if (fd < 0)
+	fd_cdev = open("/dev/lora_radio",O_RDWR);
+	if (fd_cdev < 0)
 	{
 		printf("open lora_radio error\r\n");
 		return -1;
 	}
-	
+	fd_proc = open("/proc/lora_procfs",O_RDWR);
+	ret = pthread_create(&radio_routin_handle, NULL, Radio_routin, &fd_proc);
     ret = pthread_create(&tcp_client_handle, NULL, tcp_client_routin, &fd);
     ret = pthread_create(&tcp_server_handle, NULL, tcp_server_routin, &fd);
-#define RF_FREQUENCY                                433000000 // Hz
-	SX1276SetChannel(0,fd,RF_FREQUENCY);
-	SX1276SetChannel(1,fd,RF_FREQUENCY + FREQ_STEP * 10);
+#define RF_FREQUENCY                                470000000 // Hz
+	//SX1276SetChannel(0,fd,RF_FREQUENCY);
+	//SX1276SetChannel(1,fd,RF_FREQUENCY + FREQ_STEP * 10);
 creat_msg_q:
 	//建立消息队列
 	while((msgid = msgget((key_t)1234, 0666 | IPC_CREAT) == -1))

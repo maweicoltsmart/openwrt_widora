@@ -1270,7 +1270,7 @@ bool RegionAdrNext( LoRaMacRegion_t region, AdrNextParams_t* adrNext, int8_t* dr
  *
  * \retval Returns true, if the configuration was applied successfully.
  */
-bool RegionRxConfig( LoRaMacRegion_t region, RxConfigParams_t* rxConfig, int8_t* datarate );
+bool RegionRxConfig( int chip,LoRaMacRegion_t region, RxConfigParams_t* rxConfig, int8_t* datarate );
 
 /*
  * Rx window precise timing
@@ -1340,7 +1340,7 @@ void RegionComputeRxWindowParameters( LoRaMacRegion_t region, int8_t datarate, u
  *
  * \retval Returns true, if the configuration was applied successfully.
  */
-bool RegionTxConfig( LoRaMacRegion_t region, TxConfigParams_t* txConfig, int8_t* txPower, TimerTime_t* txTimeOnAir );
+bool RegionTxConfig(int chip, LoRaMacRegion_t region, TxConfigParams_t* txConfig, int8_t* txPower, TimerTime_t* txTimeOnAir );
 
 /*!
  * \brief The function processes a Link ADR Request.
@@ -1370,7 +1370,7 @@ uint8_t RegionLinkAdrReq( LoRaMacRegion_t region, LinkAdrReqParams_t* linkAdrReq
  *
  * \retval Returns the status of the operation, according to the LoRaMAC specification.
  */
-uint8_t RegionRxParamSetupReq( LoRaMacRegion_t region, RxParamSetupReqParams_t* rxParamSetupReq );
+uint8_t RegionRxParamSetupReq(int chip, LoRaMacRegion_t region, RxParamSetupReqParams_t* rxParamSetupReq );
 
 /*!
  * \brief The function processes a New Channel Request.
@@ -1472,7 +1472,7 @@ bool RegionChannelsRemove( LoRaMacRegion_t region, ChannelRemoveParams_t* channe
  *
  * \param [IN] continuousWave Pointer to the function parameters.
  */
-void RegionSetContinuousWave( LoRaMacRegion_t region, ContinuousWaveParams_t* continuousWave );
+void RegionSetContinuousWave(int chip, LoRaMacRegion_t region, ContinuousWaveParams_t* continuousWave );
 
 /*!
  * \brief Computes new datarate according to the given offset

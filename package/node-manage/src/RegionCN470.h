@@ -307,7 +307,7 @@ void RegionCN470ComputeRxWindowParameters( int8_t datarate, uint8_t minRxSymbols
  *
  * \retval Returns true, if the configuration was applied successfully.
  */
-bool RegionCN470RxConfig( RxConfigParams_t* rxConfig, int8_t* datarate );
+bool RegionCN470RxConfig(int chip, RxConfigParams_t* rxConfig, int8_t* datarate );
 
 /*!
  * \brief TX configuration.
@@ -320,7 +320,7 @@ bool RegionCN470RxConfig( RxConfigParams_t* rxConfig, int8_t* datarate );
  *
  * \retval Returns true, if the configuration was applied successfully.
  */
-bool RegionCN470TxConfig( TxConfigParams_t* txConfig, int8_t* txPower, TimerTime_t* txTimeOnAir );
+bool RegionCN470TxConfig(int chip, TxConfigParams_t* txConfig, int8_t* txPower, TimerTime_t* txTimeOnAir );
 
 /*!
  * \brief The function processes a Link ADR Request.
@@ -338,7 +338,7 @@ uint8_t RegionCN470LinkAdrReq( LinkAdrReqParams_t* linkAdrReq, int8_t* drOut, in
  *
  * \retval Returns the status of the operation, according to the LoRaMAC specification.
  */
-uint8_t RegionCN470RxParamSetupReq( RxParamSetupReqParams_t* rxParamSetupReq );
+uint8_t RegionCN470RxParamSetupReq(int chip, RxParamSetupReqParams_t* rxParamSetupReq );
 
 /*!
  * \brief The function processes a Channel Request.
@@ -422,7 +422,7 @@ bool RegionCN470ChannelsRemove( ChannelRemoveParams_t* channelRemove  );
  *
  * \param [IN] continuousWave Pointer to the function parameters.
  */
-void RegionCN470SetContinuousWave( ContinuousWaveParams_t* continuousWave );
+void RegionCN470SetContinuousWave(int chip, ContinuousWaveParams_t* continuousWave );
 
 /*!
  * \brief Computes new datarate according to the given offset
