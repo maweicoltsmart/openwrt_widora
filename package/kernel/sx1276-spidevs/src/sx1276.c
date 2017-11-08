@@ -274,7 +274,7 @@ RadioState_t SX1276GetStatus( int chip )
 void SX1276SetChannel( int chip,uint32_t freq )
 {
     printk("%s,chip = %d,freq = %d\r\n",__func__,chip,freq);
-	dump_stack();
+    //dump_stack();
 #if 0
     SX1276[chip].Settings.Channel = freq;
     freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
@@ -877,6 +877,7 @@ void SX1276Send( int chip,uint8_t *buffer, uint8_t size )
 
 void SX1276SetSleep( int chip )
 {
+    printk("%s,%d\r\n",__func__,chip);
     //del_timer( &RxTimeoutTimer );
     del_timer( &TxTimeoutTimer[chip] );
 
@@ -886,6 +887,7 @@ void SX1276SetSleep( int chip )
 
 void SX1276SetStby( int chip )
 {
+    printk("%s,%d\r\n",__func__,chip);
     //del_timer( &RxTimeoutTimer );
     del_timer( &TxTimeoutTimer[chip] );
 
@@ -896,7 +898,7 @@ void SX1276SetStby( int chip )
 void SX1276SetRx( int chip,uint32_t timeout )
 {
     bool rxContinuous = false;
-
+    printk("%s,timeout = %d\r\n",__func__,timeout);
     switch( SX1276[chip].Settings.Modem )
     {
     case MODEM_FSK:
@@ -1201,29 +1203,29 @@ int16_t SX1276ReadRssi( int chip,RadioModems_t modem )
 
 void SX1276Reset( int chip )
 {
-	switch(chip)
-	{
-		case 0:
-    	gpio_set_value(SX1278_1_RST_PIN,0);
-    	//gpio_set_value(SX1278_2_RST_PIN,0);
-    	udelay(1000);
-    	gpio_set_value(SX1278_1_RST_PIN,1);
-    	//gpio_set_value(SX1278_2_RST_PIN,1);
-    	udelay(6000);
-		break;
-		case 1:
-		//gpio_set_value(SX1278_1_RST_PIN,0);
-		gpio_set_value(SX1278_2_RST_PIN,0);
-		udelay(1000);
-		//gpio_set_value(SX1278_1_RST_PIN,1);
-		gpio_set_value(SX1278_2_RST_PIN,1);
-		udelay(6000);
-		break;
-		case 3:
-		break;
-		default:
-		break;
-	}
+    switch(chip)
+    {
+        case 0:
+        gpio_set_value(SX1278_1_RST_PIN,0);
+        //gpio_set_value(SX1278_2_RST_PIN,0);
+        udelay(1000);
+        gpio_set_value(SX1278_1_RST_PIN,1);
+        //gpio_set_value(SX1278_2_RST_PIN,1);
+        udelay(6000);
+        break;
+        case 1:
+        //gpio_set_value(SX1278_1_RST_PIN,0);
+        gpio_set_value(SX1278_2_RST_PIN,0);
+        udelay(1000);
+        //gpio_set_value(SX1278_1_RST_PIN,1);
+        gpio_set_value(SX1278_2_RST_PIN,1);
+        udelay(6000);
+        break;
+        case 3:
+        break;
+        default:
+        break;
+    }
 }
 
 void SX1276SetOpMode( int chip,uint8_t opMode )
@@ -1338,6 +1340,7 @@ void SX1276SetMaxPayloadLength( int chip,RadioModems_t modem, uint8_t max )
 
 void SX1276SetPublicNetwork( int chip,bool enable )
 {
+    printk("%s,%d\r\n",__func__,enable);
     SX1276SetModem(chip, MODEM_LORA );
     SX1276[chip].Settings.LoRa.PublicNetwork = enable;
     if( enable == true )
@@ -1355,7 +1358,7 @@ void SX1276SetPublicNetwork( int chip,bool enable )
 void SX1276OnTimeoutIrq( unsigned long chip )
 {
     uint8_t i = 0;
-	//printk("%s, %d\r\n",__func__,chip);
+    printk("%s, %d\r\n",__func__,chip);
     switch( SX1276[chip].Settings.State )
     {
     case RF_RX_RUNNING:
@@ -1433,7 +1436,7 @@ void SX1276OnDio0Irq( int chip )
 {
     volatile uint8_t irqFlags = 0;
     int16_t rssi;
-	//printk("%s,%d\r\n",__func__,chip);
+    //printk("%s,%d\r\n",__func__,chip);
     switch( SX1276[chip].Settings.State )
     {
         case RF_RX_RUNNING:
@@ -1633,7 +1636,7 @@ void SX1276OnDio0Irq( int chip )
 
 void SX1276OnDio1Irq( int chip )
 {
-	//printk("%s,%d\r\n",__func__,chip);
+    //printk("%s,%d\r\n",__func__,chip);
     switch( SX1276[chip].Settings.State )
     {
         case RF_RX_RUNNING:
@@ -1711,7 +1714,7 @@ void SX1276OnDio1Irq( int chip )
 
 void SX1276OnDio2Irq( int chip )
 {
-	//printk("%s,%d\r\n",__func__,chip);
+    //printk("%s,%d\r\n",__func__,chip);
     switch( SX1276[chip].Settings.State )
     {
         case RF_RX_RUNNING:
@@ -1783,7 +1786,7 @@ void SX1276OnDio2Irq( int chip )
 
 void SX1276OnDio3Irq( int chip )
 {
-	//printk("%s,%d\r\n",__func__,chip);
+    //printk("%s,%d\r\n",__func__,chip);
     switch( SX1276[chip].Settings.Modem )
     {
     case MODEM_FSK:
@@ -1815,7 +1818,7 @@ void SX1276OnDio3Irq( int chip )
 
 void SX1276OnDio4Irq( int chip )
 {
-	//printk("%s,%d\r\n",__func__,chip);
+    //printk("%s,%d\r\n",__func__,chip);
     switch( SX1276[chip].Settings.Modem )
     {
     case MODEM_FSK:

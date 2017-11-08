@@ -23,6 +23,7 @@ Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
 #include <stdio.h>
 #include <sys/ioctl.h>
 #include <string.h>
+#include <math.h>
 /*
  * Local types definition
  */
@@ -177,7 +178,12 @@ SX1276_t SX1276[2];
 #define LORADEV_RADIO_READ_REG _IOWR(LORADEV_IOC_MAGIC, 8, int)  //写
 #define LORADEV_RADIO_SET_TXCFG _IOW(LORADEV_IOC_MAGIC, 9, int)
 #define LORADEV_RADIO_SET_RXCFG _IOW(LORADEV_IOC_MAGIC, 10, int)
-#define LORADEV_IOC_MAXNR 11
+#define LORADEV_RADIO_SET_RX _IOW(LORADEV_IOC_MAGIC, 11, int)
+#define LORADEV_RADIO_SET_TX _IOW(LORADEV_IOC_MAGIC, 12, int)
+#define LORADEV_RADIO_SET_SLEEP _IOW(LORADEV_IOC_MAGIC, 13, int)
+#define LORADEV_RADIO_SET_STDBY _IOW(LORADEV_IOC_MAGIC, 14, int)
+
+#define LORADEV_IOC_MAXNR 15
 
 /*
  * Radio driver functions implementation
@@ -185,22 +191,22 @@ SX1276_t SX1276[2];
 
 void SX1276Init( int chip,RadioEvents_t *events )
 {
-	printf("%s,%d,cmd = %d\r\n",__func__,__LINE__,LORADEV_RADIO_INIT);
-	//ioctl(fd, LORADEV_RADIO_INIT, NULL);
+    uint32_t ioarg = 0;
+    ioarg = (chip << 31);
+    ioctl(fd_cdev, LORADEV_RADIO_INIT, &ioarg);
 }
 
 RadioState_t SX1276GetStatus( int chip )
 {
-	return RF_IDLE;
+    return RF_IDLE;
 }
 
 void SX1276SetChannel( int chip,uint32_t freq )
 {
     SX1276[chip].Settings.Channel = freq;
     freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
-	freq = freq | (chip << 31);
+    freq = freq | (chip << 31);
     ioctl(fd_cdev, LORADEV_RADIO_CHANNEL, &freq);
-    printf("%s,%d,freq = %d\r\n",__func__,__LINE__,freq);
 }
 
 bool SX1276IsChannelFree( int chip,RadioModems_t modem, uint32_t freq, int16_t rssiThresh, uint32_t maxCarrierSenseTime )
@@ -242,28 +248,28 @@ void SX1276SetRxConfig( int chip,RadioModems_t modem, uint32_t bandwidth,
                          bool crcOn, bool freqHopOn, uint8_t hopPeriod,
                          bool iqInverted, bool rxContinuous )
 {
-	printf("%s,%d\r\n",__func__,__LINE__);
-	lora_proc_data_t lora_proc_data;
-	memset(&lora_proc_data,0,sizeof(lora_proc_data_t));
-	memcpy(lora_proc_data.name,"RegionCN470RxConfig",strlen("RegionCN470RxConfig"));
-	lora_proc_data.proc_value.stRxconfig.chip = chip;
-	lora_proc_data.proc_value.stRxconfig.modem = modem;
-	lora_proc_data.proc_value.stRxconfig.bandwidth = bandwidth;
-	lora_proc_data.proc_value.stRxconfig.datarate = datarate;
-	lora_proc_data.proc_value.stRxconfig.coderate = coderate;
-	lora_proc_data.proc_value.stRxconfig.bandwidthAfc = bandwidthAfc;
-	lora_proc_data.proc_value.stRxconfig.preambleLen = preambleLen;
-	lora_proc_data.proc_value.stRxconfig.symbTimeout = symbTimeout;
-	lora_proc_data.proc_value.stRxconfig.fixLen = fixLen;
-	lora_proc_data.proc_value.stRxconfig.payloadLen = payloadLen;
-	lora_proc_data.proc_value.stRxconfig.crcOn = crcOn;
-	lora_proc_data.proc_value.stRxconfig.freqHopOn = freqHopOn;
-	lora_proc_data.proc_value.stRxconfig.hopPeriod = hopPeriod;
-	lora_proc_data.proc_value.stRxconfig.iqInverted = iqInverted;
-	lora_proc_data.proc_value.stRxconfig.rxContinuous = rxContinuous;
-	
-	write(fd_proc,&lora_proc_data,sizeof(lora_proc_data_t));
-	//ioctl(fd, LORADEV_RADIO_SET_RXCFG, NULL);
+    lora_proc_data_t lora_proc_data;
+    printf("%s,%d\r\n",__func__,__LINE__);
+    memset(&lora_proc_data,0,sizeof(lora_proc_data_t));
+    memcpy(lora_proc_data.name,"RegionCN470RxConfig",strlen("RegionCN470RxConfig"));
+    lora_proc_data.proc_value.stRxconfig.chip = chip;
+    lora_proc_data.proc_value.stRxconfig.modem = modem;
+    lora_proc_data.proc_value.stRxconfig.bandwidth = bandwidth;
+    lora_proc_data.proc_value.stRxconfig.datarate = datarate;
+    lora_proc_data.proc_value.stRxconfig.coderate = coderate;
+    lora_proc_data.proc_value.stRxconfig.bandwidthAfc = bandwidthAfc;
+    lora_proc_data.proc_value.stRxconfig.preambleLen = preambleLen;
+    lora_proc_data.proc_value.stRxconfig.symbTimeout = symbTimeout;
+    lora_proc_data.proc_value.stRxconfig.fixLen = fixLen;
+    lora_proc_data.proc_value.stRxconfig.payloadLen = payloadLen;
+    lora_proc_data.proc_value.stRxconfig.crcOn = crcOn;
+    lora_proc_data.proc_value.stRxconfig.freqHopOn = freqHopOn;
+    lora_proc_data.proc_value.stRxconfig.hopPeriod = hopPeriod;
+    lora_proc_data.proc_value.stRxconfig.iqInverted = iqInverted;
+    lora_proc_data.proc_value.stRxconfig.rxContinuous = rxContinuous;
+
+    write(fd_proc,&lora_proc_data,sizeof(lora_proc_data_t));
+    //ioctl(fd, LORADEV_RADIO_SET_RXCFG, NULL);
 }
 
 void SX1276SetTxConfig( int chip,RadioModems_t modem, int8_t power, uint32_t fdev,
@@ -272,62 +278,144 @@ void SX1276SetTxConfig( int chip,RadioModems_t modem, int8_t power, uint32_t fde
                         bool fixLen, bool crcOn, bool freqHopOn,
                         uint8_t hopPeriod, bool iqInverted, uint32_t timeout )
 {
-	printf("%s,%d\r\n",__func__,__LINE__);
-	lora_proc_data_t lora_proc_data;
-	memset(&lora_proc_data,0,sizeof(lora_proc_data_t));
-	memcpy(lora_proc_data.name,"RegionCN470TxConfig",strlen("RegionCN470TxConfig"));
-	lora_proc_data.proc_value.stTxconfig.chip = chip;
-	lora_proc_data.proc_value.stTxconfig.modem = modem;
-	lora_proc_data.proc_value.stTxconfig.power = power;
-	lora_proc_data.proc_value.stTxconfig.fdev = fdev;
-	lora_proc_data.proc_value.stTxconfig.bandwidth = bandwidth;
-	lora_proc_data.proc_value.stTxconfig.datarate = datarate;
-	lora_proc_data.proc_value.stTxconfig.coderate = coderate;
-	lora_proc_data.proc_value.stTxconfig.preambleLen = preambleLen;
-	lora_proc_data.proc_value.stTxconfig.fixLen = fixLen;
-	lora_proc_data.proc_value.stTxconfig.crcOn = crcOn;
-	lora_proc_data.proc_value.stTxconfig.freqHopOn = freqHopOn;
-	lora_proc_data.proc_value.stTxconfig.hopPeriod = hopPeriod;
-	lora_proc_data.proc_value.stTxconfig.iqInverted = iqInverted;
-	lora_proc_data.proc_value.stTxconfig.timeout = timeout;
+    lora_proc_data_t lora_proc_data;
+    printf("%s,%d\r\n",__func__,__LINE__);
+    memset(&lora_proc_data,0,sizeof(lora_proc_data_t));
+    memcpy(lora_proc_data.name,"RegionCN470TxConfig",strlen("RegionCN470TxConfig"));
+    lora_proc_data.proc_value.stTxconfig.chip = chip;
+    lora_proc_data.proc_value.stTxconfig.modem = modem;
+    lora_proc_data.proc_value.stTxconfig.power = power;
+    lora_proc_data.proc_value.stTxconfig.fdev = fdev;
+    lora_proc_data.proc_value.stTxconfig.bandwidth = bandwidth;
+    lora_proc_data.proc_value.stTxconfig.datarate = datarate;
+    lora_proc_data.proc_value.stTxconfig.coderate = coderate;
+    lora_proc_data.proc_value.stTxconfig.preambleLen = preambleLen;
+    lora_proc_data.proc_value.stTxconfig.fixLen = fixLen;
+    lora_proc_data.proc_value.stTxconfig.crcOn = crcOn;
+    lora_proc_data.proc_value.stTxconfig.freqHopOn = freqHopOn;
+    lora_proc_data.proc_value.stTxconfig.hopPeriod = hopPeriod;
+    lora_proc_data.proc_value.stTxconfig.iqInverted = iqInverted;
+    lora_proc_data.proc_value.stTxconfig.timeout = timeout;
 
-	write(fd_proc,&lora_proc_data,sizeof(lora_proc_data_t));
+    write(fd_proc,&lora_proc_data,sizeof(lora_proc_data_t));
 }
 
 bool SX1276CheckRfFrequency( int chip,uint32_t frequency )
 {
-	// Implement check. Currently all frequencies are supported
-	return true;
+    // Implement check. Currently all frequencies are supported
+    return true;
 }
 
 uint32_t SX1276GetTimeOnAir( int chip,RadioModems_t modem, uint8_t pktLen )
 {
+    uint32_t airTime = 0;
 
+    switch( modem )
+    {
+    case MODEM_FSK:
+        {
+            /*airTime = round( ( 8 * ( SX1276.Settings.Fsk.PreambleLen +
+                                     ( ( SX1276Read( chip, REG_SYNCCONFIG ) & ~RF_SYNCCONFIG_SYNCSIZE_MASK ) + 1 ) +
+                                     ( ( SX1276.Settings.Fsk.FixLen == 0x01 ) ? 0.0 : 1.0 ) +
+                                     ( ( ( SX1276Read( chip, REG_PACKETCONFIG1 ) & ~RF_PACKETCONFIG1_ADDRSFILTERING_MASK ) != 0x00 ) ? 1.0 : 0 ) +
+                                     pktLen +
+                                     ( ( SX1276.Settings.Fsk.CrcOn == 0x01 ) ? 2.0 : 0 ) ) /
+                                     SX1276.Settings.Fsk.Datarate ) * 1000 );*/
+        }
+        break;
+    case MODEM_LORA:
+        {
+            double bw = 0.0;
+            // REMARK: When using LoRa modem only bandwidths 125, 250 and 500 kHz are supported
+            switch( SX1276[chip].Settings.LoRa.Bandwidth )
+            {
+            //case 0: // 7.8 kHz
+            //    bw = 7800;
+            //    break;
+            //case 1: // 10.4 kHz
+            //    bw = 10400;
+            //    break;
+            //case 2: // 15.6 kHz
+            //    bw = 15600;
+            //    break;
+            //case 3: // 20.8 kHz
+            //    bw = 20800;
+            //    break;
+            //case 4: // 31.2 kHz
+            //    bw = 31200;
+            //    break;
+            //case 5: // 41.4 kHz
+            //    bw = 41400;
+            //    break;
+            //case 6: // 62.5 kHz
+            //    bw = 62500;
+            //    break;
+            case 7: // 125 kHz
+                bw = 125000;
+                break;
+            case 8: // 250 kHz
+                bw = 250000;
+                break;
+            case 9: // 500 kHz
+                bw = 500000;
+                break;
+            }
+
+            // Symbol rate : time for one symbol (secs)
+            double rs = bw / ( 1 << SX1276[chip].Settings.LoRa.Datarate );
+            double ts = 1 / rs;
+            // time of preamble
+            double tPreamble = ( SX1276[chip].Settings.LoRa.PreambleLen + 4.25 ) * ts;
+            // Symbol length of payload and time
+            double tmp = ceil( ( 8 * pktLen - 4 * SX1276[chip].Settings.LoRa.Datarate +
+                                 28 + 16 * SX1276[chip].Settings.LoRa.CrcOn -
+                                 ( SX1276[chip].Settings.LoRa.FixLen ? 20 : 0 ) ) /
+                                 ( double )( 4 * ( SX1276[chip].Settings.LoRa.Datarate -
+                                 ( ( SX1276[chip].Settings.LoRa.LowDatarateOptimize > 0 ) ? 2 : 0 ) ) ) ) *
+                                 ( SX1276[chip].Settings.LoRa.Coderate + 4 );
+            double nPayload = 8 + ( ( tmp > 0 ) ? tmp : 0 );
+            double tPayload = nPayload * ts;
+            // Time on air
+            double tOnAir = tPreamble + tPayload;
+            // return ms secs
+            airTime = floor( tOnAir * 1000 + 0.999 );
+        }
+        break;
+    }
+    return airTime;
 }
 
 void SX1276Send( int chip,uint8_t *buffer, uint8_t size )
 {
-
+    write(fd_cdev,buffer,size);
 }
 
 void SX1276SetSleep( int chip )
 {
-
+    uint32_t ioarg = 0;
+    ioarg = (chip << 31);
+    ioctl(fd_cdev, LORADEV_RADIO_SET_SLEEP, &ioarg);
 }
 
 void SX1276SetStby( int chip )
 {
-
+    uint32_t ioarg = 0;
+    ioarg = (chip << 31);
+    ioctl(fd_cdev, LORADEV_RADIO_SET_STDBY, &ioarg);
 }
 
 void SX1276SetRx( int chip,uint32_t timeout )
 {
-
+    uint32_t ioarg = timeout;
+    ioarg = timeout | (chip << 31);
+    ioctl(fd_cdev, LORADEV_RADIO_SET_RX, &ioarg);
 }
 
 void SX1276SetTx( int chip,uint32_t timeout )
 {
-
+    uint32_t ioarg = timeout;
+    ioarg = timeout | (chip << 31);
+    ioctl(fd_cdev, LORADEV_RADIO_SET_TX, &ioarg);
 }
 
 void SX1276StartCad( int chip )
@@ -356,8 +444,8 @@ void SX1276SetOpMode( int chip,uint8_t opMode )
 
 void SX1276SetModem( int chip,RadioModems_t modem )
 {
-	printf("%s,%d\r\n",__func__,__LINE__);
-	//ioctl(fd, LORADEV_RADIO_SET_MODEM, &modem);
+    //printf("%s,%d\r\n",__func__,__LINE__);
+    //ioctl(fd, LORADEV_RADIO_SET_MODEM, &modem);
 }
 
 void SX1276Write( int chip,uint8_t addr, uint8_t data )
@@ -365,14 +453,6 @@ void SX1276Write( int chip,uint8_t addr, uint8_t data )
 }
 
 uint8_t SX1276Read( int chip,uint8_t addr )
-{
-}
-
-void SX1276WriteBuffer( int chip,uint8_t addr, uint8_t *buffer, uint8_t size )
-{
-}
-
-void SX1276ReadBuffer( int chip,uint8_t addr, uint8_t *buffer, uint8_t size )
 {
 }
 
@@ -390,10 +470,10 @@ void SX1276SetMaxPayloadLength( int chip,RadioModems_t modem, uint8_t max )
 
 void SX1276SetPublicNetwork( int chip,bool enable )
 {
-	int ioarg = enable;
-	ioarg = ioarg | (chip << 31);
-	ioctl(fd_cdev, LORADEV_RADIO_SET_PUBLIC, &ioarg);
-	printf("%s,%d,freq = 0x%04x\r\n",__func__,__LINE__,ioarg);
+    int ioarg = enable;
+    ioarg = ioarg | (chip << 31);
+    ioctl(fd_cdev, LORADEV_RADIO_SET_PUBLIC, &ioarg);
+    //printf("%s,%d,enable = 0x%04x\r\n",__func__,__LINE__,ioarg);
 }
 
 void SX1276OnTimeoutIrq( unsigned long chip )

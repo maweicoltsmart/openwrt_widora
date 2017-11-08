@@ -28,18 +28,23 @@
 
 #define LORADEV_IOC_MAGIC  'r'
 
-#define LORADEV_IOCPRINT            _IO(LORADEV_IOC_MAGIC, 0)  //没参数
-#define LORADEV_IOCGETDATA          _IOR(LORADEV_IOC_MAGIC, 1, int)  //读
-#define LORADEV_IOCSETDATA          _IOW(LORADEV_IOC_MAGIC, 2, int)  //写
-#define LORADEV_RADIO_INIT          _IOW(LORADEV_IOC_MAGIC, 3, int)  //没参数
-#define LORADEV_RADIO_STATE         _IOW(LORADEV_IOC_MAGIC, 4, int)  //读
-#define LORADEV_RADIO_CHANNEL       _IOW(LORADEV_IOC_MAGIC, 5, int)  //写
-#define LORADEV_RADIO_SET_PUBLIC    _IOW(LORADEV_IOC_MAGIC, 6, int)  //写
-#define LORADEV_RADIO_SET_MODEM     _IOW(LORADEV_IOC_MAGIC, 7, int)  //写
-#define LORADEV_RADIO_READ_REG      _IOWR(LORADEV_IOC_MAGIC, 8, int)  //写
-#define LORADEV_RADIO_SET_TXCFG     _IOW(LORADEV_IOC_MAGIC, 9, int)
-#define LORADEV_RADIO_SET_RXCFG     _IOW(LORADEV_IOC_MAGIC, 10, int)
-#define LORADEV_IOC_MAXNR 11
+#define LORADEV_IOCPRINT   _IO(LORADEV_IOC_MAGIC, 0)  //没参数
+#define LORADEV_IOCGETDATA _IOR(LORADEV_IOC_MAGIC, 1, int)  //读
+#define LORADEV_IOCSETDATA _IOW(LORADEV_IOC_MAGIC, 2, int)  //写
+#define LORADEV_RADIO_INIT   _IOW(LORADEV_IOC_MAGIC, 3, int)  //没参数
+#define LORADEV_RADIO_STATE _IOW(LORADEV_IOC_MAGIC, 4, int)  //读
+#define LORADEV_RADIO_CHANNEL _IOW(LORADEV_IOC_MAGIC, 5, int)  //写
+#define LORADEV_RADIO_SET_PUBLIC _IOW(LORADEV_IOC_MAGIC, 6, int)  //写
+#define LORADEV_RADIO_SET_MODEM _IOW(LORADEV_IOC_MAGIC, 7, int)  //写
+#define LORADEV_RADIO_READ_REG _IOWR(LORADEV_IOC_MAGIC, 8, int)  //写
+#define LORADEV_RADIO_SET_TXCFG _IOW(LORADEV_IOC_MAGIC, 9, int)
+#define LORADEV_RADIO_SET_RXCFG _IOW(LORADEV_IOC_MAGIC, 10, int)
+#define LORADEV_RADIO_SET_RX _IOW(LORADEV_IOC_MAGIC, 11, int)
+#define LORADEV_RADIO_SET_TX _IOW(LORADEV_IOC_MAGIC, 12, int)
+#define LORADEV_RADIO_SET_SLEEP _IOW(LORADEV_IOC_MAGIC, 13, int)
+#define LORADEV_RADIO_SET_STDBY _IOW(LORADEV_IOC_MAGIC, 14, int)
+
+#define LORADEV_IOC_MAXNR 15
 
 static struct fasync_struct *lora_node_event_button_fasync;
 
@@ -88,19 +93,19 @@ void OnTxDone( int chip )
 void OnRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
     struct lora_rx_data *new;
-	printk("%s, %d bytes\r\n",__func__,size);
+    printk("%s, %d bytes\r\n",__func__,size);
     Radio.Sleep( chip);
     new = (struct lora_rx_data *)kmalloc(sizeof(struct lora_rx_data),GFP_KERNEL);
-	if(!new)
-	{
-		return;
-	}
+    if(!new)
+    {
+        return;
+    }
     new->buffer = kmalloc(size,GFP_KERNEL);
-	if(!(new->buffer))
-	{
-		kfree(new);
-		return;
-	}
+    if(!(new->buffer))
+    {
+        kfree(new);
+        return;
+    }
     memcpy(new->buffer,payload,size);
     new->chip = chip;
     new->len = size;
@@ -110,7 +115,7 @@ void OnRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t sn
     Radio.Rx( chip,RX_TIMEOUT_VALUE );
     State = RX;
     rx_done = 1;
-	wake_up(&lora_wait);
+    wake_up(&lora_wait);
 }
 
 void OnTxTimeout( int chip )
@@ -138,10 +143,15 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
 {
     INIT_LIST_HEAD(&lora_rx_list.list);
     printk("%s,%d\r\n",__func__,__LINE__);
-	//SX1276IoIrqInit(0);
-	//SX1276IoIrqInit(1);
-	//Radio.Rx( 0,RX_TIMEOUT_VALUE );
-	//Radio.Rx( 1,RX_TIMEOUT_VALUE );
+    RadioEvents.TxDone = OnTxDone;
+    RadioEvents.RxDone = OnRxDone;
+    RadioEvents.RxError = OnRxError;
+    RadioEvents.TxTimeout = OnTxTimeout;
+    RadioEvents.RxTimeout = OnRxTimeout;
+    //SX1276IoIrqInit(0);
+    //SX1276IoIrqInit(1);
+    //Radio.Rx( 0,RX_TIMEOUT_VALUE );
+    //Radio.Rx( 1,RX_TIMEOUT_VALUE );
     return 0;
 }
 
@@ -149,20 +159,20 @@ static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,l
 {
     int ret = 0;
     struct lora_rx_data *get;
-	struct list_head *pos;
+    struct list_head *pos;
     while (list_empty(&lora_rx_list.list)) /* 没有数据可读，考虑为什么不用if，而用while */
     {
-    	//printk("%s,%d\r\n",__func__,__LINE__);
+        //printk("%s,%d\r\n",__func__,__LINE__);
         if (filp->f_flags & O_NONBLOCK)
             return -EAGAIN;
         rx_done = 0;
         wait_event_interruptible(lora_wait,rx_done);
     }
-	//printk("%s,%d\r\n",__func__,__LINE__);
-	pos = lora_rx_list.list.next;
+    //printk("%s,%d\r\n",__func__,__LINE__);
+    pos = lora_rx_list.list.next;
     get = list_entry(pos, struct lora_rx_data, list);
     /*读数据到用户空间*/
-	if (copy_to_user(user, (void*)(get->buffer), get->len))
+    if (copy_to_user(user, (void*)(get->buffer), get->len))
     {
         ret =  - EFAULT;
     }
@@ -171,12 +181,12 @@ static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,l
         //printk(KERN_INFO "read %d bytes(s) from list\n", get->len);
         ret = get->len;
     }
-	//printk("%s,%d\r\n",__func__,__LINE__);
-	list_del(&get->list);
-	if(get->len > 0)
-	{
-    	kfree(get->buffer);
-	}
+    //printk("%s,%d\r\n",__func__,__LINE__);
+    list_del(&get->list);
+    if(get->len > 0)
+    {
+        kfree(get->buffer);
+    }
     kfree(get);
     return ret;
 }
@@ -214,7 +224,10 @@ static long lora_dev_ioctl(struct file *filp,unsigned int cmd,unsigned long arg)
     int err = 0;
     int ret = 0;
     int ioarg = 0;
-	int chip;
+    int chip;
+    int enable;
+    int channel;
+    int timeout;
     printk("%s,%d,cmd = %d\r\n",__func__,__LINE__,cmd);
     if (_IOC_TYPE(cmd) != LORADEV_IOC_MAGIC)
         return -EINVAL;
@@ -245,40 +258,68 @@ static long lora_dev_ioctl(struct file *filp,unsigned int cmd,unsigned long arg)
         break;
         case LORADEV_RADIO_INIT:
         printk("%s,%d\r\n",__func__,__LINE__);
+        ret = __get_user(ioarg, (int *)arg);
+        chip = (ioarg & 0x80000000) >> 31;
+        Radio.Init(chip,&RadioEvents);
         break;
         case LORADEV_RADIO_STATE:
         printk("%s,%d\r\n",__func__,__LINE__);
-		break;
+        break;
         case LORADEV_RADIO_SET_PUBLIC:
         printk("%s,%d\r\n",__func__,__LINE__);
-		ret = __get_user(ioarg, (int *)arg);
-		chip = (ioarg & 0x80000000) >> 31;
-		int enable = ioarg & 0x7fffffff;
-		Radio.SetPublicNetwork(chip,enable);
-		break;
+        ret = __get_user(ioarg, (int *)arg);
+        chip = (ioarg & 0x80000000) >> 31;
+        enable = ioarg & 0x7fffffff;
+        Radio.SetPublicNetwork(chip,enable);
+        break;
         case LORADEV_RADIO_SET_MODEM:
         printk("%s,%d\r\n",__func__,__LINE__);
-		break;
+        break;
         case LORADEV_RADIO_CHANNEL:
-		ret = __get_user(ioarg, (int *)arg);
-		chip = (ioarg & 0x80000000) >> 31;
-		int channel = ioarg & 0x7fffffff;
-		Radio.Sleep(chip);
-		Radio.SetChannel(chip,channel);
-		Radio.Rx( chip,0 );
+        ret = __get_user(ioarg, (int *)arg);
+        chip = (ioarg & 0x80000000) >> 31;
+        channel = ioarg & 0x7fffffff;
+        //Radio.Sleep(chip);
+        Radio.SetChannel(chip,channel);
+        //Radio.Rx( chip,0 );
         printk("%s,%d\r\n",__func__,__LINE__);
-		break;
+        break;
         case LORADEV_RADIO_SET_TXCFG:
         printk("%s,%d\r\n",__func__,__LINE__);
-		break;
+        break;
         case LORADEV_RADIO_SET_RXCFG:
         printk("%s,%d\r\n",__func__,__LINE__);
-		break;
+        break;
+        case LORADEV_RADIO_SET_TX:
+        /*ret = __get_user(ioarg, (int *)arg);
+        chip = (ioarg & 0x80000000) >> 31;
+        Radio.Tx( chip,0 );*/
+        printk("%s,%d\r\n",__func__,__LINE__);
+        break;
+        case LORADEV_RADIO_SET_RX:
+        ret = __get_user(ioarg, (int *)arg);
+        chip = (ioarg & 0x80000000) >> 31;
+        timeout = ioarg & 0x7fffffff;
+        Radio.Rx( chip,timeout );
+        printk("%s,%d\r\n",__func__,__LINE__);
+        break;
+        case LORADEV_RADIO_SET_SLEEP:
+        ret = __get_user(ioarg, (int *)arg);
+        chip = (ioarg & 0x80000000) >> 31;
+        Radio.Sleep( chip);
+        printk("%s,%d\r\n",__func__,__LINE__);
+        break;
+        case LORADEV_RADIO_SET_STDBY:
+        ret = __get_user(ioarg, (int *)arg);
+        chip = (ioarg & 0x80000000) >> 31;
+        Radio.Standby( chip);
+        printk("%s,%d\r\n",__func__,__LINE__);
+        break;
         case LORADEV_RADIO_READ_REG:
         ret = __get_user(ioarg, (int *)arg);
         ioarg = spi_w8r8(SX1276[0].Spi,ioarg & 0x7f);
         ret = __put_user(ioarg, (int *)arg);
-		break;
+        break;
         default:
         printk("%s,%d\r\n",__func__,__LINE__);
         return -EINVAL;

@@ -632,8 +632,6 @@ const struct Radio_s Radio =
     SX1276ReadRssi,
     SX1276Write,
     SX1276Read,
-    SX1276WriteBuffer,
-    SX1276ReadBuffer,
     SX1276SetMaxPayloadLength,
     SX1276SetPublicNetwork
 };
@@ -1901,22 +1899,25 @@ LoRaMacStatus_t LoRaMacInitialization(int chip, LoRaMacPrimitives_t *primitives,
     RadioEvents.TxTimeout = OnRadioTxTimeout;
     RadioEvents.RxTimeout = OnRadioRxTimeout;*/
     Radio.Init(chip, &RadioEvents );
-
+    sleep(1);
     // Random seed initialization
     srand1( Radio.Random(chip ) );
 
     PublicNetwork = true;
     Radio.SetPublicNetwork(chip, PublicNetwork );
+    sleep(1);
     Radio.Sleep(chip );
-	RxConfig.Channel = Channel;
+    sleep(1);
+    RxConfig.Channel = Channel;
     RxConfig.Frequency = LoRaMacParams.Rx2Channel.Frequency;
     RxConfig.DownlinkDwellTime = LoRaMacParams.DownlinkDwellTime;
     RxConfig.RepeaterSupport = RepeaterSupport;
     RxConfig.Window = 1;
-	RxConfig.RxContinuous = true;
-	if( RegionRxConfig( chip,LoRaMacRegion, &RxConfig, ( int8_t* )&McpsIndication.RxDatarate ) == true )
+    RxConfig.RxContinuous = true;
+    printf("%s,%d\r\n",__func__,__LINE__);
+    if( RegionRxConfig( chip,LoRaMacRegion, &RxConfig, ( int8_t* )&McpsIndication.RxDatarate ) == true )
     {
-    	Radio.Rx( chip,0 ); // Continuous mode
+        printf("%s,%d\r\n",__func__,__LINE__);
         RxSlot = RxWindow2Config.Window;
     }
     return LORAMAC_STATUS_OK;

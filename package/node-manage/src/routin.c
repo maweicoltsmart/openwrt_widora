@@ -412,7 +412,7 @@ static void OnTxNextPacketTimerEvent( void )
  * \param   [IN] mcpsConfirm - Pointer to the confirm structure,
  *               containing confirm attributes.
  */
-static void McpsConfirm( McpsConfirm_t *mcpsConfirm )
+static void McpsConfirm( int chip, McpsConfirm_t *mcpsConfirm )
 {
     if( mcpsConfirm->Status == LORAMAC_EVENT_INFO_STATUS_OK )
     {
@@ -662,7 +662,7 @@ static void McpsIndication(int chip, McpsIndication_t *mcpsIndication )
  * \param   [IN] mlmeConfirm - Pointer to the confirm structure,
  *               containing confirm attributes.
  */
-static void MlmeConfirm( MlmeConfirm_t *mlmeConfirm )
+static void MlmeConfirm( int chip, MlmeConfirm_t *mlmeConfirm )
 {
     switch( mlmeConfirm->MlmeRequest )
     {
@@ -832,10 +832,13 @@ void *Radio_routin(void *data){
                 mibReq.Type = MIB_ADR;
                 mibReq.Param.AdrEnable = LORAWAN_ADR_ON;
                 LoRaMacMibSetRequestConfirm( chip, &mibReq );
-
+                sleep(1);
                 mibReq.Type = MIB_PUBLIC_NETWORK;
                 mibReq.Param.EnablePublicNetwork = LORAWAN_PUBLIC_NETWORK;
                 LoRaMacMibSetRequestConfirm( chip, &mibReq );
+                sleep(1);
+                Radio.Rx( chip,0 ); // Continuous mode
+
 
 #if defined( REGION_EU868 )
                 LoRaMacTestSetDutyCycleOn( LORAWAN_DUTYCYCLE_ON );
@@ -953,7 +956,7 @@ void *Radio_routin(void *data){
             }
             case DEVICE_STATE_SLEEP:
             {
-                printf("%s,%d\r\n",__func__,__LINE__);
+                //printf("%s,%d\r\n",__func__,__LINE__);
                 // Wake up through events
                 //TimerLowPowerHandler( );
                 break;
