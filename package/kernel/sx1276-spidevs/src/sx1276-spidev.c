@@ -100,10 +100,10 @@ static int sx1276_spidevs_remove_1(struct spi_device *spi)
 {
     //kthread_stop(radio_routin);
     //unregister_sx1276_cdev();
-    del_timer(&TxTimeoutTimer[0]);
+    //del_timer(&TxTimeoutTimer[0]);
     //del_timer(&RxTimeoutSyncWord[0]);
-    SX1276IoIrqFree(0);
-    SX1276IoFree(0);
+    //SX1276IoIrqFree(0);
+    //SX1276IoFree(0);
     return 0;
 }
 static int sx1276_spidevs_probe_1(struct spi_device *spi)
@@ -118,8 +118,9 @@ static int sx1276_spidevs_probe_1(struct spi_device *spi)
     spi->mode = SPI_MODE_0;
     err = spi_setup(spi);
     printk("%s, %d\r\n",__func__,__LINE__);
-
-    /*Radio.SetChannel(0,RF_FREQUENCY);
+/*
+    Radio.Init(0,&RadioEvents);
+    Radio.SetChannel(0,470300000);
     Radio.SetTxConfig( 0,MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
                                LORA_SPREADING_FACTOR, LORA_CODINGRATE,
                                LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
@@ -128,9 +129,9 @@ static int sx1276_spidevs_probe_1(struct spi_device *spi)
                                LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
                                LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
                                0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
-    *///Radio.SX1276SetPublicNetwork(0,false);
-    //Radio.Rx( 0,RX_TIMEOUT_VALUE );
-
+    Radio.SetPublicNetwork(0,false);
+    Radio.Rx( 0,RX_TIMEOUT_VALUE );
+*/
     //register_sx1276_cdev();
     return err;
 }
@@ -139,10 +140,10 @@ static int sx1276_spidevs_remove_2(struct spi_device *spi)
 {
     //kthread_stop(radio_routin);
 
-    del_timer(&TxTimeoutTimer[1]);
+    //del_timer(&TxTimeoutTimer[1]);
     //del_timer(&RxTimeoutSyncWord[1]);
-    SX1276IoIrqFree(1);
-    SX1276IoFree(1);
+    //SX1276IoIrqFree(1);
+    //SX1276IoFree(1);
     unregister_sx1276_cdev();
     cleanup_procfs_lora();
     return 0;
@@ -159,9 +160,9 @@ static int sx1276_spidevs_probe_2(struct spi_device *spi)
     spi->mode = SPI_MODE_0;
     err = spi_setup(spi);
     printk("%s, %d\r\n",__func__,__LINE__);
-    // Initialize Radio driver
-
-    /*Radio.SetChannel(1,RF_FREQUENCY);
+/*
+    Radio.Init(1,&RadioEvents);
+    Radio.SetChannel(1,470500000);
     Radio.SetTxConfig( 1,MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
                                LORA_SPREADING_FACTOR, LORA_CODINGRATE,
                                LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
@@ -170,7 +171,9 @@ static int sx1276_spidevs_probe_2(struct spi_device *spi)
                                LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
                                LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
                                0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
-    *///Radio.Rx( 1,RX_TIMEOUT_VALUE );
+    Radio.SetPublicNetwork(1,false);
+    Radio.Rx( 1,RX_TIMEOUT_VALUE );
+    */
     register_sx1276_cdev();
     init_procfs_lora();
     return err;

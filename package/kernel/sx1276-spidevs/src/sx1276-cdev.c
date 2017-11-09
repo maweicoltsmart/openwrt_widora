@@ -25,6 +25,8 @@
 #include "radio-default-param.h"
 #include "sx1276-board.h"
 #include <linux/list.h>
+#include <linux/time.h>
+#include <linux/timer.h>
 
 #define LORADEV_IOC_MAGIC  'r'
 
@@ -82,6 +84,7 @@ int8_t RssiValue = 0;
 int8_t SnrValue = 0;
 
 struct lora_rx_data lora_rx_list;
+struct lora_tx_data lora_tx_list;
 
 void OnTxDone( int chip )
 {
@@ -142,6 +145,7 @@ void OnRxError( int chip )
 static int lora_dev_open(struct inode * inode, struct file * filp)
 {
     INIT_LIST_HEAD(&lora_rx_list.list);
+    INIT_LIST_HEAD(&lora_tx_list.list);
     printk("%s,%d\r\n",__func__,__LINE__);
     RadioEvents.TxDone = OnTxDone;
     RadioEvents.RxDone = OnRxDone;
@@ -194,11 +198,49 @@ static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,l
 static ssize_t lora_dev_write(struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
 {
     uint8_t buffer[256];
-
+    struct lora_tx_data *new,*tmp;
+    unsigned long a,b;
+    pst_lora_tx_data_type p = (pst_lora_tx_data_type)buffer;
     printk("%s,%d\r\n",__func__,__LINE__);
 
     /*从用户空间写入数据*/
     copy_from_user(buffer, buf, size);
+    new = (struct lora_tx_data *)kmalloc(sizeof(struct lora_tx_data),GFP_KERNEL);
+    if(!new)
+    {
+        return 0;
+    }
+    new->buffer = kmalloc(p->len,GFP_KERNEL);
+    if(!(new->buffer))
+    {
+        kfree(new);
+        return 0;
+    }
+    memcpy(new->buffer,p->buffer,p->len);
+    new->chip = p->chip;
+    new->len = p->len;
+    new->jiffies = p->jiffies;
+    a = new->jiffies;
+    if(list_empty(&lora_tx_list.list))
+        list_add_tail(&(new->list), &lora_tx_list.list);//使用尾插法
+    else
+    {
+        list_for_each_entry(tmp, &lora_tx_list.list, list){
+            b = tmp->jiffies;
+            if(!time_after(a,b))
+            {
+                __list_add_rcu(&new->list,tmp->list.prev,&tmp->list);
+            }
+            else
+            {
+                if(list_is_last(&tmp->list,&lora_tx_list.list))
+                {
+                    list_add_tail(&(new->list), &lora_tx_list.list);//使用尾插法
+                }
+            }
+        }
+    }
+
     Radio.Sleep(0);
     Radio.Send(0,buffer,size);
     return size;
@@ -208,8 +250,16 @@ static int lora_dev_close(struct inode *inode, struct file *file)
 {
     printk("%s,%d\r\n",__func__,__LINE__);
 
-    //SX1276IoIrqFree(0);
-    //SX1276IoFree(0);
+    del_timer(&TxTimeoutTimer[0]);
+    del_timer(&RxTimeoutTimer[0]);
+    //del_timer(&RxTimeoutSyncWord[0]);
+    del_timer(&TxTimeoutTimer[1]);
+    del_timer(&RxTimeoutTimer[1]);
+    //del_timer(&RxTimeoutSyncWord[1]);
+    SX1276IoIrqFree(0);
+    SX1276IoFree(0);
+    SX1276IoIrqFree(1);
+    SX1276IoFree(1);
     //kthread_stop(radio_routin);
     return 0;
 }

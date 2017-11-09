@@ -302,12 +302,12 @@ void RegionCN470InitDefaults( InitType_t type )
             }
 
             // Initialize the channels default mask
-            ChannelsDefaultMask[0] = 0xFFFF;
-            ChannelsDefaultMask[1] = 0xFFFF;
-            ChannelsDefaultMask[2] = 0xFFFF;
-            ChannelsDefaultMask[3] = 0xFFFF;
-            ChannelsDefaultMask[4] = 0xFFFF;
-            ChannelsDefaultMask[5] = 0xFFFF;
+            ChannelsDefaultMask[0] = 0x0003;
+            ChannelsDefaultMask[1] = 0x0000;
+            ChannelsDefaultMask[2] = 0x0000;
+            ChannelsDefaultMask[3] = 0x0000;
+            ChannelsDefaultMask[4] = 0x0000;
+            ChannelsDefaultMask[5] = 0x0000;
 
             // Update the channels mask
             RegionCommonChanMaskCopy( ChannelsMask, ChannelsDefaultMask, 6 );
@@ -483,14 +483,14 @@ bool RegionCN470RxConfig(int chip, RxConfigParams_t* rxConfig, int8_t* datarate 
         // Apply window 1 frequency
         frequency = CN470_FIRST_RX1_CHANNEL + ( rxConfig->Channel % 48 ) * CN470_STEPWIDTH_RX1_CHANNEL;
     }
-
+    frequency = Channels[rxConfig->Channel].Frequency;
     // Read the physical datarate from the datarates table
     phyDr = DataratesCN470[dr];
 
     Radio.SetChannel(chip, frequency );
 
     // Radio configuration
-    Radio.SetRxConfig(chip, MODEM_LORA, rxConfig->Bandwidth, phyDr, 1, 0, 8, rxConfig->WindowTimeout, false, 0, false, 0, 0, true, rxConfig->RxContinuous );
+    Radio.SetRxConfig(chip, MODEM_LORA, rxConfig->Bandwidth, 7, 1, 0, 8, 24, false, 0, true, 0, 0, false, rxConfig->RxContinuous );
 
     if( rxConfig->RepeaterSupport == true )
     {
@@ -516,8 +516,8 @@ bool RegionCN470TxConfig(int chip, TxConfigParams_t* txConfig, int8_t* txPower, 
     phyTxPower = RegionCommonComputeTxPower( txPowerLimited, txConfig->MaxEirp, txConfig->AntennaGain );
 
     // Setup the radio frequency
-    Radio.SetChannel(chip, Channels[txConfig->Channel].Frequency );
-
+    //Radio.SetChannel(chip, Channels[txConfig->Channel].Frequency );
+    Radio.SetChannel(chip, CN470_FIRST_RX1_CHANNEL + ( txConfig->Channel ) * CN470_STEPWIDTH_RX1_CHANNEL);
     Radio.SetTxConfig(chip, MODEM_LORA, phyTxPower, 0, 0, phyDr, 1, 8, false, true, 0, 0, false, 3000 );
     // Setup maximum payload lenght of the radio driver
     Radio.SetMaxPayloadLength(chip, MODEM_LORA, txConfig->PktLen );

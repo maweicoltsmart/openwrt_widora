@@ -215,7 +215,7 @@ SX1276_t SX1276[2];
  * Tx and Rx timers
  */
 struct timer_list TxTimeoutTimer[2];
-//struct timer_list RxTimeoutTimer;
+struct timer_list RxTimeoutTimer[2];
 //struct timer_list RxTimeoutSyncWord[2];
 struct timeval oldtv;
 
@@ -235,12 +235,13 @@ void SX1276Init( int chip,RadioEvents_t *events )
 
     // Initialize driver timeout timers
     init_timer(&TxTimeoutTimer[chip]);
-    //init_timer(&RxTimeoutTimer);
+    init_timer(&RxTimeoutTimer[chip]);
     //init_timer(&RxTimeoutSyncWord[chip]);
     do_gettimeofday(&oldtv);
     TxTimeoutTimer[chip].function = SX1276OnTimeoutIrq;
     TxTimeoutTimer[chip].data = chip;
-    //RxTimeoutTimer.function = SX1276OnTimeoutIrq;
+    RxTimeoutTimer[chip].function = SX1276OnTimeoutIrq;
+    RxTimeoutTimer[chip].data = chip;
     //RxTimeoutSyncWord[chip].function = SX1276OnTimeoutIrq;
     //RxTimeoutSyncWord[chip].data = chip;
     SX1276IoInit(chip);
@@ -878,7 +879,7 @@ void SX1276Send( int chip,uint8_t *buffer, uint8_t size )
 void SX1276SetSleep( int chip )
 {
     printk("%s,%d\r\n",__func__,chip);
-    //del_timer( &RxTimeoutTimer );
+    del_timer( &RxTimeoutTimer[chip] );
     del_timer( &TxTimeoutTimer[chip] );
 
     SX1276SetOpMode(chip, RF_OPMODE_SLEEP );
@@ -888,7 +889,7 @@ void SX1276SetSleep( int chip )
 void SX1276SetStby( int chip )
 {
     printk("%s,%d\r\n",__func__,chip);
-    //del_timer( &RxTimeoutTimer );
+    del_timer( &RxTimeoutTimer[chip] );
     del_timer( &TxTimeoutTimer[chip] );
 
     SX1276SetOpMode(chip, RF_OPMODE_STANDBY );
@@ -1034,8 +1035,8 @@ void SX1276SetRx( int chip,uint32_t timeout )
     SX1276[chip].Settings.State = RF_RX_RUNNING;
     if( timeout != 0 )
     {
-        //RxTimeoutTimer.expires = jiffies + timeout;
-        //add_timer( &RxTimeoutTimer );
+        RxTimeoutTimer[chip].expires = jiffies + timeout;
+        add_timer( &RxTimeoutTimer[chip] );
     }
 
     if( SX1276[chip].Settings.Modem == MODEM_FSK )
@@ -1440,7 +1441,7 @@ void SX1276OnDio0Irq( int chip )
     switch( SX1276[chip].Settings.State )
     {
         case RF_RX_RUNNING:
-            //del_timer( &RxTimeoutTimer );
+            //del_timer( &RxTimeoutTimer[chip] );
             // RxDone interrupt
             switch( SX1276[chip].Settings.Modem )
             {
@@ -1456,7 +1457,7 @@ void SX1276OnDio0Irq( int chip )
                                                     RF_IRQFLAGS1_SYNCADDRESSMATCH );
                         SX1276Write(chip, REG_IRQFLAGS2, RF_IRQFLAGS2_FIFOOVERRUN );
 
-                        //del_timer( &RxTimeoutTimer );
+                        del_timer( &RxTimeoutTimer[chip] );
 
                         if( SX1276[chip].Settings.Fsk.RxContinuous == false )
                         {
@@ -1502,7 +1503,7 @@ void SX1276OnDio0Irq( int chip )
                     SX1276[chip].Settings.FskPacketHandler.NbBytes += ( SX1276[chip].Settings.FskPacketHandler.Size - SX1276[chip].Settings.FskPacketHandler.NbBytes );
                 }
 
-                //del_timer( &RxTimeoutTimer );
+                del_timer( &RxTimeoutTimer[chip] );
 
                 if( SX1276[chip].Settings.Fsk.RxContinuous == false )
                 {
@@ -1542,7 +1543,7 @@ void SX1276OnDio0Irq( int chip )
                         {
                             SX1276[chip].Settings.State = RF_IDLE;
                         }
-                        //del_timer( &RxTimeoutTimer );
+                        del_timer( &RxTimeoutTimer[chip] );
 
                         if( ( RadioEvents != NULL ) && ( RadioEvents->RxError != NULL ) )
                         {
@@ -1598,7 +1599,7 @@ void SX1276OnDio0Irq( int chip )
                     {
                         SX1276[chip].Settings.State = RF_IDLE;
                     }
-                    //del_timer( &RxTimeoutTimer );
+                    del_timer( &RxTimeoutTimer[chip] );
 
                     if( ( RadioEvents != NULL ) && ( RadioEvents->RxDone != NULL ) )
                     {
@@ -1670,7 +1671,7 @@ void SX1276OnDio1Irq( int chip )
                 break;
             case MODEM_LORA:
                 // Sync time out
-                //del_timer( &RxTimeoutTimer );
+                del_timer( &RxTimeoutTimer[chip] );
                 // Clear Irq
                 SX1276Write(chip, REG_LR_IRQFLAGS, RFLR_IRQFLAGS_RXTIMEOUT );
 

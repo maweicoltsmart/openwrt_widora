@@ -203,6 +203,7 @@ RadioState_t SX1276GetStatus( int chip )
 
 void SX1276SetChannel( int chip,uint32_t freq )
 {
+    printf("%s ,freq = %d\r\n",__func__,freq);
     SX1276[chip].Settings.Channel = freq;
     freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
     freq = freq | (chip << 31);

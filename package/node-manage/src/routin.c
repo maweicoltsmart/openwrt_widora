@@ -833,11 +833,7 @@ void *Radio_routin(void *data){
                 mibReq.Param.AdrEnable = LORAWAN_ADR_ON;
                 LoRaMacMibSetRequestConfirm( chip, &mibReq );
                 sleep(1);
-                mibReq.Type = MIB_PUBLIC_NETWORK;
-                mibReq.Param.EnablePublicNetwork = LORAWAN_PUBLIC_NETWORK;
-                LoRaMacMibSetRequestConfirm( chip, &mibReq );
-                sleep(1);
-                Radio.Rx( chip,0 ); // Continuous mode
+
 
 
 #if defined( REGION_EU868 )

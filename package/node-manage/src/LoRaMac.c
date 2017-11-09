@@ -1761,6 +1761,11 @@ LoRaMacStatus_t LoRaMacInitialization(int chip, LoRaMacPrimitives_t *primitives,
     GetPhyParams_t getPhy;
     PhyParam_t phyParam;
 
+    TimerTime_t dutyCycleTimeOff = 0;
+    NextChanParams_t nextChan;
+    TxConfigParams_t txConfig;
+    int8_t txPower = 0;
+
     if( primitives == NULL )
     {
         return LORAMAC_STATUS_PARAMETER_INVALID;
@@ -1898,28 +1903,65 @@ LoRaMacStatus_t LoRaMacInitialization(int chip, LoRaMacPrimitives_t *primitives,
     RadioEvents.RxError = OnRadioRxError;
     RadioEvents.TxTimeout = OnRadioTxTimeout;
     RadioEvents.RxTimeout = OnRadioRxTimeout;*/
-    Radio.Init(chip, &RadioEvents );
+    Radio.Init(0, &RadioEvents );
+    sleep(1);
+    Radio.Init(1, &RadioEvents );
     sleep(1);
     // Random seed initialization
     srand1( Radio.Random(chip ) );
 
-    PublicNetwork = true;
-    Radio.SetPublicNetwork(chip, PublicNetwork );
+    PublicNetwork = false;
+    Radio.SetPublicNetwork(0, PublicNetwork );
     sleep(1);
-    Radio.Sleep(chip );
+    Radio.SetPublicNetwork(1, PublicNetwork );
     sleep(1);
+    Radio.Sleep(0 );
+    sleep(1);
+    Radio.Sleep(1 );
+    sleep(1);
+
+    txConfig.Channel = Channel;
+    txConfig.Datarate = LoRaMacParams.ChannelsDatarate;
+    txConfig.TxPower = LoRaMacParams.ChannelsTxPower;
+    txConfig.MaxEirp = LoRaMacParams.MaxEirp;
+    txConfig.AntennaGain = LoRaMacParams.AntennaGain;
+    txConfig.PktLen = LoRaMacBufferPktLen;
+
+    RegionTxConfig( 0,LoRaMacRegion, &txConfig, &txPower, &TxTimeOnAir );
+    sleep(1);
+    RegionTxConfig( 1,LoRaMacRegion, &txConfig, &txPower, &TxTimeOnAir );
+    sleep(1);
+    nextChan.AggrTimeOff = AggregatedTimeOff;
+    nextChan.Datarate = LoRaMacParams.ChannelsDatarate;
+    nextChan.DutyCycleEnabled = DutyCycleOn;
+    nextChan.Joined = IsLoRaMacNetworkJoined;
+    nextChan.LastAggrTx = AggregatedLastTxDoneTime;
+
+    // Select channel
+    RegionNextChannel( LoRaMacRegion, &nextChan, &Channel, &dutyCycleTimeOff, &AggregatedTimeOff );
+    printf("%s,chip0 Channel = %d\r\n",__func__,Channel);
     RxConfig.Channel = Channel;
     RxConfig.Frequency = LoRaMacParams.Rx2Channel.Frequency;
     RxConfig.DownlinkDwellTime = LoRaMacParams.DownlinkDwellTime;
     RxConfig.RepeaterSupport = RepeaterSupport;
     RxConfig.Window = 1;
     RxConfig.RxContinuous = true;
-    printf("%s,%d\r\n",__func__,__LINE__);
-    if( RegionRxConfig( chip,LoRaMacRegion, &RxConfig, ( int8_t* )&McpsIndication.RxDatarate ) == true )
-    {
-        printf("%s,%d\r\n",__func__,__LINE__);
-        RxSlot = RxWindow2Config.Window;
-    }
+    RegionRxConfig( 0,LoRaMacRegion, &RxConfig, ( int8_t* )&McpsIndication.RxDatarate );
+    sleep(1);
+    RegionNextChannel( LoRaMacRegion, &nextChan, &Channel, &dutyCycleTimeOff, &AggregatedTimeOff );
+    printf("%s,chip1 Channel = %d\r\n",__func__,Channel);
+    RxConfig.Channel = Channel;
+    RxConfig.Frequency = LoRaMacParams.Rx2Channel.Frequency;
+    RxConfig.DownlinkDwellTime = LoRaMacParams.DownlinkDwellTime;
+    RxConfig.RepeaterSupport = RepeaterSupport;
+    RxConfig.Window = 1;
+    RxConfig.RxContinuous = true;
+    RegionRxConfig( 1,LoRaMacRegion, &RxConfig, ( int8_t* )&McpsIndication.RxDatarate );
+    sleep(1);
+    Radio.Rx( 0,1000 ); // Continuous mode
+    sleep(1);
+    Radio.Rx( 1,1000 ); // Continuous mode
+    sleep(1);
     return LORAMAC_STATUS_OK;
 }
 
