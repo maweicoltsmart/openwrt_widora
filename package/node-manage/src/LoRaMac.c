@@ -1685,7 +1685,7 @@ LoRaMacStatus_t SendFrameOnChannel(int chip, uint8_t channel )
 {
     TxConfigParams_t txConfig;
     int8_t txPower = 0;
-
+    uint32_t jiffies = 0;
     txConfig.Channel = channel;
     txConfig.Datarate = LoRaMacParams.ChannelsDatarate;
     txConfig.TxPower = LoRaMacParams.ChannelsTxPower;
@@ -1714,7 +1714,7 @@ LoRaMacStatus_t SendFrameOnChannel(int chip, uint8_t channel )
     }
 
     // Send now
-    Radio.Send(chip, LoRaMacBuffer, LoRaMacBufferPktLen );
+    Radio.Send(chip, jiffies,LoRaMacBuffer, LoRaMacBufferPktLen );
 
     LoRaMacState |= LORAMAC_TX_RUNNING;
 
@@ -1940,7 +1940,7 @@ LoRaMacStatus_t LoRaMacInitialization(int chip, LoRaMacPrimitives_t *primitives,
     // Select channel
     RegionNextChannel( LoRaMacRegion, &nextChan, &Channel, &dutyCycleTimeOff, &AggregatedTimeOff );
     printf("%s,chip0 Channel = %d\r\n",__func__,Channel);
-    RxConfig.Channel = Channel;
+    RxConfig.Channel = 0;
     RxConfig.Frequency = LoRaMacParams.Rx2Channel.Frequency;
     RxConfig.DownlinkDwellTime = LoRaMacParams.DownlinkDwellTime;
     RxConfig.RepeaterSupport = RepeaterSupport;
@@ -1950,7 +1950,7 @@ LoRaMacStatus_t LoRaMacInitialization(int chip, LoRaMacPrimitives_t *primitives,
     sleep(1);
     RegionNextChannel( LoRaMacRegion, &nextChan, &Channel, &dutyCycleTimeOff, &AggregatedTimeOff );
     printf("%s,chip1 Channel = %d\r\n",__func__,Channel);
-    RxConfig.Channel = Channel;
+    RxConfig.Channel = 1;
     RxConfig.Frequency = LoRaMacParams.Rx2Channel.Frequency;
     RxConfig.DownlinkDwellTime = LoRaMacParams.DownlinkDwellTime;
     RxConfig.RepeaterSupport = RepeaterSupport;

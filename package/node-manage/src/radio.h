@@ -244,7 +244,7 @@ struct Radio_s
      * \param [IN]: buffer     Buffer pointer
      * \param [IN]: size       Buffer size
      */
-    void    ( *Send )( int chip,uint8_t *buffer, uint8_t size );
+    void    ( *Send )( int chip,uint32_t jiffies,uint8_t *buffer, uint8_t size );
     /*!
      * \brief Sets the radio in sleep mode
      */

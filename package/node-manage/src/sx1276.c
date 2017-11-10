@@ -386,9 +386,16 @@ uint32_t SX1276GetTimeOnAir( int chip,RadioModems_t modem, uint8_t pktLen )
     return airTime;
 }
 
-void SX1276Send( int chip,uint8_t *buffer, uint8_t size )
+void SX1276Send( int chip,uint32_t jiffies,uint8_t *buffer, uint8_t size )
 {
-    write(fd_cdev,buffer,size);
+    int len = sizeof(st_lora_tx_data_type) - sizeof(uint8_t *) + size;
+    pst_lora_rx_data_type p = malloc(len);
+    memcpy(p->buffer,buffer,size);
+    p->chip = chip;
+    p->len = size;
+    p->jiffies = jiffies;
+    write(fd_cdev,(void*)p,len);
+
 }
 
 void SX1276SetSleep( int chip )

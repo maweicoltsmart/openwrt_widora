@@ -96,6 +96,9 @@ void OnTxDone( int chip )
 void OnRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
     struct lora_rx_data *new;
+    pst_lora_rx_data_type p;
+    int len;
+    uint8_t *pkg;
     printk("%s, %d bytes\r\n",__func__,size);
     Radio.Sleep( chip);
     new = (struct lora_rx_data *)kmalloc(sizeof(struct lora_rx_data),GFP_KERNEL);
@@ -103,19 +106,25 @@ void OnRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t sn
     {
         return;
     }
-    new->buffer = kmalloc(size,GFP_KERNEL);
+    len = size + sizeof(st_lora_rx_data_type) - sizeof(uint8_t *);
+    new->buffer = kmalloc(len,GFP_KERNEL);
     if(!(new->buffer))
     {
         kfree(new);
         return;
     }
-    memcpy(new->buffer,payload,size);
-    new->chip = chip;
-    new->len = size;
+    p = (pst_lora_rx_data_type)new->buffer;
+    pkg = (uint8_t*)&new->buffer[sizeof(st_lora_rx_data_type) - sizeof(uint8_t *)];
+    memcpy(pkg,payload,size);
+    printk("%s, %d \r\n",__func__,pkg[0]);
+    p->jiffies = jiffies;
+    p->chip = chip;
+    p->len = size;
+    new->len  = len;
     list_add_tail(&(new->list), &lora_rx_list.list);//使用尾插法
     RssiValue = rssi;
     SnrValue = snr;
-    Radio.Rx( chip,RX_TIMEOUT_VALUE );
+    Radio.Rx( chip,0 );
     State = RX;
     rx_done = 1;
     wake_up(&lora_wait);
@@ -175,14 +184,21 @@ static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,l
     //printk("%s,%d\r\n",__func__,__LINE__);
     pos = lora_rx_list.list.next;
     get = list_entry(pos, struct lora_rx_data, list);
+    if(!get)
+    {
+        return 0;
+    }
+    printk("%s, %d, len = %d\r\n",__func__,__LINE__,get->len);
     /*读数据到用户空间*/
     if (copy_to_user(user, (void*)(get->buffer), get->len))
     {
+        printk("%s, %d, len = %d\r\n",__func__,__LINE__,get->len);
         ret =  - EFAULT;
     }
     else
     {
         //printk(KERN_INFO "read %d bytes(s) from list\n", get->len);
+        printk("%s, %d, len = %d\r\n",__func__,__LINE__,get->len);
         ret = get->len;
     }
     //printk("%s,%d\r\n",__func__,__LINE__);
@@ -197,26 +213,22 @@ static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,l
 
 static ssize_t lora_dev_write(struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
 {
-    uint8_t buffer[256];
     struct lora_tx_data *new,*tmp;
     unsigned long a,b;
-    pst_lora_tx_data_type p = (pst_lora_tx_data_type)buffer;
-    printk("%s,%d\r\n",__func__,__LINE__);
-
+    pst_lora_tx_data_type p;
+    p = kmalloc(size,GFP_KERNEL);
+    if(!p)
+    {
+        return 0;
+    }
     /*从用户空间写入数据*/
-    copy_from_user(buffer, buf, size);
+    copy_from_user(p, buf, size);
     new = (struct lora_tx_data *)kmalloc(sizeof(struct lora_tx_data),GFP_KERNEL);
     if(!new)
     {
         return 0;
     }
-    new->buffer = kmalloc(p->len,GFP_KERNEL);
-    if(!(new->buffer))
-    {
-        kfree(new);
-        return 0;
-    }
-    memcpy(new->buffer,p->buffer,p->len);
+    new->buffer = (uint8_t*)p;
     new->chip = p->chip;
     new->len = p->len;
     new->jiffies = p->jiffies;
@@ -230,6 +242,7 @@ static ssize_t lora_dev_write(struct file *filp, const char __user *buf, size_t 
             if(!time_after(a,b))
             {
                 __list_add_rcu(&new->list,tmp->list.prev,&tmp->list);
+                break;
             }
             else
             {
@@ -241,8 +254,8 @@ static ssize_t lora_dev_write(struct file *filp, const char __user *buf, size_t 
         }
     }
 
-    Radio.Sleep(0);
-    Radio.Send(0,buffer,size);
+    //Radio.Sleep(0);
+    //Radio.Send(0,buffer,size);
     return size;
 }
 

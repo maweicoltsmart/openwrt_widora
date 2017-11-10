@@ -19,4 +19,12 @@ struct msg_st
     char text[BUFFER_SIZE];
 };
 
+typedef struct
+{
+	uint32_t jiffies;
+	uint32_t chip;
+	uint32_t len;
+	uint8_t *buffer;
+}st_lora_tx_data_type,*pst_lora_tx_data_type,st_lora_rx_data_type,*pst_lora_rx_data_type;
+
 #endif

@@ -39,6 +39,8 @@
 #include <sys/stat.h>
 #include <sys/msg.h>
 #include "typedef.h"
+#include "sx1276.h"
+#include "nodedatabase.h"
 
 /*!
  * Defines the application data transmission duty cycle. 5s, value in [ms].
@@ -706,84 +708,86 @@ static void MlmeConfirm( int chip, MlmeConfirm_t *mlmeConfirm )
  */
 bool lora_rx_done;
 uint8_t lora_rx_len;
-uint8_t radio2tcpbuffer[256];
+uint8_t radio2tcpbuffer[300];
 #define MAX_TEXT 512
 
-void *Radio_1_routin(void *arg){
-    int fd = *(int*)arg;
+void *Radio_routin(void *param){
+    LoRaMacPrimitives_t LoRaMacPrimitives;
+    LoRaMacCallback_t LoRaMacCallbacks;
+    MibRequestConfirm_t mibReq;
     int msgid = -1;
-    struct msg_st data;
+    //struct msg_st data;
     int len;
+	//int fd = *(int *)data;
+	int chip = 0;
+    DeviceState = DEVICE_STATE_INIT;
+    pst_lora_rx_data_type p;
+    LoRaMacHeader_t macHdr;
+    LoRaMacFrameCtrl_t fCtrl;
+    node_join_info_t node_join_info;
+    uint8_t *pkg;
+    printf("%s,%d\r\n",__func__,__LINE__);
+    LoRaMacPrimitives.MacMcpsConfirm = McpsConfirm;
+    LoRaMacPrimitives.MacMcpsIndication = McpsIndication;
+    LoRaMacPrimitives.MacMlmeConfirm = MlmeConfirm;
+    LoRaMacCallbacks.GetBatteryLevel = NULL;//BoardGetBatteryLevel;
+    LoRaMacInitialization( chip, &LoRaMacPrimitives, &LoRaMacCallbacks, LORAMAC_REGION_CN470 );
+    creat_msg_q:
     //建立消息队列
-    msgid = msgget((key_t)1234, 0666 | IPC_CREAT);
-    if(msgid == -1)
+    while((msgid = msgget((key_t)1234, 0666 | IPC_CREAT) == -1))
     {
-        fprintf(stderr, "msgget failed with error: %d\n", errno);
+        printf("msgget failed with error: %d\r\n", errno);
+        sleep(1);
     }
-    fd = open("/dev/lora_radio",O_RDWR);
-    if (fd < 0)
-    {
-        printf("open error\n");
-        return;
-    }
-    SX1276Init(fd);
-#define RF_FREQUENCY                                433000000 // Hz
-    SX1276SetChannel(fd,RF_FREQUENCY);
-    SX1276SetTxConfig(fd);
-    SX1276SetRxConfig(fd);
     while(1)
     {
         memset(radio2tcpbuffer,0,256);
-        printf("%s\r\n",__func__);
-        if((len = read(fd,radio2tcpbuffer,256)) > 0)
+        if((len = read(fd_cdev,radio2tcpbuffer,300)) > 0)
         {
+            printf("%s, %d, %d\r\n",__func__,__LINE__,len);
+            usleep(1000000);
+            p = (pst_lora_rx_data_type)radio2tcpbuffer;
+            pkg = (uint8_t*)&radio2tcpbuffer[sizeof(st_lora_rx_data_type) - sizeof(uint8_t *)];
+            macHdr.Value = pkg[0];
+            printf("%s, %d, %d\r\n",__func__,__LINE__,macHdr.Value);
+            switch( macHdr.Bits.MType )
+            {
+                case FRAME_TYPE_JOIN_REQ:
+
+                    memcpy(node_join_info.APPEUI,pkg + 1,8);
+                    memcpy(node_join_info.DevEUI,pkg + 9,8);
+                    node_join_info.DevNonce = *(uint16_t*)&pkg[17];
+                    printf("%s, %d, %d\r\n",__func__,__LINE__,len);
+                    database_node_join(&node_join_info);
+                    printf("%s, %d, %d\r\n",__func__,__LINE__,len);
+                    break;
+                case FRAME_TYPE_DATA_UNCONFIRMED_UP:
+                    break;
+                case FRAME_TYPE_DATA_CONFIRMED_UP:
+
+                    break;
+                case FRAME_TYPE_PROPRIETARY:
+                    break;
+                default:
+
+                    break;
+            }
+            /*
             data.msg_type = 1;    //注意2
             memcpy(data.text, radio2tcpbuffer,len);
             //向队列发送数据
             if(msgsnd(msgid, (void*)&data, len, 0) == -1)
             {
-                fprintf(stderr, "msgsnd failed\n");
-            }
-            printf("%s:%s,%d\r\n",__func__,radio2tcpbuffer,len);
+                printf("msgsnd failed\r\n");
+                goto creat_msg_q;
+            }*/
         }
-        sleep(1);
-    }
-
-}
-
-void *Radio_2_routin(void *data){
-    int fd = *(int*)data;;
-    uint8_t buffer[256];
-    fd = open("/dev/lora_radio_1",O_RDWR);
-    if (fd < 0)
-    {
-        printf("open error\n");
-        return;
-    }
-    SX1276Init(fd);
-#define RF_FREQUENCY                                433000000 // Hz
-    SX1276SetChannel(fd,RF_FREQUENCY);
-    SX1276SetTxConfig(fd);
-    SX1276SetRxConfig(fd);
-    while(1)
-    {
-        memset(buffer,0,256);
-        if(read(fd,buffer,256) != 0)
+        else
         {
-            printf("%s:%s\r\n",__func__,buffer);
+            usleep(10000);
         }
-        sleep(1);
     }
-}
-
-void *Radio_routin(void *data){
-    LoRaMacPrimitives_t LoRaMacPrimitives;
-    LoRaMacCallback_t LoRaMacCallbacks;
-    MibRequestConfirm_t mibReq;
-	int fd = *(int *)data;
-	int chip = 0;
-    DeviceState = DEVICE_STATE_INIT;
-    printf("%s,%d\r\n",__func__,__LINE__);
+#if 0
     while( 1 )
     {
         sleep(1);
@@ -964,5 +968,6 @@ void *Radio_routin(void *data){
             }
         }
     }
+#endif
     return 0;
 }

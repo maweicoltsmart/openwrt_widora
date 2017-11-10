@@ -9,9 +9,8 @@ typedef uint32_t TimerTime_t;
 
 #define LORA_RX_PKG_MAX_SIZE    256
 struct lora_rx_data{
-    int chip;
-    int len;
-    unsigned char *buffer;
+    uint32_t len;
+    uint8_t *buffer;
     struct list_head list;
 };
 extern struct lora_rx_data lora_rx_list;
@@ -31,7 +30,7 @@ typedef struct
 	uint32_t chip;
 	uint32_t len;
 	uint8_t *buffer;
-}st_lora_tx_data_type,*pst_lora_tx_data_type;
+}st_lora_tx_data_type,*pst_lora_tx_data_type,st_lora_rx_data_type,*pst_lora_rx_data_type;
 extern bool rx_done;
 
 #endif

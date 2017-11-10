@@ -75,6 +75,11 @@ int main(int argc ,char *argv[])
 #define RF_FREQUENCY                                470000000 // Hz
     //SX1276SetChannel(0,fd,RF_FREQUENCY);
     //SX1276SetChannel(1,fd,RF_FREQUENCY + FREQ_STEP * 10);
+    while(1)
+    {
+        sleep(100);
+    }
+#if 0
 creat_msg_q:
     //建立消息队列
     while((msgid = msgget((key_t)1234, 0666 | IPC_CREAT) == -1))
@@ -101,5 +106,6 @@ creat_msg_q:
             usleep(10000);
         }
     }
+#endif
 }
 

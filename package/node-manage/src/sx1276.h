@@ -314,7 +314,7 @@ uint32_t SX1276GetTimeOnAir( int chip,RadioModems_t modem, uint8_t pktLen );
  * \param [IN]: buffer     Buffer pointer
  * \param [IN]: size       Buffer size
  */
-void SX1276Send( int chip,uint8_t *buffer, uint8_t size );
+void SX1276Send( int chip,uint32_t jiffies,uint8_t *buffer, uint8_t size );
 
 /*!
  * \brief Sets the radio in sleep mode
