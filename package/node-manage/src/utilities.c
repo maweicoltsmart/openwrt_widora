@@ -90,3 +90,15 @@ TimerTime_t TimerGetElapsedTime( TimerTime_t savedTime )
     return 1;//RtcComputeElapsedTime( savedTime );
 }
 
+void hexdump(const unsigned char *buf, const int num)
+{
+    int i;
+    for(i = 0; i < num; i++)
+    {
+        printf("%02X ", buf[i]);
+        /*if ((i+1)%8 == 0)
+            printf("\n");*/
+    }
+    printf("\r\n");
+    return;
+}

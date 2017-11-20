@@ -314,7 +314,7 @@ uint32_t SX1276GetTimeOnAir( int chip,RadioModems_t modem, uint8_t pktLen );
  * \param [IN]: buffer     Buffer pointer
  * \param [IN]: size       Buffer size
  */
-void SX1276Send( int chip,uint32_t jiffies,uint8_t *buffer, uint8_t size );
+void SX1276Send( uint8_t *buffer, uint8_t size );
 
 /*!
  * \brief Sets the radio in sleep mode
@@ -403,9 +403,9 @@ void SX1276SetMaxPayloadLength( int chip,RadioModems_t modem, uint8_t max );
  * \param [IN] enable if true, it enables a public network
  */
 void SX1276SetPublicNetwork( int chip,bool enable );
-
+#if 0
 extern SX1276_t SX1276[];
-extern int fd_proc;
+extern int fd_proc_cfg,fd_proc_chan;
 extern int fd_cdev;
 
 #define LORA_PROCFS_NAME_LEN 32
@@ -453,5 +453,5 @@ typedef struct{
         st_txconfig stTxconfig;
     }proc_value;
 }lora_proc_data_t;
-
+#endif
 #endif // __SX1276_H__

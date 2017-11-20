@@ -17,7 +17,19 @@ Maintainer: Miguel Luis and Gregory Cristian
 //#include "board.h"
 #include "typedef.h"
 #include "utilities.h"
-
+#include <linux/kernel.h>
+#include <linux/module.h>
+#include <linux/init.h>
+#include <linux/platform_device.h>
+#include <linux/device.h>         //class_create
+#include <linux/poll.h>   //poll
+#include <linux/fcntl.h>
+#include <linux/gpio.h>
+#include <linux/spi/spi.h>
+#include <linux/spi/spi_gpio.h>
+#include <linux/interrupt.h> //---request_irq()
+#include <asm/irq.h> //---disable_irq, enable_irq()
+#include <linux/workqueue.h>
 /*!
  * Redefinition of rand() and srand() standard C functions.
  * These functions are redefined in order to get the same behavior across
@@ -90,3 +102,15 @@ TimerTime_t TimerGetElapsedTime( TimerTime_t savedTime )
     return 1;//RtcComputeElapsedTime( savedTime );
 }
 
+void hexdump(const unsigned char *buf, const int num)
+{
+    int i;
+    for(i = 0; i < num; i++)
+    {
+        printk("%02X ", buf[i]);
+        /*if ((i+1)%8 == 0)
+            printf("\n");*/
+    }
+    printk("\r\n");
+    return;
+}

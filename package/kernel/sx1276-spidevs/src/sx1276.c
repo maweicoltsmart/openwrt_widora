@@ -214,9 +214,9 @@ SX1276_t SX1276[2];
 /*!
  * Tx and Rx timers
  */
-struct timer_list TxTimeoutTimer[2];
-struct timer_list RxTimeoutTimer[2];
-//struct timer_list RxTimeoutSyncWord[2];
+struct timer_list TxTimeoutTimer[3];
+struct timer_list RxTimeoutTimer[3];
+//struct timer_list RxTimeoutSyncWord[3];
 struct timeval oldtv;
 
 
@@ -228,7 +228,7 @@ void SX1276Init( int chip,RadioEvents_t *events )
 {
     uint8_t i;
     uint8_t chipversion1;
-    printk("%s,%d\r\n",__func__,__LINE__);
+    //printk("%s,%d\r\n",__func__,__LINE__);
     RadioEvents = events;
 
     // Initialize driver timeout timers
@@ -390,7 +390,7 @@ static void RxChainCalibration( int chip )
     SX1276Write(chip, REG_PACONFIG, regPaConfigInitVal );
     SX1276SetChannel(chip, initialFreq );
 }
-
+#if 0
 /*!
  * Returns the known FSK bandwidth registers value
  *
@@ -411,7 +411,7 @@ static uint8_t GetFskBandwidthRegValue( int chip,uint32_t bandwidth )
     // ERROR: Value not found
     while( 1 );
 }
-
+#endif
 void SX1276SetRxConfig( int chip,RadioModems_t modem, uint32_t bandwidth,
                          uint32_t datarate, uint8_t coderate,
                          uint32_t bandwidthAfc, uint16_t preambleLen,
@@ -422,7 +422,38 @@ void SX1276SetRxConfig( int chip,RadioModems_t modem, uint32_t bandwidth,
 {
     printk("%s,%d\r\n",__func__,__LINE__);
     SX1276SetModem(chip, modem );
-
+    printk("%s:\
+            chip = %d,\
+            modem = %d,\
+            bandwidth = %d,\
+            datarate = %d,\
+            coderate = %d,\
+            bandwidthAfc = %d,\
+            preambleLen = %d,\
+            symbTimeout = %d,\
+            fixLen = %d,\
+            payloadLen = %d,\
+            crcOn = %d,\
+            freqHopOn = %d,\
+            hopPeriod = %d,\
+            iqInverted = %d,\
+            rxContinuous = %d\r\n",
+            __func__,
+            chip,
+            modem,
+            bandwidth,
+            datarate,
+            coderate,
+            bandwidthAfc,
+            preambleLen,
+            symbTimeout,
+            fixLen,
+            payloadLen,
+            crcOn,
+            freqHopOn,
+            hopPeriod,
+            iqInverted,
+            rxContinuous);
     switch( modem )
     {
     case MODEM_FSK:
@@ -592,6 +623,37 @@ void SX1276SetTxConfig( int chip,RadioModems_t modem, int8_t power, uint32_t fde
                         uint8_t hopPeriod, bool iqInverted, uint32_t timeout )
 {
     printk("%s,%d\r\n",__func__,__LINE__);
+
+    printk("%s:\
+            chip = %d,\
+            modem = %d,\
+            power = %d,\
+            fdev = %d,\
+            bandwidth = %d,\
+            datarate = %d,\
+            coderate = %d,\
+            preambleLen = %d,\
+            fixLen = %d,\
+            crcOn = %d,\
+            freqHopOn = %d,\
+            hopPeriod = %d,\
+            iqInverted = %d,\
+            timeout = %d\r\n",
+            __func__,
+            chip,
+            modem,
+            power,
+            fdev,
+            bandwidth,
+            datarate,
+            coderate,
+            preambleLen,
+            fixLen,
+            crcOn,
+            freqHopOn,
+            hopPeriod,
+            iqInverted,
+            timeout);
     SX1276SetModem(chip, modem );
 
     SX1276SetRfTxPower(chip, power );
@@ -1359,7 +1421,7 @@ void SX1276SetPublicNetwork( int chip,bool enable )
 void SX1276OnTimeoutIrq( unsigned long chip )
 {
     uint8_t i = 0;
-    printk("%s, %d\r\n",__func__,chip);
+    printk("%s, %d\r\n",__func__,(int)chip);
     switch( SX1276[chip].Settings.State )
     {
     case RF_RX_RUNNING:

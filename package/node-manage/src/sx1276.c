@@ -269,7 +269,7 @@ void SX1276SetRxConfig( int chip,RadioModems_t modem, uint32_t bandwidth,
     lora_proc_data.proc_value.stRxconfig.iqInverted = iqInverted;
     lora_proc_data.proc_value.stRxconfig.rxContinuous = rxContinuous;
 
-    write(fd_proc,&lora_proc_data,sizeof(lora_proc_data_t));
+    write(fd_proc_cfg,&lora_proc_data,sizeof(lora_proc_data_t));
     //ioctl(fd, LORADEV_RADIO_SET_RXCFG, NULL);
 }
 
@@ -298,7 +298,7 @@ void SX1276SetTxConfig( int chip,RadioModems_t modem, int8_t power, uint32_t fde
     lora_proc_data.proc_value.stTxconfig.iqInverted = iqInverted;
     lora_proc_data.proc_value.stTxconfig.timeout = timeout;
 
-    write(fd_proc,&lora_proc_data,sizeof(lora_proc_data_t));
+    write(fd_proc_cfg,&lora_proc_data,sizeof(lora_proc_data_t));
 }
 
 bool SX1276CheckRfFrequency( int chip,uint32_t frequency )
@@ -386,16 +386,9 @@ uint32_t SX1276GetTimeOnAir( int chip,RadioModems_t modem, uint8_t pktLen )
     return airTime;
 }
 
-void SX1276Send( int chip,uint32_t jiffies,uint8_t *buffer, uint8_t size )
+void SX1276Send(uint8_t *buffer, uint8_t size )
 {
-    int len = sizeof(st_lora_tx_data_type) - sizeof(uint8_t *) + size;
-    pst_lora_rx_data_type p = malloc(len);
-    memcpy(p->buffer,buffer,size);
-    p->chip = chip;
-    p->len = size;
-    p->jiffies = jiffies;
-    write(fd_cdev,(void*)p,len);
-
+    write(fd_cdev,(void*)buffer,size);
 }
 
 void SX1276SetSleep( int chip )

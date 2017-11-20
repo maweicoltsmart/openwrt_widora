@@ -41,6 +41,10 @@
 #include "typedef.h"
 #include "sx1276.h"
 #include "nodedatabase.h"
+#include "RegionCN470.h"
+#include "nodedatabase.h"
+
+extern LoRaMacParams_t LoRaMacParams;
 
 /*!
  * Defines the application data transmission duty cycle. 5s, value in [ms].
@@ -708,7 +712,9 @@ static void MlmeConfirm( int chip, MlmeConfirm_t *mlmeConfirm )
  */
 bool lora_rx_done;
 uint8_t lora_rx_len;
-uint8_t radio2tcpbuffer[300];
+uint8_t radiorxbuffer[300];
+uint8_t radiotxbuffer[2][300];
+
 #define MAX_TEXT 512
 
 void *Radio_routin(void *param){
@@ -720,10 +726,13 @@ void *Radio_routin(void *param){
     int len;
 	//int fd = *(int *)data;
 	int chip = 0;
+    int index;
     DeviceState = DEVICE_STATE_INIT;
-    pst_lora_rx_data_type p;
+    pst_lora_rx_data_type p1;
+    pst_lora_tx_data_type p2;
     LoRaMacHeader_t macHdr;
     LoRaMacFrameCtrl_t fCtrl;
+    uint32_t mic = 0;
     node_join_info_t node_join_info;
     uint8_t *pkg;
     printf("%s,%d\r\n",__func__,__LINE__);
@@ -741,13 +750,13 @@ void *Radio_routin(void *param){
     }
     while(1)
     {
-        memset(radio2tcpbuffer,0,256);
-        if((len = read(fd_cdev,radio2tcpbuffer,300)) > 0)
+        memset(radiorxbuffer,0,256);
+        if((len = read(fd_cdev,radiorxbuffer,300)) > 0)
         {
             printf("%s, %d, %d\r\n",__func__,__LINE__,len);
             usleep(1000000);
-            p = (pst_lora_rx_data_type)radio2tcpbuffer;
-            pkg = (uint8_t*)&radio2tcpbuffer[sizeof(st_lora_rx_data_type) - sizeof(uint8_t *)];
+            p1 = (pst_lora_rx_data_type)radiorxbuffer;
+            pkg = (uint8_t*)&radiorxbuffer[sizeof(st_lora_rx_data_type)];
             macHdr.Value = pkg[0];
             printf("%s, %d, %d\r\n",__func__,__LINE__,macHdr.Value);
             switch( macHdr.Bits.MType )
@@ -758,8 +767,35 @@ void *Radio_routin(void *param){
                     memcpy(node_join_info.DevEUI,pkg + 9,8);
                     node_join_info.DevNonce = *(uint16_t*)&pkg[17];
                     printf("%s, %d, %d\r\n",__func__,__LINE__,len);
-                    database_node_join(&node_join_info);
+                    index = database_node_join(&node_join_info);
                     printf("%s, %d, %d\r\n",__func__,__LINE__,len);
+                    p2 = (pst_lora_tx_data_type)&radiotxbuffer[1];
+                    p2->jiffies_start = p1->jiffies + LoRaMacParams.JoinAcceptDelay1;
+                    p2->jiffies_end = p1->jiffies + LoRaMacParams.JoinAcceptDelay1 + LoRaMacParams.MaxRxWindow + LoRaMacParams.JoinAcceptDelay2;
+                    p2->chip = p1->chip;
+                    p2->len = 17;
+                    p2->freq = CN470_FIRST_RX1_CHANNEL + ( p2->chip ) * CN470_STEPWIDTH_RX1_CHANNEL;
+                    p2->freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
+                    pkg = (uint8_t*)&radiotxbuffer[1][sizeof(st_lora_tx_data_type)];
+                    macHdr.Bits.MType = FRAME_TYPE_JOIN_ACCEPT;
+                    pkg[0] = macHdr.Value;
+                    memcpy(&pkg[1],gateway_pragma.AppNonce,3); // AppNonce
+                    memcpy(&pkg[1 + 3],gateway_pragma.NetID,3); // NetID
+                    memcpy(&pkg[1 + 3 + 3],nodebase_node_pragma[index].DevAddr,4);  // DevAddr
+                    pkg[1 + 3 + 3 + 4] = 0; //DLSettings
+                    pkg[1 + 3 + 3 + 4 + 1] = 0; //RxDelay
+                    LoRaMacJoinComputeMic(radiotxbuffer[0],13,LoRaMacAppKey,&pkg[1 + 3 + 3 + 4 + 1 + 1]);   // mic
+                    LoRaMacJoinDecrypt(&pkg[1],12 + 4,LoRaMacAppKey,&radiotxbuffer[0][sizeof(st_lora_tx_data_type) + 1]);
+                    pkg = (uint8_t*)&radiotxbuffer[1][sizeof(st_lora_tx_data_type)];
+                    pkg[0]= macHdr.Value;
+                    p2 = (pst_lora_tx_data_type)&radiotxbuffer[0];
+                    p2->jiffies_start = p1->jiffies + LoRaMacParams.JoinAcceptDelay1;
+                    p2->jiffies_end = p1->jiffies + LoRaMacParams.JoinAcceptDelay1 + LoRaMacParams.MaxRxWindow + LoRaMacParams.JoinAcceptDelay2;
+                    p2->chip = p1->chip;
+                    p2->len = 17;
+                    p2->freq = CN470_FIRST_RX1_CHANNEL + ( p2->chip ) * CN470_STEPWIDTH_RX1_CHANNEL;
+                    p2->freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
+                    Radio.Send(radiotxbuffer[1],17);
                     break;
                 case FRAME_TYPE_DATA_UNCONFIRMED_UP:
                     break;

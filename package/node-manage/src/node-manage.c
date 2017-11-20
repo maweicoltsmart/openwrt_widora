@@ -24,7 +24,6 @@
 #include <poll.h>
 #include <signal.h>
 #include <fcntl.h>
-#include "routin.h"
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
@@ -33,12 +32,11 @@
 #include <sys/msg.h>
 #include "typedef.h"
 #include "radio.h"
-#include "sx1276.h"
-#include "LoRaMac.h"
 #include "typedef.h"
-#include "Region.h"
+#include "LoRaDevOps.h"
+#include "routin.h"
 
-int fd_proc;
+int fd_proc_cfg_rx,fd_proc_cfg_tx;
 int fd_cdev;
 
 void node_event_fun(int signum)
@@ -62,14 +60,21 @@ int main(int argc ,char *argv[])
         printf("open lora_radio error\r\n");
         return -1;
     }
-    fd_proc = open("/proc/lora_procfs/lora",O_RDWR);
-    if (fd_proc < 0)
+    fd_proc_cfg_rx = open("/proc/lora_procfs/lora_cfg_rx",O_RDWR);
+    if (fd_proc_cfg_rx < 0)
     {
-        perror("lora_proc");
-        printf("open lora_proc error\r\n");
+        perror("lora_proc_cfg_rx");
+        printf("open lora_proc_cfg_rx error\r\n");
         return -1;
     }
-    ret = pthread_create(&radio_routin_handle, NULL, Radio_routin, &fd_proc);
+    fd_proc_cfg_tx = open("/proc/lora_procfs/lora_cfg_tx",O_RDWR);
+    if (fd_proc_cfg_tx < 0)
+    {
+        perror("lora_proc_cfg_tx");
+        printf("open lora_proc_cfg_tx error\r\n");
+        return -1;
+    }
+    ret = pthread_create(&radio_routin_handle, NULL, Radio_routin, &fd);
     ret = pthread_create(&tcp_client_handle, NULL, tcp_client_routin, &fd);
     ret = pthread_create(&tcp_server_handle, NULL, tcp_server_routin, &fd);
 #define RF_FREQUENCY                                470000000 // Hz

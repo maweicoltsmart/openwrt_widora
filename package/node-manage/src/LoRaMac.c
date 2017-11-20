@@ -1714,7 +1714,7 @@ LoRaMacStatus_t SendFrameOnChannel(int chip, uint8_t channel )
     }
 
     // Send now
-    Radio.Send(chip, jiffies,LoRaMacBuffer, LoRaMacBufferPktLen );
+    Radio.Send(LoRaMacBuffer, LoRaMacBufferPktLen );
 
     LoRaMacState |= LORAMAC_TX_RUNNING;
 

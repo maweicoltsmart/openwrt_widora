@@ -85,31 +85,31 @@ DECLARE_TASKLET(sx1276_2OnDio5,SX1276OnDio5Irq,1);
 static irqreturn_t sx1278_1_dio0irq_handler(int irq, void *dev_id)
 {
     tasklet_schedule(&sx1276_1OnDio0);//调度底半部
-    printk("%s, %d\r\n",__func__,__LINE__);
+    //printk("%s, %d\r\n",__func__,__LINE__);
     return 0;
 }
 static irqreturn_t sx1278_1_dio1irq_handler(int irq, void *dev_id)
 {
     tasklet_schedule(&sx1276_1OnDio1);//调度底半部
-    printk("%s, %d\r\n",__func__,__LINE__);
+    //printk("%s, %d\r\n",__func__,__LINE__);
     return 0;
 }
 static irqreturn_t sx1278_1_dio2irq_handler(int irq, void *dev_id)
 {
     tasklet_schedule(&sx1276_1OnDio2);//调度底半部
-    printk("%s, %d\r\n",__func__,__LINE__);
+    //printk("%s, %d\r\n",__func__,__LINE__);
     return 0;
 }
 static irqreturn_t sx1278_1_dio3irq_handler(int irq, void *dev_id)
 {
     tasklet_schedule(&sx1276_1OnDio3);//调度底半部
-    printk("%s, %d\r\n",__func__,__LINE__);
+    //printk("%s, %d\r\n",__func__,__LINE__);
     return 0;
 }
 static irqreturn_t sx1278_1_dio4irq_handler(int irq, void *dev_id)
 {
     tasklet_schedule(&sx1276_1OnDio4);//调度底半部
-    printk("%s, %d\r\n",__func__,__LINE__);
+    //printk("%s, %d\r\n",__func__,__LINE__);
     return 0;
 }
 #if 0
@@ -123,31 +123,31 @@ static irqreturn_t sx1278_1_dio5irq_handler(int irq, void *dev_id)
 static irqreturn_t sx1278_2_dio0irq_handler(int irq, void *dev_id)
 {
     tasklet_schedule(&sx1276_2OnDio0);//调度底半部
-    printk("%s, %d\r\n",__func__,__LINE__);
+    //printk("%s, %d\r\n",__func__,__LINE__);
     return 0;
 }
 static irqreturn_t sx1278_2_dio1irq_handler(int irq, void *dev_id)
 {
     tasklet_schedule(&sx1276_2OnDio1);//调度底半部
-    printk("%s, %d\r\n",__func__,__LINE__);
+    //printk("%s, %d\r\n",__func__,__LINE__);
     return 0;
 }
 static irqreturn_t sx1278_2_dio2irq_handler(int irq, void *dev_id)
 {
     tasklet_schedule(&sx1276_2OnDio2);//调度底半部
-    printk("%s, %d\r\n",__func__,__LINE__);
+    //printk("%s, %d\r\n",__func__,__LINE__);
     return 0;
 }
 static irqreturn_t sx1278_2_dio3irq_handler(int irq, void *dev_id)
 {
     tasklet_schedule(&sx1276_2OnDio3);//调度底半部
-    printk("%s, %d\r\n",__func__,__LINE__);
+    //printk("%s, %d\r\n",__func__,__LINE__);
     return 0;
 }
 static irqreturn_t sx1278_2_dio4irq_handler(int irq, void *dev_id)
 {
     tasklet_schedule(&sx1276_2OnDio4);//调度底半部
-    printk("%s, %d\r\n",__func__,__LINE__);
+    //printk("%s, %d\r\n",__func__,__LINE__);
     return 0;
 }
 #if 0

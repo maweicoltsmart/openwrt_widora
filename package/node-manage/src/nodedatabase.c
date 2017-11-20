@@ -1,21 +1,12 @@
 #include "nodedatabase.h"
 
-gateway_pragma_t gateway_pragma;
+#define LORAWAN_APPLICATION_KEY                     { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C }
+
+gateway_pragma_t gateway_pragma = {
+    .APPKEY = LORAWAN_APPLICATION_KEY,
+};
 node_pragma_t nodebase_node_pragma[MAX_NODE];
 static int16_t node_cnt = 0;
-
-void hexdump(const unsigned char *buf, const int num)
-{
-    int i;
-    for(i = 0; i < num; i++)
-    {
-        printf("%02X ", buf[i]);
-        /*if ((i+1)%8 == 0)
-            printf("\n");*/
-    }
-    printf("\r\n");
-    return;
-}
 
 int16_t database_node_join(node_join_info_t* node)
 {
@@ -33,15 +24,15 @@ int16_t database_node_join(node_join_info_t* node)
             *(uint32_t*)nodebase_node_pragma[loop].DevAddr = loop;
             node_cnt ++;
             printf("APPEUI: 0x");
-            hexdump(node->APPEUI,8);
+            hexdump((const unsigned char *)node->APPEUI,8);
             printf("DevEUI: 0x");
-            hexdump(node->DevEUI,8);
+            hexdump((const unsigned char *)node->DevEUI,8);
             printf("DevNonce: 0x");
-            hexdump(&node->DevNonce,2);
+            hexdump((const unsigned char *)&node->DevNonce,2);
             printf("APPKEY: 0x");
-            hexdump(nodebase_node_pragma[loop].AppSKey,16);
+            hexdump((const unsigned char *)nodebase_node_pragma[loop].AppSKey,16);
             printf("NwkSKey: 0x");
-            hexdump(nodebase_node_pragma[loop].NwkSKey,16);
+            hexdump((const unsigned char *)nodebase_node_pragma[loop].NwkSKey,16);
             return loop;
         }
     }
@@ -55,15 +46,15 @@ int16_t database_node_join(node_join_info_t* node)
         LoRaMacJoinComputeSKeys( gateway_pragma.APPKEY, gateway_pragma.AppNonce, node->DevNonce, nodebase_node_pragma[loop].NwkSKey, nodebase_node_pragma[loop].AppSKey );
         *(uint32_t*)nodebase_node_pragma[loop].DevAddr = loop;
         printf("APPEUI: 0x");
-        hexdump(node->APPEUI,8);
+        hexdump((const unsigned char *)node->APPEUI,8);
         printf("DevEUI: 0x");
-        hexdump(node->DevEUI,8);
+        hexdump((const unsigned char *)node->DevEUI,8);
         printf("DevNonce: 0x");
-        hexdump(&node->DevNonce,2);
+        hexdump((const unsigned char *)&node->DevNonce,2);
         printf("APPKEY: 0x");
-        hexdump(nodebase_node_pragma[loop].AppSKey,16);
+        hexdump((const unsigned char *)nodebase_node_pragma[loop].AppSKey,16);
         printf("NwkSKey: 0x");
-        hexdump(nodebase_node_pragma[loop].NwkSKey,16);
+        hexdump((const unsigned char *)nodebase_node_pragma[loop].NwkSKey,16);
         node_cnt ++;
     }
     else
