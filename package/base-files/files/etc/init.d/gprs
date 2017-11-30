@@ -1,0 +1,11 @@
+#!/bin/sh /etc/rc.common
+START=99
+start(){
+	/etc/ppp/ppp-on
+}
+stop(){
+        /etc/ppp/ppp-off
+}
+restart(){
+       /etc/ppp/ppp-on
+}
