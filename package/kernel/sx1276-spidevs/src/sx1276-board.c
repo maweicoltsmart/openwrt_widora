@@ -62,7 +62,9 @@ const struct Radio_s Radio =
 
 unsigned int sx1278_1_dio0irq = 0,sx1278_1_dio1irq = 0,sx1278_1_dio2irq = 0,sx1278_1_dio3irq = 0,sx1278_1_dio4irq = 0,sx1278_1_dio5irq = 0;
 unsigned int sx1278_2_dio0irq = 0,sx1278_2_dio1irq = 0,sx1278_2_dio2irq = 0,sx1278_2_dio3irq = 0,sx1278_2_dio4irq = 0,sx1278_2_dio5irq = 0;
-
+#if defined (GATEWAY_V2_3CHANNEL)
+unsigned int sx1278_3_dio0irq = 0,sx1278_3_dio1irq = 0,sx1278_3_dio2irq = 0,sx1278_3_dio3irq = 0,sx1278_3_dio4irq = 0,sx1278_3_dio5irq = 0;
+#endif
 extern void SX1276OnDio0Irq(unsigned long);
 extern void SX1276OnDio1Irq(unsigned long);
 extern void SX1276OnDio2Irq(unsigned long);
@@ -81,6 +83,14 @@ DECLARE_TASKLET(sx1276_2OnDio2,SX1276OnDio2Irq,1);
 DECLARE_TASKLET(sx1276_2OnDio3,SX1276OnDio3Irq,1);
 DECLARE_TASKLET(sx1276_2OnDio4,SX1276OnDio4Irq,1);
 DECLARE_TASKLET(sx1276_2OnDio5,SX1276OnDio5Irq,1);
+#if defined (GATEWAY_V2_3CHANNEL)
+DECLARE_TASKLET(sx1276_3OnDio0,SX1276OnDio0Irq,2);
+DECLARE_TASKLET(sx1276_3OnDio1,SX1276OnDio1Irq,2);
+DECLARE_TASKLET(sx1276_3OnDio2,SX1276OnDio2Irq,2);
+DECLARE_TASKLET(sx1276_3OnDio3,SX1276OnDio3Irq,2);
+DECLARE_TASKLET(sx1276_3OnDio4,SX1276OnDio4Irq,2);
+DECLARE_TASKLET(sx1276_3OnDio5,SX1276OnDio5Irq,2);
+#endif
 
 static irqreturn_t sx1278_1_dio0irq_handler(int irq, void *dev_id)
 {
@@ -158,6 +168,47 @@ static irqreturn_t sx1278_2_dio5irq_handler(int irq, void *dev_id)
     return 0;
 }
 #endif
+#if defined (GATEWAY_V2_3CHANNEL)
+static irqreturn_t sx1278_3_dio0irq_handler(int irq, void *dev_id)
+{
+    tasklet_schedule(&sx1276_3OnDio0);//调度底半部
+    //printk("%s, %d\r\n",__func__,__LINE__);
+    return 0;
+}
+static irqreturn_t sx1278_3_dio1irq_handler(int irq, void *dev_id)
+{
+    tasklet_schedule(&sx1276_3OnDio1);//调度底半部
+    //printk("%s, %d\r\n",__func__,__LINE__);
+    return 0;
+}
+static irqreturn_t sx1278_3_dio2irq_handler(int irq, void *dev_id)
+{
+    tasklet_schedule(&sx1276_3OnDio2);//调度底半部
+    //printk("%s, %d\r\n",__func__,__LINE__);
+    return 0;
+}
+static irqreturn_t sx1278_3_dio3irq_handler(int irq, void *dev_id)
+{
+    tasklet_schedule(&sx1276_3OnDio3);//调度底半部
+    //printk("%s, %d\r\n",__func__,__LINE__);
+    return 0;
+}
+static irqreturn_t sx1278_3_dio4irq_handler(int irq, void *dev_id)
+{
+    tasklet_schedule(&sx1276_3OnDio4);//调度底半部
+    //printk("%s, %d\r\n",__func__,__LINE__);
+    return 0;
+}
+#if 0
+static irqreturn_t sx1278_3_dio5irq_handler(int irq, void *dev_id)
+{
+    tasklet_schedule(&sx1276_3OnDio5);//调度底半部
+    printk("%s, %d\r\n",__func__,__LINE__);
+    return 0;
+}
+#endif
+#endif
+
 /*!
  * Antenna switch GPIO pins objects
  */
@@ -304,7 +355,7 @@ void SX1276IoInit( int chip )
             {
                 printk("%s,%d\r\n",__func__,__LINE__);
             }
-            err = gpio_request(SX1278_2_DIO5_PIN, "SX1278_2_DIO5_PIN");
+            /*err = gpio_request(SX1278_2_DIO5_PIN, "SX1278_2_DIO5_PIN");
             if(err)
             {
                 printk("%s,%d\r\n",__func__,__LINE__);
@@ -313,10 +364,83 @@ void SX1276IoInit( int chip )
             if(err)
             {
                 printk("%s,%d\r\n",__func__,__LINE__);
-            }
+            }*/
             break;
+#if defined (GATEWAY_V2_3CHANNEL)
         case 2:
+            err = gpio_request(SX1278_3_RST_PIN, "SX1278_3_RST_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_output(SX1278_3_RST_PIN,0);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            //SX1276.Spi = slave;
+            err = gpio_request(SX1278_3_DIO0_PIN, "SX1278_3_DIO0_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_3_DIO0_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_3_DIO1_PIN, "SX1278_3_DIO1_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_3_DIO1_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_3_DIO2_PIN, "SX1278_3_DIO2_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_3_DIO2_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_3_DIO3_PIN, "SX1278_3_DIO3_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_3_DIO3_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_3_DIO4_PIN, "SX1278_3_DIO4_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_3_DIO4_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            /*err = gpio_request(SX1278_3_DIO5_PIN, "SX1278_3_DIO5_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_3_DIO5_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }*/
             break;
+#endif
         default:
             break;
     }
@@ -415,8 +539,52 @@ void SX1276IoIrqInit( int chip )
             //    printk( "sx1278_2_dio5irq request failed\r\n");
             //}
             break;
+#if defined (GATEWAY_V2_3CHANNEL)
         case 2:
+			sx1278_3_dio0irq = gpio_to_irq(SX1278_3_DIO0_PIN);
+            err = request_irq(sx1278_3_dio0irq,sx1278_3_dio0irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio0irq",NULL);
+            //disable_irq(sx1278_3_dio0irq);
+            if(err)
+            {
+                printk( "sx1278_3_dio0irq request failed\r\n");
+            }
+            sx1278_3_dio1irq = gpio_to_irq(SX1278_3_DIO1_PIN);
+            err = request_irq(sx1278_3_dio1irq,sx1278_3_dio1irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio1irq",NULL);
+            //disable_irq(sx1278_3_dio1irq);
+            if(err)
+            {
+                printk( "sx1278_3_dio1irq request failed\r\n");
+            }
+            sx1278_3_dio2irq = gpio_to_irq(SX1278_3_DIO2_PIN);
+            err = request_irq(sx1278_3_dio2irq,sx1278_3_dio2irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio2irq",NULL);
+            //disable_irq(sx1278_3_dio2irq);
+            if(err)
+            {
+                printk( "sx1278_3_dio2irq request failed\r\n");
+            }
+            sx1278_3_dio3irq = gpio_to_irq(SX1278_3_DIO3_PIN);
+            err = request_irq(sx1278_3_dio3irq,sx1278_3_dio3irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio3irq",NULL);
+            //disable_irq(sx1278_3_dio3irq);
+            if(err)
+            {
+                printk( "sx1278_3_dio3irq request failed\r\n");
+            }
+            sx1278_3_dio4irq = gpio_to_irq(SX1278_3_DIO4_PIN);
+            err = request_irq(sx1278_3_dio4irq,sx1278_3_dio4irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio4irq",NULL);
+            //disable_irq(sx1278_3_dio4irq);
+            if(err)
+            {
+                printk( "sx1278_3_dio4irq request failed\r\n");
+            }
+            /*sx1278_3_dio5irq = gpio_to_irq(SX1278_3_DIO5_PIN);
+            err = request_irq(sx1278_3_dio5irq,sx1278_3_dio5irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio5irq",NULL);*/
+            //disable_irq(sx1278_3_dio5irq);
+            //if(err)
+            //{
+            //    printk( "sx1278_3_dio5irq request failed\r\n");
+            //}
             break;
+#endif
         default:
             break;
     }
@@ -573,10 +741,18 @@ void SX1276IoFree(int chip)
             gpio_free(SX1278_2_DIO2_PIN);
             gpio_free(SX1278_2_DIO3_PIN);
             gpio_free(SX1278_2_DIO4_PIN);
-            gpio_free(SX1278_2_DIO5_PIN);
+            //gpio_free(SX1278_2_DIO5_PIN);
             break;
+#if defined (GATEWAY_V2_3CHANNEL)
         case 2:
+			gpio_free(SX1278_3_RST_PIN);
+            gpio_free(SX1278_3_DIO0_PIN);
+            gpio_free(SX1278_3_DIO1_PIN);
+            gpio_free(SX1278_3_DIO2_PIN);
+            gpio_free(SX1278_3_DIO3_PIN);
+            gpio_free(SX1278_3_DIO4_PIN);
             break;
+#endif
         default:
             break;
     }
@@ -602,8 +778,15 @@ void SX1276IoIrqFree(int chip)
             free_irq(sx1278_2_dio4irq,NULL);
             //free_irq(sx1278_2_dio5irq,NULL);
             break;
+#if defined (GATEWAY_V2_3CHANNEL)
         case 2:
+			free_irq(sx1278_3_dio0irq,NULL);
+            free_irq(sx1278_3_dio1irq,NULL);
+            free_irq(sx1278_3_dio2irq,NULL);
+            free_irq(sx1278_3_dio3irq,NULL);
+            free_irq(sx1278_3_dio4irq,NULL);
             break;
+#endif
         default:
             break;
     }
