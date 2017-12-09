@@ -1,6 +1,22 @@
 #ifndef __DEBUG_H__
 #define __DEBUG_H__
 
+#define DEBUG_DATA	(1 < 0)
+#define DEBUG_EVENT	(1 < 0)
+#define DEBUG_BUG	(1 < 0)
+#define DEBUG_WARNNING	(1 < 0)
+//#define DEBUG_DATA	(1 < 0)
+//#define DEBUG_DATA	(1 < 0)
+//#define DEBUG_DATA	(1 < 0)
+//#define DEBUG_DATA	(1 < 0)
+void debug_output_data(uint8_t *data,int len);
+//#define DEBUG_MASK	DEBUG_DATA|DEBUG_EVENT|DEBUG_BUG|DEBUG_WARNNING
+#if defined(DEBUG_DATA)
+#define DEBUG_OUTPUT_DATA(data,len)		debug_output_data(data,len);
+#else
+#define DEBUG_OUTPUT_DATA(data,len)
+#endif
+//#endif
 /*KERN_EMERG
 Used for emergency messages, usually those that precede a crash.
 用于突发性事件的消息，通常在系统崩溃之前报告此类消息。
@@ -24,5 +40,4 @@ Informational messages. Many drivers print information about the hardware they f
 信息消息。许多驱动程序在启动时刻用它来输出获得的硬件信息。
 KERN_DEBUG
 */
-#endif
 #endif

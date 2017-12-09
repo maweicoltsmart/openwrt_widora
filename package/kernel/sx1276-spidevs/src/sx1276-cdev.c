@@ -28,6 +28,9 @@
 #include <linux/time.h>
 #include <linux/timer.h>
 #include "proc.h"
+#include "LoRaMac.h"
+#include "radiomsg.h"
+
 #define LORADEV_IOC_MAGIC  'r'
 
 #define LORADEV_IOCPRINT   _IO(LORADEV_IOC_MAGIC, 0)  //没参数
@@ -56,6 +59,8 @@ static DECLARE_WAIT_QUEUE_HEAD(lora_wait);
 
 static struct class *lora_dev_class;
 static struct device *lora_dev_device;
+static struct task_struct *radio_routin;
+
 #define LORADEV_MAJOR 0   /*预设的mem的主设备号*/
 #define LORADEV_NR_DEVS 2    /*设备数*/
 #define LORADEV_SIZE 4096
@@ -85,7 +90,7 @@ int8_t SnrValue = 0;
 
 struct lora_rx_data lora_rx_list;
 struct lora_tx_data lora_tx_list;
-
+/*
 void OnTxDone( int chip )
 {
     Radio.Sleep( chip);
@@ -168,18 +173,16 @@ void OnRxError( int chip )
     Radio.Sleep( chip);
     Radio.Rx( chip,RX_TIMEOUT_VALUE );
     State = RX_ERROR;
-}
+}*/
 
 static int lora_dev_open(struct inode * inode, struct file * filp)
 {
-    INIT_LIST_HEAD(&lora_rx_list.list);
-    INIT_LIST_HEAD(&lora_tx_list.list);
-    printk("%s,%d\r\n",__func__,__LINE__);
-    RadioEvents.TxDone = OnTxDone;
-    RadioEvents.RxDone = OnRxDone;
-    RadioEvents.RxError = OnRxError;
-    RadioEvents.TxTimeout = OnTxTimeout;
-    RadioEvents.RxTimeout = OnRxTimeout;
+    RadioMsgListInit();
+    RadioEvents.TxDone = OnMacTxDone;
+    RadioEvents.RxDone = OnMacRxDone;
+    RadioEvents.RxError = OnMacRxError;
+    RadioEvents.TxTimeout = OnMacTxTimeout;
+    RadioEvents.RxTimeout = OnMacRxTimeout;
     Radio.Init(0,&RadioEvents);
     Radio.Init(1,&RadioEvents);
     //Radio.Init(2,&RadioEvents);
@@ -190,11 +193,13 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
     //SX1276IoIrqInit(1);
     //Radio.Rx( 0,RX_TIMEOUT_VALUE );
     //Radio.Rx( 1,RX_TIMEOUT_VALUE );
+    radio_routin = kthread_create(Radio_routin, NULL, "Radio1 routin thread");
     return 0;
 }
 
 static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,loff_t *ppos)
 {
+    #if 0
     int ret = 0;
     struct lora_rx_data *get;
     struct list_head *pos;
@@ -234,10 +239,12 @@ static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,l
     }
     kfree(get);
     return ret;
+    #endif
 }
 
 void lora_dev_tx_queue_routin( unsigned long data )
 {
+    #if 0
     pst_lora_tx_data_type p = (pst_lora_tx_data_type)data;
     uint8_t *buf = (uint8_t*)p;
     buf = &buf[sizeof(st_lora_tx_data_type)];
@@ -265,10 +272,12 @@ void lora_dev_tx_queue_routin( unsigned long data )
     kfree(p);
     printk("chip%d send %d bytes: 0x",p->chip,p->len);
     hexdump((const unsigned char *)buf,p->len);
+    #endif
 }
 
 static ssize_t lora_dev_write(struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
 {
+    #if 0
     pst_lora_tx_data_type p;
     struct timer_list *timer;
     timer = kmalloc(sizeof(struct timer_list),GFP_KERNEL);
@@ -280,6 +289,7 @@ static ssize_t lora_dev_write(struct file *filp, const char __user *buf, size_t 
     timer->expires = p->jiffies_start;
     p->timer = timer;
     add_timer(timer);
+    #endif
     return size;
 #if 0
     struct lora_tx_data *new,*tmp;
@@ -353,6 +363,7 @@ static int lora_dev_close(struct inode *inode, struct file *file)
     SX1276IoFree(1);
     //SX1276IoIrqFree(2);
     //SX1276IoFree(2);
+    kthread_stop(radio_routin);
     return 0;
 }
 static unsigned int lora_dev_poll(struct file *file, struct poll_table_struct *wait)

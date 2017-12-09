@@ -1,31 +1,71 @@
 #include "nodedatabase.h"
+#include "LoRaMacCrypto.h"
 
-gateway_pragma_t gateway_pragma;
+#define LORAWAN_APPLICATION_KEY                     { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C }
+
+gateway_pragma_t gateway_pragma = {
+    .APPKEY = LORAWAN_APPLICATION_KEY,
+};
 node_pragma_t nodebase_node_pragma[MAX_NODE];
-static uint16_t node_cnt = 0;
+static int16_t node_cnt = 0;
 
-uint16_t database_node_join(node_join_info_t* node)
+int16_t database_node_join(node_join_info_t* node)
 {
     uint16_t loop;
+    //time_t   now;
+    struct timex  txc;
+    struct rtc_time tm;
+
+    printk("%s, %d\r\n",__func__,__LINE__);
     for(loop = 0;loop < node_cnt;loop ++)
     {
         if(!memcmp(node->DevEUI,nodebase_node_pragma[loop].DevEUI,8)){
             LoRaMacJoinComputeSKeys( gateway_pragma.APPKEY, gateway_pragma.AppNonce, node->DevNonce, nodebase_node_pragma[loop].NwkSKey, nodebase_node_pragma[loop].AppSKey );
-            memcpy(nodebase_node_pragma[loop].DevNonce, node->DevNonce, 2);
+            nodebase_node_pragma[loop].DevNonce = node->DevNonce;
+            //time(&now);
+            /* 获取当前的UTC时间 */
             do_gettimeofday(&(nodebase_node_pragma[loop].LastComunication.time));
+
             *(uint32_t*)nodebase_node_pragma[loop].DevAddr = loop;
             node_cnt ++;
+            printk("APPEUI: 0x");
+            hexdump((const unsigned char *)node->APPEUI,8);
+            printk("DevEUI: 0x");
+            hexdump((const unsigned char *)node->DevEUI,8);
+            printk("DevNonce: 0x");
+            hexdump((const unsigned char *)&node->DevNonce,2);
+            printk("APPKEY: 0x");
+            hexdump((const unsigned char *)nodebase_node_pragma[loop].AppSKey,16);
+            printk("NwkSKey: 0x");
+            hexdump((const unsigned char *)nodebase_node_pragma[loop].NwkSKey,16);
             return loop;
         }
     }
     if(loop < MAX_NODE){
-        memcpy(nodebase_node_pragma[loop].DevNonce, node->DevNonce, 2);
+        nodebase_node_pragma[loop].DevNonce = node->DevNonce;
         memcpy(nodebase_node_pragma[loop].APPEUI, node->APPEUI, 8);
         memcpy(nodebase_node_pragma[loop].DevEUI, node->DevEUI, 8);
+        //time(&now);
+        //time函数读取现在的时间(国际标准时间非北京时间)，然后传值给now
+        //nodebase_node_pragma[loop].LastComunication   =   localtime(&now);
         do_gettimeofday(&(nodebase_node_pragma[loop].LastComunication.time));
         LoRaMacJoinComputeSKeys( gateway_pragma.APPKEY, gateway_pragma.AppNonce, node->DevNonce, nodebase_node_pragma[loop].NwkSKey, nodebase_node_pragma[loop].AppSKey );
         *(uint32_t*)nodebase_node_pragma[loop].DevAddr = loop;
+        printk("APPEUI: 0x");
+        hexdump((const unsigned char *)node->APPEUI,8);
+        printk("DevEUI: 0x");
+        hexdump((const unsigned char *)node->DevEUI,8);
+        printk("DevNonce: 0x");
+        hexdump((const unsigned char *)&node->DevNonce,2);
+        printk("APPKEY: 0x");
+        hexdump((const unsigned char *)nodebase_node_pragma[loop].AppSKey,16);
+        printk("NwkSKey: 0x");
+        hexdump((const unsigned char *)nodebase_node_pragma[loop].NwkSKey,16);
         node_cnt ++;
+    }
+    else
+    {
+        return -1;
     }
     return loop;
 }
