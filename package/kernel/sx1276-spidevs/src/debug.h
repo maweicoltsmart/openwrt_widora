@@ -1,14 +1,30 @@
 #ifndef __DEBUG_H__
 #define __DEBUG_H__
 
-#define DEBUG_DATA	(1 < 0)
-#define DEBUG_EVENT	(1 < 0)
-#define DEBUG_BUG	(1 < 0)
-#define DEBUG_WARNNING	(1 < 0)
+typedef enum{
+	EV_JOIN_REQ,
+	EV_DATA_UNCONFIRMED_UP,
+	EV_DATA_CONFIRMED_UP,
+	EV_RXCOMPLETE,
+	EV_TXCOMPLETE,
+	EV_TX_START,
+	EV_LAST
+}en_Event;
+
+extern unsigned char* enEventName[];
+
+#define EV_JOIN_REQ		(1 < 0)
+#define EV_JOIN_REQ		(1 < 0)
+#define EV_JOIN_REQ		(1 < 0)
+
 //#define DEBUG_DATA	(1 < 0)
-//#define DEBUG_DATA	(1 < 0)
-//#define DEBUG_DATA	(1 < 0)
-//#define DEBUG_DATA	(1 < 0)
+#define DEBUG_EVENT	(1 < 1)
+#define DEBUG_BUG	(1 < 2)
+#define DEBUG_WARNNING	(1 < 3)
+//#define DEBUG_DATA	(1 < 4)
+//#define DEBUG_DATA	(1 < 5)
+//#define DEBUG_DATA	(1 < 6)
+//#define DEBUG_DATA	(1 < 7)
 void debug_output_data(uint8_t *data,int len);
 //#define DEBUG_MASK	DEBUG_DATA|DEBUG_EVENT|DEBUG_BUG|DEBUG_WARNNING
 #if defined(DEBUG_DATA)
@@ -16,6 +32,10 @@ void debug_output_data(uint8_t *data,int len);
 #else
 #define DEBUG_OUTPUT_DATA(data,len)
 #endif
+
+#define DEBUG_OUTPUT_EVENT(chip,ev)	//printk("%d: %s\r\n",chip,enEventName[ev]);
+
+#define DEBUG_OUTPUT_INFO(fmt,arg...)	//printk(fmt, ##arg)
 //#endif
 /*KERN_EMERG
 Used for emergency messages, usually those that precede a crash.

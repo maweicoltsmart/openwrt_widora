@@ -17,13 +17,11 @@ struct lora_rx_data{
 
 struct lora_tx_data{
     uint8_t *buffer;
-    uint32_t jiffies;
 	uint32_t chip;
 	uint16_t size;
 	int16_t rssi;
 	int8_t snr;
     struct list_head list;
-    struct timer_list *timer;
 };
 
 void RadioMsgListInit(void);

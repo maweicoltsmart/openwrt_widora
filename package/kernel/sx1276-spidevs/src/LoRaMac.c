@@ -11,25 +11,34 @@
 #include "proc.h"
 #include "nodedatabase.h"
 #include "LoRaMacCrypto.h"
+#include "debug.h"
 
 static DECLARE_WAIT_QUEUE_HEAD(lora_wait);
 LoRaMacParams_t LoRaMacParams;
+static bool rx_done = false;
+void LoRaMacInit(void)
+{
+	LoRaMacParams.JoinAcceptDelay1 = 5 * HZ;
+	LoRaMacParams.JoinAcceptDelay2 = 6 * HZ;
+}
 
 void OnMacRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
+	DEBUG_OUTPUT_EVENT(chip, EV_RXCOMPLETE);
     RadioRxMsgListAdd( chip,payload,size,rssi,snr );
     Radio.Rx( chip,0 );
-    //rx_done = 1;
+    rx_done = true;
     wake_up(&lora_wait);
 }
 
 void OnMacTxDone( int chip )
 {
+	DEBUG_OUTPUT_EVENT(chip,EV_TXCOMPLETE);
     Radio.Sleep( chip);
     SX1276SetRxConfig(chip,
             stRadioCfg_Rx.modem,
             stRadioCfg_Rx.bandwidth,
-            stChannel[chip].datarate,
+            stRadioCfg_Rx.datarate[chip],
             stRadioCfg_Rx.coderate,
             stRadioCfg_Rx.bandwidthAfc,
             stRadioCfg_Rx.preambleLen,
@@ -41,7 +50,7 @@ void OnMacTxDone( int chip )
             stRadioCfg_Rx.hopPeriod,
             stRadioCfg_Rx.iqInverted,
             stRadioCfg_Rx.rxContinuous);
-    Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stChannel[chip].channel]);
+    Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
     Radio.Rx( chip,0 );
     //State = TX;
 }
@@ -68,47 +77,49 @@ void OnMacRxError( int chip )
 }
 
 int Radio_routin(void *data){
-    int ret = 0;
     int index;
     unsigned char radiorxbuffer[300];
     unsigned char radiotxbuffer[2][300];
-    int len;
+    //int len;
     struct lora_rx_data *p1;
-    struct lora_tx_data *p2;
+    //struct lora_tx_data *p2;
     LoRaMacHeader_t macHdr;
-    LoRaMacFrameCtrl_t fCtrl;
-    uint32_t mic = 0;
+    //LoRaMacFrameCtrl_t fCtrl;
     node_join_info_t node_join_info;
     uint8_t *pkg;
-    while (RadioRxMsgListGet(radiorxbuffer) < 0) /* 没有数据可读，考虑为什么不用if，而用while */
+	printk("%s,%d\r\n",__func__,__LINE__);
+    while (true)
     {
-        wait_event_interruptible(lora_wait,rx_done);
-        if( kthread_should_stop())
+    	if( kthread_should_stop())
         {
-          return -1;
+			printk("%s,%d\r\n",__func__,__LINE__);
+			return -1;
         }
+    	if(RadioRxMsgListGet(radiorxbuffer) < 0)
+    	{
+    		rx_done = false;
+        	wait_event_interruptible(lora_wait,rx_done);
+    	}
         else
         {
+        	printk("%s,%d\r\n",__func__,__LINE__);
             p1 = (struct lora_rx_data*)radiorxbuffer;
             pkg = (uint8_t*)&radiorxbuffer[sizeof(struct lora_rx_data)];
             macHdr.Value = pkg[0];
+			printk("0x%02x\r\n",macHdr.Value);
             switch( macHdr.Bits.MType )
             {
                 case FRAME_TYPE_JOIN_REQ:
-
+					DEBUG_OUTPUT_EVENT(p1->chip,EV_JOIN_REQ);
                     memcpy(node_join_info.APPEUI,pkg + 1,8);
                     memcpy(node_join_info.DevEUI,pkg + 9,8);
+					node_join_info.chip = p1->chip;
                     node_join_info.DevNonce = *(uint16_t*)&pkg[17];
                     //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
                     index = database_node_join(&node_join_info);
                     //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
-                    p2 = (struct lora_tx_data *)&radiotxbuffer[1];
-                    //p2->jiffies = p1->jiffies + LoRaMacParams.JoinAcceptDelay1;
-                    //p2->jiffies_end = p1->jiffies + LoRaMacParams.JoinAcceptDelay1 + LoRaMacParams.MaxRxWindow + LoRaMacParams.JoinAcceptDelay2;
-                    //p2->chip = p1->chip;
-                    //p2->size = 17;
-
-                    pkg = (uint8_t*)&radiotxbuffer[1][sizeof(struct lora_tx_data)];
+                    //p2 = (struct lora_tx_data *)&radiotxbuffer[1];
+                    pkg = (uint8_t*)&radiotxbuffer[1][0];
                     macHdr.Bits.MType = FRAME_TYPE_JOIN_ACCEPT;
                     pkg[0] = macHdr.Value;
                     memcpy(&pkg[1],gateway_pragma.AppNonce,3); // AppNonce
@@ -116,23 +127,24 @@ int Radio_routin(void *data){
                     memcpy(&pkg[1 + 3 + 3],nodebase_node_pragma[index].DevAddr,4);  // DevAddr
                     pkg[1 + 3 + 3 + 4] = 0; //DLSettings
                     pkg[1 + 3 + 3 + 4 + 1] = 0; //RxDelay
-                    LoRaMacJoinComputeMic(radiotxbuffer[1],13,gateway_pragma.APPKEY,&pkg[1 + 3 + 3 + 4 + 1 + 1]);   // mic
-                    LoRaMacJoinDecrypt(&pkg[1],12 + 4,gateway_pragma.APPKEY,&radiotxbuffer[0][sizeof(struct lora_tx_data) + 1]);
-                    pkg = (uint8_t*)&radiotxbuffer[0][sizeof(struct lora_tx_data)];
+                    LoRaMacJoinComputeMic(radiotxbuffer[1],13,gateway_pragma.APPKEY,(uint32_t*)&pkg[1 + 3 + 3 + 4 + 1 + 1]);   // mic
+                    LoRaMacJoinDecrypt(&pkg[1],12 + 4,gateway_pragma.APPKEY,&radiotxbuffer[0][1]);
+                    pkg = (uint8_t*)&radiotxbuffer[0][0];
                     pkg[0]= macHdr.Value;
-                    p2 = (struct lora_tx_data *)&radiotxbuffer[0];
-                    p2->jiffies = p1->jiffies + LoRaMacParams.JoinAcceptDelay1;
-                    //p2->jiffies_end = p1->jiffies + LoRaMacParams.JoinAcceptDelay1 + LoRaMacParams.MaxRxWindow + LoRaMacParams.JoinAcceptDelay2;
-                    p2->chip = p1->chip;
-                    p2->size = 17;
+                    //p2 = (struct lora_tx_data *)&radiotxbuffer[0];
+                    //p2->chip = p1->chip;
+                    //p2->size = 17;
+					update_node_info(index,p1->chip);
+					RadioTxMsgListAdd(index,pkg,17);
                     //p2->freq = CN470_FIRST_RX1_CHANNEL + ( p2->chip ) * CN470_STEPWIDTH_RX1_CHANNEL;
                     //p2->freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
                     //Radio.Send(radiotxbuffer[1],17);
                     break;
                 case FRAME_TYPE_DATA_UNCONFIRMED_UP:
+					DEBUG_OUTPUT_EVENT(p1->chip,EV_DATA_UNCONFIRMED_UP);
                     break;
                 case FRAME_TYPE_DATA_CONFIRMED_UP:
-
+					DEBUG_OUTPUT_EVENT(p1->chip,EV_DATA_CONFIRMED_UP);
                     break;
                 case FRAME_TYPE_PROPRIETARY:
                     break;

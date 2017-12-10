@@ -1701,10 +1701,15 @@ typedef struct sLoRaMacCallback
     uint8_t ( *GetBatteryLevel )( void );
 }LoRaMacCallback_t;
 
+extern LoRaMacParams_t LoRaMacParams;
+
+void LoRaMacInit(void);
+
 void OnMacTxDone( int chip );
 void OnMacRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr );
 void OnMacTxTimeout( int chip );
 void OnMacRxTimeout( int chip );
 void OnMacRxError( int chip );
+int Radio_routin(void *data);
 
 #endif // __LORAMAC_H__

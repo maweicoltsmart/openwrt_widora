@@ -3,6 +3,15 @@
 #include <linux/kernel.h>
 #include "debug.h"
 
+unsigned char* enEventName[] = {
+	[EV_JOIN_REQ] = "EV_JOIN_REQ",
+	[EV_DATA_UNCONFIRMED_UP] = "EV_DATA_UNCONFIRMED_UP",
+	[EV_DATA_CONFIRMED_UP] = "EV_DATA_CONFIRMED_UP",
+	[EV_RXCOMPLETE] = "EV_RXCOMPLETE",
+	[EV_TXCOMPLETE] = "EV_TXCOMPLETE",
+	[EV_TX_START] = "EV_TX_START",
+};
+
 void debug_output_data(uint8_t *data,int len)
 {
 	int loop;
@@ -12,3 +21,4 @@ void debug_output_data(uint8_t *data,int len)
 	}
 	printk("\r\n");
 }
+

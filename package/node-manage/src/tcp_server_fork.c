@@ -117,7 +117,7 @@ void* tcp_server_routin(void *data)
     if (setsockopt(server_sockfd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) != 0)
     {
         perror("Server setsockopt failed");
-        return 1;
+        return 0;
     }
     //bind成功返回0，出错返回-1
     if(bind(server_sockfd,(struct sockaddr *)&server_sockaddr,sizeof(server_sockaddr))==-1)

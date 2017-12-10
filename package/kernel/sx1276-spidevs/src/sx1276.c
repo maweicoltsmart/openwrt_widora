@@ -274,7 +274,7 @@ RadioState_t SX1276GetStatus( int chip )
 
 void SX1276SetChannel( int chip,uint32_t freq )
 {
-    printk("%s,chip = %d,freq = %d\r\n",__func__,chip,freq);
+    //printk("%s,chip = %d,freq = %d\r\n",__func__,chip,freq);
     //dump_stack();
 #if 0
     SX1276[chip].Settings.Channel = freq;
@@ -420,23 +420,22 @@ void SX1276SetRxConfig( int chip,RadioModems_t modem, uint32_t bandwidth,
                          bool crcOn, bool freqHopOn, uint8_t hopPeriod,
                          bool iqInverted, bool rxContinuous )
 {
-    printk("%s,%d\r\n",__func__,__LINE__);
     SX1276SetModem(chip, modem );
-    printk("%s:\
-            chip = %d,\
-            modem = %d,\
-            bandwidth = %d,\
-            datarate = %d,\
-            coderate = %d,\
-            bandwidthAfc = %d,\
-            preambleLen = %d,\
-            symbTimeout = %d,\
-            fixLen = %d,\
-            payloadLen = %d,\
-            crcOn = %d,\
-            freqHopOn = %d,\
-            hopPeriod = %d,\
-            iqInverted = %d,\
+    /*printk("%s:\r\n\
+            chip = %d,\r\n\
+            modem = %d,\r\n\
+            bandwidth = %d,\r\n\
+            datarate = %d,\r\n\
+            coderate = %d,\r\n\
+            bandwidthAfc = %d,\r\n\
+            preambleLen = %d,\r\n\
+            symbTimeout = %d,\r\n\
+            fixLen = %d,\r\n\
+            payloadLen = %d,\r\n\
+            crcOn = %d,\r\n\
+            freqHopOn = %d,\r\n\
+            hopPeriod = %d,\r\n\
+            iqInverted = %d,\r\n\
             rxContinuous = %d\r\n",
             __func__,
             chip,
@@ -453,7 +452,7 @@ void SX1276SetRxConfig( int chip,RadioModems_t modem, uint32_t bandwidth,
             freqHopOn,
             hopPeriod,
             iqInverted,
-            rxContinuous);
+            rxContinuous);*/
     switch( modem )
     {
     case MODEM_FSK:
@@ -622,22 +621,20 @@ void SX1276SetTxConfig( int chip,RadioModems_t modem, int8_t power, uint32_t fde
                         bool fixLen, bool crcOn, bool freqHopOn,
                         uint8_t hopPeriod, bool iqInverted, uint32_t timeout )
 {
-    printk("%s,%d\r\n",__func__,__LINE__);
-
-    printk("%s:\
-            chip = %d,\
-            modem = %d,\
-            power = %d,\
-            fdev = %d,\
-            bandwidth = %d,\
-            datarate = %d,\
-            coderate = %d,\
-            preambleLen = %d,\
-            fixLen = %d,\
-            crcOn = %d,\
-            freqHopOn = %d,\
-            hopPeriod = %d,\
-            iqInverted = %d,\
+    /*printk("%s:\r\n\
+            chip = %d,\r\n\
+            modem = %d,\r\n\
+            power = %d,\r\n\
+            fdev = %d,\r\n\
+            bandwidth = %d,\r\n\
+            datarate = %d,\r\n\
+            coderate = %d,\r\n\
+            preambleLen = %d,\r\n\
+            fixLen = %d,\r\n\
+            crcOn = %d,\r\n\
+            freqHopOn = %d,\r\n\
+            hopPeriod = %d,\r\n\
+            iqInverted = %d,\r\n\
             timeout = %d\r\n",
             __func__,
             chip,
@@ -653,7 +650,7 @@ void SX1276SetTxConfig( int chip,RadioModems_t modem, int8_t power, uint32_t fde
             freqHopOn,
             hopPeriod,
             iqInverted,
-            timeout);
+            timeout);*/
     SX1276SetModem(chip, modem );
 
     SX1276SetRfTxPower(chip, power );
@@ -940,7 +937,6 @@ void SX1276Send( int chip,uint8_t *buffer, uint8_t size )
 
 void SX1276SetSleep( int chip )
 {
-    printk("%s,%d\r\n",__func__,chip);
     del_timer( &RxTimeoutTimer[chip] );
     del_timer( &TxTimeoutTimer[chip] );
 
@@ -950,7 +946,6 @@ void SX1276SetSleep( int chip )
 
 void SX1276SetStby( int chip )
 {
-    printk("%s,%d\r\n",__func__,chip);
     del_timer( &RxTimeoutTimer[chip] );
     del_timer( &TxTimeoutTimer[chip] );
 
@@ -961,7 +956,6 @@ void SX1276SetStby( int chip )
 void SX1276SetRx( int chip,uint32_t timeout )
 {
     bool rxContinuous = false;
-    printk("%s,timeout = %d\r\n",__func__,timeout);
     switch( SX1276[chip].Settings.Modem )
     {
     case MODEM_FSK:

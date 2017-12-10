@@ -26,7 +26,6 @@
 #include <poll.h>
 #include <signal.h>
 #include <fcntl.h>
-#include "routin.h"
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
@@ -34,16 +33,17 @@
 #include <sys/stat.h>
 #include <sys/msg.h>
 #include "typedef.h"
-#include "nodedatabase.h"
-#include "nodedatabase.h"
+//#include "nodedatabase.h"
+//#include "nodedatabase.h"
 #include "LoRaDevOps.h"
 #include "RegionCN470.h"
 #include "LoRaMac.h"
 #include "sx1276.h"
 #include "Region.h"
 
-extern int fd_proc_cfg_rx,fd_proc_cfg_tx;
+int fd_proc_cfg_rx,fd_proc_cfg_tx;
 int fd_cdev;
+
 
 static uint8_t *LoRaMacAppKey;
 LoRaMacParams_t LoRaMacParams;
@@ -74,7 +74,21 @@ void LoRaMacInit(void)
 	int chip = 0;
 	int i;
     st_RadioCfg stRadioCfg;
-
+	
+    fd_proc_cfg_rx = open("/proc/lora_procfs/lora_cfg_rx",O_RDWR);
+    if (fd_proc_cfg_rx < 0)
+    {
+        perror("lora_proc_cfg_rx");
+        printf("open lora_proc_cfg_rx error\r\n");
+        return;
+    }
+    fd_proc_cfg_tx = open("/proc/lora_procfs/lora_cfg_tx",O_RDWR);
+    if (fd_proc_cfg_tx < 0)
+    {
+        perror("lora_proc_cfg_tx");
+        printf("open lora_proc_cfg_tx error\r\n");
+        return;
+    }
     LoRaMacParamsDefaults.ChannelsTxPower = CN470_DEFAULT_TX_POWER;
     LoRaMacParamsDefaults.ChannelsDatarate = CN470_DEFAULT_DATARATE;
     LoRaMacParamsDefaults.MaxRxWindow = CN470_MAX_RX_WINDOW;
@@ -116,7 +130,12 @@ void LoRaMacInit(void)
     stRadioCfg.power = 20;
     stRadioCfg.fdev = 0;
     stRadioCfg.bandwidth = 0;
-    stRadioCfg.datarate = 7;
+    stRadioCfg.datarate[0] = 7;
+	stRadioCfg.datarate[1] = 7;
+	stRadioCfg.datarate[2] = 7;
+	stRadioCfg.channel[0] = 0;
+	stRadioCfg.channel[1] = 1;
+	stRadioCfg.channel[2] = 2;
     stRadioCfg.coderate = 1;
     stRadioCfg.preambleLen = 8;
     stRadioCfg.fixLen = false;
@@ -129,6 +148,7 @@ void LoRaMacInit(void)
     stRadioCfg.symbTimeout = 24;
     stRadioCfg.payloadLen = 0;
     stRadioCfg.rxContinuous = true;
+	stRadioCfg.isPublic = false;
 
     write(fd_proc_cfg_rx,&stRadioCfg,sizeof(st_RadioCfg));
 
@@ -137,7 +157,12 @@ void LoRaMacInit(void)
     stRadioCfg.power = 20;
     stRadioCfg.fdev = 0;
     stRadioCfg.bandwidth = 0;
-    stRadioCfg.datarate = 7;
+    stRadioCfg.datarate[0] = 7;
+	stRadioCfg.datarate[1] = 7;
+	stRadioCfg.datarate[2] = 7;
+	stRadioCfg.channel[0] = 0;
+	stRadioCfg.channel[1] = 1;
+	stRadioCfg.channel[2] = 2;
     stRadioCfg.coderate = 1;
     stRadioCfg.preambleLen = 8;
     stRadioCfg.fixLen = false;
@@ -150,9 +175,18 @@ void LoRaMacInit(void)
     stRadioCfg.symbTimeout = 24;
     stRadioCfg.payloadLen = 0;
     stRadioCfg.rxContinuous = true;
-
+	stRadioCfg.isPublic = false;
+	
     write(fd_proc_cfg_tx,&stRadioCfg,sizeof(st_RadioCfg));
 
+	sleep(1);
+	fd_cdev = open("/dev/lora_radio",O_RDWR);
+    if (fd_cdev < 0)
+    {
+        printf("open lora_radio error\r\n");
+        return -1;
+    }
+/*
 	int ioarg = false;
     ioarg = ioarg | (chip << 31);
     ioctl(fd_cdev, LORADEV_RADIO_SET_PUBLIC, &ioarg);
@@ -173,6 +207,7 @@ void LoRaMacInit(void)
 	    ioarg = ioarg | (chip << 31);
 	    ioctl(fd_cdev, LORADEV_RADIO_SET_RX, &ioarg);
 	}
+	*/
 }
 
 uint8_t radiorxbuffer[300];
@@ -193,7 +228,7 @@ void *Radio_routin(void *param){
     LoRaMacHeader_t macHdr;
     LoRaMacFrameCtrl_t fCtrl;
     uint32_t mic = 0;
-    node_join_info_t node_join_info;
+    //node_join_info_t node_join_info;
     uint8_t *pkg,*pkg1,*pkg2;
     //printf("%s,%d\r\n",__func__,__LINE__);
 
@@ -208,6 +243,8 @@ void *Radio_routin(void *param){
     }
     while(1)
     {
+    	sleep(1);
+    #if 0
         memset(radiorxbuffer,0,300);
         if((len = read(fd_cdev,radiorxbuffer,300)) > 0)
         {
@@ -280,6 +317,7 @@ void *Radio_routin(void *param){
         {
             usleep(10000);
         }
+		#endif
     }
 }
 

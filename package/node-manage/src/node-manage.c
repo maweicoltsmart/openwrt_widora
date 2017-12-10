@@ -34,10 +34,10 @@
 #include "radio.h"
 #include "typedef.h"
 #include "LoRaDevOps.h"
-#include "routin.h"
+//#include "routin.h"
 
-int fd_proc_cfg_rx,fd_proc_cfg_tx;
-int fd_cdev;
+void *tcp_client_routin(void *data);
+void* tcp_server_routin(void *data);
 
 void node_event_fun(int signum)
 {
@@ -54,26 +54,6 @@ int main(int argc ,char *argv[])
     int msgid = -1;
     struct msg_st data;
     int len;
-    fd_cdev = open("/dev/lora_radio",O_RDWR);
-    if (fd_cdev < 0)
-    {
-        printf("open lora_radio error\r\n");
-        return -1;
-    }
-    fd_proc_cfg_rx = open("/proc/lora_procfs/lora_cfg_rx",O_RDWR);
-    if (fd_proc_cfg_rx < 0)
-    {
-        perror("lora_proc_cfg_rx");
-        printf("open lora_proc_cfg_rx error\r\n");
-        return -1;
-    }
-    fd_proc_cfg_tx = open("/proc/lora_procfs/lora_cfg_tx",O_RDWR);
-    if (fd_proc_cfg_tx < 0)
-    {
-        perror("lora_proc_cfg_tx");
-        printf("open lora_proc_cfg_tx error\r\n");
-        return -1;
-    }
     ret = pthread_create(&radio_routin_handle, NULL, Radio_routin, &fd);
     ret = pthread_create(&tcp_client_handle, NULL, tcp_client_routin, &fd);
     ret = pthread_create(&tcp_server_handle, NULL, tcp_server_routin, &fd);

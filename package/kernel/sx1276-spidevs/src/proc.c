@@ -13,9 +13,6 @@
 
 static struct proc_dir_entry *lora_dir, *lora_cfg_rx_file,*lora_cfg_tx_file;
 
-lora_cfg_proc_data_t lora_cfg_data_rx_cfg,lora_cfg_data_tx_cfg;
-st_Channel stChannel[3];
-st_RadioChip stRadioChip[3];
 st_RadioCfg stRadioCfg_Tx,stRadioCfg_Rx;
 
 static int mytest_flag = 0;//create flag variable
@@ -62,7 +59,7 @@ static int proc_write_lora_cfg_rx(struct file *file, const char *buffer, size_t 
             __func__,
             stRadioCfg_Rx.modem,
             stRadioCfg_Rx.bandwidth,
-            stRadioCfg_Rx.datarate,
+            stRadioCfg_Rx.datarate[0],
             stRadioCfg_Rx.freq_rx[0],
             stRadioCfg_Rx.coderate,
             stRadioCfg_Rx.bandwidthAfc,
@@ -124,7 +121,7 @@ static int proc_write_lora_cfg_tx(struct file *file, const char *buffer, size_t 
             stRadioCfg_Tx.power,
             stRadioCfg_Tx.fdev,
             stRadioCfg_Tx.bandwidth,
-            stRadioCfg_Tx.datarate,
+            stRadioCfg_Tx.datarate[0],
             stRadioCfg_Tx.freq_tx[0],
             stRadioCfg_Tx.coderate,
             stRadioCfg_Tx.preambleLen,

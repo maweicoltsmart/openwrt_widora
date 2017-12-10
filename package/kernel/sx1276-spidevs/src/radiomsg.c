@@ -32,11 +32,7 @@ int RadioRxMsgListAdd( int chip,uint8_t *payload, uint16_t size, int16_t rssi, i
     new->size = size;
     new->rssi = rssi;
     new->snr = snr;
-    list_add_tail(&(new->list), &lora_rx_list.list);//使用尾插法
-}
-
-int RadioTxMsgListAdd(void)
-{
+    list_add_tail(&(new->list), &lora_rx_list.list);
 	return 0;
 }
 
@@ -60,9 +56,4 @@ int RadioRxMsgListGet(uint8_t *buf)
     	kfree(get);
 		return 0;
 	}
-}
-
-int RadioTxMsgListGet(void)
-{
-	return 0;
 }

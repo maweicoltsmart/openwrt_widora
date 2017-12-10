@@ -42,7 +42,7 @@
 #include "LoRaMacCrypto.h"
 #include "radiomsg.h"
 
-DECLARE_WAIT_QUEUE_HEAD(lora_wait);
-extern bool rx_done;
+//DECLARE_WAIT_QUEUE_HEAD(lora_wait);
+//extern bool rx_done;
 
 

@@ -30,6 +30,8 @@
 #include "proc.h"
 #include "LoRaMac.h"
 #include "radiomsg.h"
+#include "nodedatabase.h"
+#include "LoRaMac.h"
 
 #define LORADEV_IOC_MAGIC  'r'
 
@@ -177,7 +179,10 @@ void OnRxError( int chip )
 
 static int lora_dev_open(struct inode * inode, struct file * filp)
 {
+	int chip;
     RadioMsgListInit();
+	database_init();
+	LoRaMacInit();
     RadioEvents.TxDone = OnMacTxDone;
     RadioEvents.RxDone = OnMacRxDone;
     RadioEvents.RxError = OnMacRxError;
@@ -189,12 +194,113 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
     Radio.Sleep(0);
     Radio.Sleep(1);
     //Radio.Sleep(2);
+    Radio.SetPublicNetwork(0,stRadioCfg_Rx.isPublic);
+	Radio.SetPublicNetwork(1,stRadioCfg_Rx.isPublic);
+	//Radio.SetPublicNetwork(2,stRadioCfg_Rx.isPublic);
+    chip = 0;
+    Radio.SetTxConfig(chip,
+            stRadioCfg_Tx.modem,
+            stRadioCfg_Tx.power,
+            stRadioCfg_Tx.fdev,
+            stRadioCfg_Tx.bandwidth,
+            stRadioCfg_Tx.datarate[chip],
+            stRadioCfg_Tx.coderate,
+            stRadioCfg_Tx.preambleLen,
+            stRadioCfg_Tx.fixLen,
+            stRadioCfg_Tx.crcOn,
+            stRadioCfg_Tx.freqHopOn,
+            stRadioCfg_Tx.hopPeriod,
+            stRadioCfg_Tx.iqInverted,
+            stRadioCfg_Tx.timeout);
+	Radio.SetRxConfig(chip,
+            stRadioCfg_Rx.modem,
+            stRadioCfg_Rx.bandwidth,
+            stRadioCfg_Rx.datarate[chip],
+            stRadioCfg_Rx.coderate,
+            stRadioCfg_Rx.bandwidthAfc,
+            stRadioCfg_Rx.preambleLen,
+            stRadioCfg_Rx.symbTimeout,
+            stRadioCfg_Rx.fixLen,
+            stRadioCfg_Rx.payloadLen,
+            stRadioCfg_Rx.crcOn,
+            stRadioCfg_Rx.freqHopOn,
+            stRadioCfg_Rx.hopPeriod,
+            stRadioCfg_Rx.iqInverted,
+            stRadioCfg_Rx.rxContinuous);
+	Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
+	Radio.Rx( chip,0 );
+	chip = 1;
+	Radio.SetTxConfig(chip,
+            stRadioCfg_Tx.modem,
+            stRadioCfg_Tx.power,
+            stRadioCfg_Tx.fdev,
+            stRadioCfg_Tx.bandwidth,
+            stRadioCfg_Tx.datarate[chip],
+            stRadioCfg_Tx.coderate,
+            stRadioCfg_Tx.preambleLen,
+            stRadioCfg_Tx.fixLen,
+            stRadioCfg_Tx.crcOn,
+            stRadioCfg_Tx.freqHopOn,
+            stRadioCfg_Tx.hopPeriod,
+            stRadioCfg_Tx.iqInverted,
+            stRadioCfg_Tx.timeout);
+	Radio.SetRxConfig(chip,
+            stRadioCfg_Rx.modem,
+            stRadioCfg_Rx.bandwidth,
+            stRadioCfg_Rx.datarate[chip],
+            stRadioCfg_Rx.coderate,
+            stRadioCfg_Rx.bandwidthAfc,
+            stRadioCfg_Rx.preambleLen,
+            stRadioCfg_Rx.symbTimeout,
+            stRadioCfg_Rx.fixLen,
+            stRadioCfg_Rx.payloadLen,
+            stRadioCfg_Rx.crcOn,
+            stRadioCfg_Rx.freqHopOn,
+            stRadioCfg_Rx.hopPeriod,
+            stRadioCfg_Rx.iqInverted,
+            stRadioCfg_Rx.rxContinuous);
+	Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
+	Radio.Rx( chip,0 );
+	/*chip = 3;
+	Radio.SetTxConfig(chip,
+            stRadioCfg_Tx.modem,
+            stRadioCfg_Tx.power,
+            stRadioCfg_Tx.fdev,
+            stRadioCfg_Tx.bandwidth,
+            stRadioCfg_Tx.datarate[chip],
+            stRadioCfg_Tx.coderate,
+            stRadioCfg_Tx.preambleLen,
+            stRadioCfg_Tx.fixLen,
+            stRadioCfg_Tx.crcOn,
+            stRadioCfg_Tx.freqHopOn,
+            stRadioCfg_Tx.hopPeriod,
+            stRadioCfg_Tx.iqInverted,
+            stRadioCfg_Tx.timeout);
+	Radio.SetRxConfig(chip,
+            stRadioCfg_Rx.modem,
+            stRadioCfg_Rx.bandwidth,
+            stRadioCfg_Rx.datarate[chip],
+            stRadioCfg_Rx.coderate,
+            stRadioCfg_Rx.bandwidthAfc,
+            stRadioCfg_Rx.preambleLen,
+            stRadioCfg_Rx.symbTimeout,
+            stRadioCfg_Rx.fixLen,
+            stRadioCfg_Rx.payloadLen,
+            stRadioCfg_Rx.crcOn,
+            stRadioCfg_Rx.freqHopOn,
+            stRadioCfg_Rx.hopPeriod,
+            stRadioCfg_Rx.iqInverted,
+            stRadioCfg_Rx.rxContinuous);
+	Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
+	Radio.Rx( chip,0 );*/
     //SX1276IoIrqInit(0);
     //SX1276IoIrqInit(1);
     //Radio.Rx( 0,RX_TIMEOUT_VALUE );
     //Radio.Rx( 1,RX_TIMEOUT_VALUE );
-    radio_routin = kthread_create(Radio_routin, NULL, "Radio1 routin thread");
-    return 0;
+    printk("create radio routin\r\n");
+    radio_routin = kthread_create(Radio_routin, NULL, "Radio routin thread");
+	wake_up_process(radio_routin);
+	return 0;
 }
 
 static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,loff_t *ppos)
@@ -240,6 +346,7 @@ static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,l
     kfree(get);
     return ret;
     #endif
+	return 0;
 }
 
 void lora_dev_tx_queue_routin( unsigned long data )
@@ -342,7 +449,7 @@ static ssize_t lora_dev_write(struct file *filp, const char __user *buf, size_t 
 static int lora_dev_close(struct inode *inode, struct file *file)
 {
     printk("%s,%d\r\n",__func__,__LINE__);
-
+	kthread_stop(radio_routin);
     Radio.Sleep(0);
     Radio.Sleep(1);
     //Radio.Sleep(2);
@@ -363,7 +470,7 @@ static int lora_dev_close(struct inode *inode, struct file *file)
     SX1276IoFree(1);
     //SX1276IoIrqFree(2);
     //SX1276IoFree(2);
-    kthread_stop(radio_routin);
+    
     return 0;
 }
 static unsigned int lora_dev_poll(struct file *file, struct poll_table_struct *wait)
@@ -436,8 +543,8 @@ static long lora_dev_ioctl(struct file *filp,unsigned int cmd,unsigned long arg)
         chip = (ioarg & 0x80000000) >> 31;
         channel = (ioarg & 0x0000ff00) >> 8;
         datarate = ioarg & 0x000000ff;
-        stChannel[chip].channel = channel;
-        stChannel[chip].datarate = datarate;
+        //stChannel[chip].channel = channel;
+        //stChannel[chip].datarate = datarate;
         //Radio.Sleep(chip);
         //Radio.SetChannel(chip,channel);
         //Radio.Rx( chip,0 );
@@ -464,7 +571,7 @@ static long lora_dev_ioctl(struct file *filp,unsigned int cmd,unsigned long arg)
             stRadioCfg_Tx.power,
             stRadioCfg_Tx.fdev,
             stRadioCfg_Tx.bandwidth,
-            stChannel[chip].datarate,
+            stRadioCfg_Tx.datarate[chip],
             stRadioCfg_Tx.coderate,
             stRadioCfg_Tx.preambleLen,
             stRadioCfg_Tx.fixLen,
@@ -476,7 +583,7 @@ static long lora_dev_ioctl(struct file *filp,unsigned int cmd,unsigned long arg)
         SX1276SetRxConfig(chip,
             stRadioCfg_Rx.modem,
             stRadioCfg_Rx.bandwidth,
-            stChannel[chip].datarate,
+            stRadioCfg_Rx.datarate[chip],
             stRadioCfg_Rx.coderate,
             stRadioCfg_Rx.bandwidthAfc,
             stRadioCfg_Rx.preambleLen,
@@ -488,7 +595,7 @@ static long lora_dev_ioctl(struct file *filp,unsigned int cmd,unsigned long arg)
             stRadioCfg_Rx.hopPeriod,
             stRadioCfg_Rx.iqInverted,
             stRadioCfg_Rx.rxContinuous);
-        Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stChannel[chip].channel]);
+        Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
         Radio.Rx( chip,timeout );
         //printk("%s,%d\r\n",__func__,__LINE__);
         break;

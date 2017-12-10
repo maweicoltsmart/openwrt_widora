@@ -1897,6 +1897,7 @@ LoRaMacStatus_t LoRaMacInitialization(int chip, LoRaMacPrimitives_t *primitives,
     // Store the current initialization time
     //LoRaMacInitializationTime = TimerGetCurrentTime( );
 #endif
+#if 0
     // Initialize Radio driver
     /*RadioEvents.TxDone = OnRadioTxDone;
     RadioEvents.RxDone = OnRadioRxDone;
@@ -1962,6 +1963,7 @@ LoRaMacStatus_t LoRaMacInitialization(int chip, LoRaMacPrimitives_t *primitives,
     sleep(1);
     Radio.Rx( 1,1000 ); // Continuous mode
     sleep(1);
+	#endif
     return LORAMAC_STATUS_OK;
 }
 
