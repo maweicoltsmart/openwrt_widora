@@ -87,29 +87,40 @@ int Radio_routin(void *data){
     //LoRaMacFrameCtrl_t fCtrl;
     node_join_info_t node_join_info;
     uint8_t *pkg;
+	uint32_t micRX,micTX;
 	printk("%s,%d\r\n",__func__,__LINE__);
     while (true)
     {
     	if( kthread_should_stop())
         {
-			printk("%s,%d\r\n",__func__,__LINE__);
 			return -1;
         }
     	if(RadioRxMsgListGet(radiorxbuffer) < 0)
     	{
     		rx_done = false;
-        	wait_event_interruptible(lora_wait,rx_done);
+        	//wait_event_interruptible(lora_wait,rx_done);
+			wait_event_interruptible_timeout(lora_wait, rx_done, HZ);
     	}
         else
         {
-        	printk("%s,%d\r\n",__func__,__LINE__);
             p1 = (struct lora_rx_data*)radiorxbuffer;
             pkg = (uint8_t*)&radiorxbuffer[sizeof(struct lora_rx_data)];
+			DEBUG_OUTPUT_DATA(pkg,p1->size);
             macHdr.Value = pkg[0];
-			printk("0x%02x\r\n",macHdr.Value);
             switch( macHdr.Bits.MType )
             {
                 case FRAME_TYPE_JOIN_REQ:
+					if(p1->size < 19 + 4)
+					{
+						continue;
+					}
+					LoRaMacJoinComputeMic( (const uint8_t*)pkg, 19, gateway_pragma.APPKEY, &micRX );
+					if(micRX != *(uint32_t *)(&pkg[19]))
+					{
+						DEBUG_OUTPUT_DATA((uint8_t*)&micRX,4);
+						DEBUG_OUTPUT_DATA(&pkg[19],4);
+						continue;
+					}
 					DEBUG_OUTPUT_EVENT(p1->chip,EV_JOIN_REQ);
                     memcpy(node_join_info.APPEUI,pkg + 1,8);
                     memcpy(node_join_info.DevEUI,pkg + 9,8);
@@ -128,7 +139,8 @@ int Radio_routin(void *data){
                     pkg[1 + 3 + 3 + 4] = 0; //DLSettings
                     pkg[1 + 3 + 3 + 4 + 1] = 0; //RxDelay
                     LoRaMacJoinComputeMic(radiotxbuffer[1],13,gateway_pragma.APPKEY,(uint32_t*)&pkg[1 + 3 + 3 + 4 + 1 + 1]);   // mic
-                    LoRaMacJoinDecrypt(&pkg[1],12 + 4,gateway_pragma.APPKEY,&radiotxbuffer[0][1]);
+					debug_output_data(pkg,17);
+					LoRaMacJoinDecrypt(&pkg[1],12 + 4,gateway_pragma.APPKEY,&radiotxbuffer[0][1]);
                     pkg = (uint8_t*)&radiotxbuffer[0][0];
                     pkg[0]= macHdr.Value;
                     //p2 = (struct lora_tx_data *)&radiotxbuffer[0];

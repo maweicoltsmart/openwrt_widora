@@ -61,7 +61,7 @@ int RadioTxMsgListAdd(int index,uint8_t *data,int len);
 void update_node_info(int index,int chip);
 
 
-extern gateway_pragma_t gateway_pragma;
+extern const gateway_pragma_t gateway_pragma;
 extern node_pragma_t nodebase_node_pragma[];
 
 #endif

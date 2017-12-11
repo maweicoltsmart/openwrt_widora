@@ -18,9 +18,9 @@ extern unsigned char* enEventName[];
 #define EV_JOIN_REQ		(1 < 0)
 
 //#define DEBUG_DATA	(1 < 0)
-#define DEBUG_EVENT	(1 < 1)
-#define DEBUG_BUG	(1 < 2)
-#define DEBUG_WARNNING	(1 < 3)
+//#define DEBUG_EVENT	(1 < 1)
+//#define DEBUG_BUG	(1 < 2)
+//#define DEBUG_WARNNING	(1 < 3)
 //#define DEBUG_DATA	(1 < 4)
 //#define DEBUG_DATA	(1 < 5)
 //#define DEBUG_DATA	(1 < 6)
@@ -33,9 +33,9 @@ void debug_output_data(uint8_t *data,int len);
 #define DEBUG_OUTPUT_DATA(data,len)
 #endif
 
-#define DEBUG_OUTPUT_EVENT(chip,ev)	//printk("%d: %s\r\n",chip,enEventName[ev]);
+#define DEBUG_OUTPUT_EVENT(chip,ev);//	printk("%d: %s\r\n",chip,enEventName[ev]);
 
-#define DEBUG_OUTPUT_INFO(fmt,arg...)	//printk(fmt, ##arg)
+#define DEBUG_OUTPUT_INFO(fmt,arg...);//	printk(fmt, ##arg)
 //#endif
 /*KERN_EMERG
 Used for emergency messages, usually those that precede a crash.

@@ -42,15 +42,14 @@
 #endif
 
 
-//#include <stdlib.h>
-//#include <stdint.h>
-#include "typedef.h"
-
+#include <linux/stddef.h>
+#include <linux/types.h>
+#if 0
 /* define if you have fast 32-bit types on your system */
-#if 1
+#if ( __CORTEX_M != 0 ) // if Cortex is different from M0/M0+
 #  define HAVE_UINT_32T
 #endif
-
+#endif
 /* define if you don't want any tables */
 #if 1
 #  define USE_TABLES
