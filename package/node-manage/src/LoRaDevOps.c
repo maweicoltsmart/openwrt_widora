@@ -34,12 +34,13 @@
 #include <sys/msg.h>
 #include "typedef.h"
 //#include "nodedatabase.h"
-//#include "nodedatabase.h"
+#include "nodedatabase.h"
 #include "LoRaDevOps.h"
 #include "RegionCN470.h"
 #include "LoRaMac.h"
 #include "sx1276.h"
 #include "Region.h"
+#include "GatewayPragma.h"
 
 int fd_proc_cfg_rx,fd_proc_cfg_tx;
 int fd_cdev;
@@ -74,7 +75,9 @@ void LoRaMacInit(void)
 	int chip = 0;
 	int i;
     st_RadioCfg stRadioCfg;
-	
+
+    GetGatewayPragma(&gateway_pragma);
+
     fd_proc_cfg_rx = open("/proc/lora_procfs/lora_cfg_rx",O_RDWR);
     if (fd_proc_cfg_rx < 0)
     {
@@ -176,7 +179,7 @@ void LoRaMacInit(void)
     stRadioCfg.payloadLen = 0;
     stRadioCfg.rxContinuous = true;
 	stRadioCfg.isPublic = false;
-	
+
     write(fd_proc_cfg_tx,&stRadioCfg,sizeof(st_RadioCfg));
 
 	sleep(1);
@@ -184,7 +187,7 @@ void LoRaMacInit(void)
     if (fd_cdev < 0)
     {
         printf("open lora_radio error\r\n");
-        return -1;
+        return;
     }
 /*
 	int ioarg = false;

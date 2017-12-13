@@ -24,7 +24,8 @@ void LoRaMacInit(void)
 
 void OnMacRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
-	DEBUG_OUTPUT_EVENT(chip, EV_RXCOMPLETE);
+    DEBUG_OUTPUT_EVENT(chip, EV_RXCOMPLETE);
+    Radio.Sleep( chip);
     RadioRxMsgListAdd( chip,payload,size,rssi,snr );
     Radio.Rx( chip,0 );
     rx_done = true;

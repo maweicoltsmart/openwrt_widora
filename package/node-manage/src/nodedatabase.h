@@ -30,7 +30,7 @@
 #include <poll.h>
 #include <signal.h>
 #include <fcntl.h>
-#include "routin.h"
+//#include "routin.h"
 #include <pthread.h>
 #include <unistd.h>
 #include <errno.h>
