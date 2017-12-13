@@ -100,7 +100,7 @@ int Radio_routin(void *data){
     	{
     		rx_done = false;
         	//wait_event_interruptible(lora_wait,rx_done);
-			wait_event_interruptible_timeout(lora_wait, rx_done, HZ);
+			wait_event_interruptible_timeout(lora_wait, rx_done, HZ / 5);
     	}
         else
         {
@@ -165,7 +165,7 @@ int Radio_routin(void *data){
 
                     break;
             }
-            msleep(10000);
+            //msleep(10000);
         }
     }
     return 0;

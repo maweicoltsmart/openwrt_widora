@@ -91,7 +91,7 @@ connect:
 	{  
 		if(errno != EINPROGRESS) //connect返回错误。  
 		{  
-			printf("connect failed\n");  
+			//printf("connect failed\n");  
 		}  
 		//连接正在建立  
 		else  
@@ -117,7 +117,7 @@ connect:
 					  
 			if(FD_ISSET(sock_cli,&wset))  
 			{  
-				printf("test \n");	
+				//printf("test \n");	
 				int err = -1;  
 				socklen_t len = sizeof(int);  
 						  
@@ -132,7 +132,7 @@ connect:
 		  
 				if(err)  
 				{  
-					printf("connect faile\n");	
+					//printf("connect faile\n");	
 					errno = err;  
 					close(sock_cli);  
 					//return 4;  
