@@ -40,8 +40,8 @@ endef
 
 
 define Package/lora_param_set/install
-	$(INSTALL_DIR) $(1)/bin
-	$(INSTALL_BIN) $(PKG_BUILD_DIR)/lora_param_set $(1)/bin/
+	$(INSTALL_DIR) $(1)/www/cgi-bin
+	$(INSTALL_BIN) $(PKG_BUILD_DIR)/lora_param_set $(1)/www/cgi-bin/
 endef
 
 
