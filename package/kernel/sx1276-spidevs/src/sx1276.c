@@ -202,7 +202,7 @@ static uint8_t RxTxBuffer[RX_BUFFER_SIZE];
 /*!
  * Radio hardware and global parameters
  */
-SX1276_t SX1276[2];
+SX1276_t SX1276[3];
 
 /*!
  * Hardware DIO IRQ callback initialization
@@ -1278,8 +1278,16 @@ void SX1276Reset( int chip )
         gpio_set_value(SX1278_2_RST_PIN,1);
         udelay(6000);
         break;
-        case 3:
+		#if defined(GATEWAY_V2_3CHANNEL)
+        case 2:
+		//gpio_set_value(SX1278_1_RST_PIN,0);
+        gpio_set_value(SX1278_3_RST_PIN,0);
+        udelay(1000);
+        //gpio_set_value(SX1278_1_RST_PIN,1);
+        gpio_set_value(SX1278_3_RST_PIN,1);
+        udelay(6000);
         break;
+		#endif
         default:
         break;
     }

@@ -542,42 +542,42 @@ void SX1276IoIrqInit( int chip )
 #if defined (GATEWAY_V2_3CHANNEL)
         case 2:
 			sx1278_3_dio0irq = gpio_to_irq(SX1278_3_DIO0_PIN);
-            err = request_irq(sx1278_3_dio0irq,sx1278_3_dio0irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio0irq",NULL);
+            err = request_irq(sx1278_3_dio0irq,sx1278_3_dio0irq_handler,IRQF_TRIGGER_RISING,"sx1278_3_dio0irq",NULL);
             //disable_irq(sx1278_3_dio0irq);
             if(err)
             {
                 printk( "sx1278_3_dio0irq request failed\r\n");
             }
             sx1278_3_dio1irq = gpio_to_irq(SX1278_3_DIO1_PIN);
-            err = request_irq(sx1278_3_dio1irq,sx1278_3_dio1irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio1irq",NULL);
+            err = request_irq(sx1278_3_dio1irq,sx1278_3_dio1irq_handler,IRQF_TRIGGER_RISING,"sx1278_3_dio1irq",NULL);
             //disable_irq(sx1278_3_dio1irq);
             if(err)
             {
                 printk( "sx1278_3_dio1irq request failed\r\n");
             }
             sx1278_3_dio2irq = gpio_to_irq(SX1278_3_DIO2_PIN);
-            err = request_irq(sx1278_3_dio2irq,sx1278_3_dio2irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio2irq",NULL);
+            err = request_irq(sx1278_3_dio2irq,sx1278_3_dio2irq_handler,IRQF_TRIGGER_RISING,"sx1278_3_dio2irq",NULL);
             //disable_irq(sx1278_3_dio2irq);
             if(err)
             {
                 printk( "sx1278_3_dio2irq request failed\r\n");
             }
             sx1278_3_dio3irq = gpio_to_irq(SX1278_3_DIO3_PIN);
-            err = request_irq(sx1278_3_dio3irq,sx1278_3_dio3irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio3irq",NULL);
+            err = request_irq(sx1278_3_dio3irq,sx1278_3_dio3irq_handler,IRQF_TRIGGER_RISING,"sx1278_3_dio3irq",NULL);
             //disable_irq(sx1278_3_dio3irq);
             if(err)
             {
                 printk( "sx1278_3_dio3irq request failed\r\n");
             }
             sx1278_3_dio4irq = gpio_to_irq(SX1278_3_DIO4_PIN);
-            err = request_irq(sx1278_3_dio4irq,sx1278_3_dio4irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio4irq",NULL);
+            err = request_irq(sx1278_3_dio4irq,sx1278_3_dio4irq_handler,IRQF_TRIGGER_RISING,"sx1278_3_dio4irq",NULL);
             //disable_irq(sx1278_3_dio4irq);
             if(err)
             {
                 printk( "sx1278_3_dio4irq request failed\r\n");
             }
             /*sx1278_3_dio5irq = gpio_to_irq(SX1278_3_DIO5_PIN);
-            err = request_irq(sx1278_3_dio5irq,sx1278_3_dio5irq_handler,IRQF_TRIGGER_RISING,"sx1278_2_dio5irq",NULL);*/
+            err = request_irq(sx1278_3_dio5irq,sx1278_3_dio5irq_handler,IRQF_TRIGGER_RISING,"sx1278_3_dio5irq",NULL);*/
             //disable_irq(sx1278_3_dio5irq);
             //if(err)
             //{

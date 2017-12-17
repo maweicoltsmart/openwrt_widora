@@ -95,6 +95,8 @@ static int sx1276_spidevs_remove_1(struct spi_device *spi);
 static int sx1276_spidevs_probe_1(struct spi_device *spi);
 static int sx1276_spidevs_remove_2(struct spi_device *spi);
 static int sx1276_spidevs_probe_2(struct spi_device *spi);
+static int sx1276_spidevs_remove_2(struct spi_device *spi);
+static int sx1276_spidevs_probe_3(struct spi_device *spi);
 
 static int sx1276_spidevs_remove_1(struct spi_device *spi)
 {
@@ -144,8 +146,10 @@ static int sx1276_spidevs_remove_2(struct spi_device *spi)
     //del_timer(&RxTimeoutSyncWord[1]);
     //SX1276IoIrqFree(1);
     //SX1276IoFree(1);
+    #ifndef GATEWAY_V2_3CHANNEL
     unregister_sx1276_cdev();
     cleanup_procfs_lora();
+	#endif
     return 0;
 }
 static int sx1276_spidevs_probe_2(struct spi_device *spi)
@@ -174,11 +178,57 @@ static int sx1276_spidevs_probe_2(struct spi_device *spi)
     Radio.SetPublicNetwork(1,false);
     Radio.Rx( 1,RX_TIMEOUT_VALUE );
     */
+    #ifndef GATEWAY_V2_3CHANNEL
+    register_sx1276_cdev();
+    init_procfs_lora();
+	#endif
+    return err;
+}
+
+#if defined(GATEWAY_V2_3CHANNEL)
+static int sx1276_spidevs_remove_3(struct spi_device *spi)
+{
+    //kthread_stop(radio_routin);
+
+    //del_timer(&TxTimeoutTimer[1]);
+    //del_timer(&RxTimeoutSyncWord[1]);
+    //SX1276IoIrqFree(1);
+    //SX1276IoFree(1);
+    unregister_sx1276_cdev();
+    cleanup_procfs_lora();
+    return 0;
+}
+static int sx1276_spidevs_probe_3(struct spi_device *spi)
+{
+    int err = 0;
+    //int ret;
+    //int i;
+    SX1276[2].Spi = spi;
+    //printk("%s, %d,slave[0] = %d, slave[1] = %d\r\n",__func__,__LINE__,slave[0],slave[1]);
+    printk(KERN_INFO DRV_DESC " version " DRV_VERSION "\n");
+    spi->bits_per_word = 8;
+    spi->mode = SPI_MODE_0;
+    err = spi_setup(spi);
+    printk("%s, %d\r\n",__func__,__LINE__);
+/*
+    Radio.Init(1,&RadioEvents);
+    Radio.SetChannel(1,470500000);
+    Radio.SetTxConfig( 1,MODEM_LORA, TX_OUTPUT_POWER, 0, LORA_BANDWIDTH,
+                               LORA_SPREADING_FACTOR, LORA_CODINGRATE,
+                               LORA_PREAMBLE_LENGTH, LORA_FIX_LENGTH_PAYLOAD_ON,
+                               true, 0, 0, LORA_IQ_INVERSION_ON, 3000 );
+    Radio.SetRxConfig( 1,MODEM_LORA, LORA_BANDWIDTH, LORA_SPREADING_FACTOR,
+                               LORA_CODINGRATE, 0, LORA_PREAMBLE_LENGTH,
+                               LORA_SYMBOL_TIMEOUT, LORA_FIX_LENGTH_PAYLOAD_ON,
+                               0, true, 0, 0, LORA_IQ_INVERSION_ON, true );
+    Radio.SetPublicNetwork(1,false);
+    Radio.Rx( 1,RX_TIMEOUT_VALUE );
+    */
     register_sx1276_cdev();
     init_procfs_lora();
     return err;
 }
-
+#endif
 static const struct of_device_id lorawan_dt_ids_1[] = {
     { .compatible = "semtech,sx1278-1" },
     {},
@@ -224,11 +274,40 @@ static struct spi_driver lorawan_spi_driver_2 = {
     * most issues; the controller driver handles the rest.
     */
 };
+
+#if defined(GATEWAY_V2_3CHANNEL)
+static const struct of_device_id lorawan_dt_ids_3[] = {
+    { .compatible = "semtech,sx1278-3" },
+    {},
+};
+
+MODULE_DEVICE_TABLE(of, lorawan_dt_ids_3);
+
+static struct spi_driver lorawan_spi_driver_3 = {
+        .driver = {
+        .name =         "semtech,sx1278-3",
+        .owner =        THIS_MODULE,
+        .of_match_table = of_match_ptr(lorawan_dt_ids_3),
+    },
+    .probe =        sx1276_spidevs_probe_3,
+    .remove =       sx1276_spidevs_remove_3,
+
+    /* NOTE:  suspend/resume methods are not necessary here.
+    * We don't do anything except pass the requests to/from
+    * the underlying controller.  The refrigerator handles
+    * most issues; the controller driver handles the rest.
+    */
+};
+#endif
 static int __init lorawan_init(void)
 {
     int ret;
     ret = spi_register_driver(&lorawan_spi_driver_1);
     ret = spi_register_driver(&lorawan_spi_driver_2);
+	
+#if defined(GATEWAY_V2_3CHANNEL)
+	ret = spi_register_driver(&lorawan_spi_driver_3);
+#endif
     return ret;
 }
 
@@ -236,6 +315,10 @@ static void __exit lorawan_exit(void)
 {
     spi_unregister_driver(&lorawan_spi_driver_1);
     spi_unregister_driver(&lorawan_spi_driver_2);
+	
+#if defined(GATEWAY_V2_3CHANNEL)
+	spi_unregister_driver(&lorawan_spi_driver_3);
+#endif
 }
 
 module_init(lorawan_init);

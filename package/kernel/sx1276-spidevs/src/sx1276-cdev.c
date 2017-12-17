@@ -190,13 +190,19 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
     RadioEvents.RxTimeout = OnMacRxTimeout;
     Radio.Init(0,&RadioEvents);
     Radio.Init(1,&RadioEvents);
-    //Radio.Init(2,&RadioEvents);
+	#if defined(GATEWAY_V2_3CHANNEL)
+    Radio.Init(2,&RadioEvents);
+	#endif
     Radio.Sleep(0);
     Radio.Sleep(1);
-    //Radio.Sleep(2);
+	#if defined(GATEWAY_V2_3CHANNEL)
+    Radio.Sleep(2);
+	#endif
     Radio.SetPublicNetwork(0,stRadioCfg_Rx.isPublic);
 	Radio.SetPublicNetwork(1,stRadioCfg_Rx.isPublic);
-	//Radio.SetPublicNetwork(2,stRadioCfg_Rx.isPublic);
+	#if defined(GATEWAY_V2_3CHANNEL)
+	Radio.SetPublicNetwork(2,stRadioCfg_Rx.isPublic);
+	#endif
     chip = 0;
     Radio.SetTxConfig(chip,
             stRadioCfg_Tx.modem,
@@ -261,7 +267,8 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
             stRadioCfg_Rx.rxContinuous);
 	Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
 	Radio.Rx( chip,0 );
-	/*chip = 3;
+	#if defined(GATEWAY_V2_3CHANNEL)
+	chip = 2;
 	Radio.SetTxConfig(chip,
             stRadioCfg_Tx.modem,
             stRadioCfg_Tx.power,
@@ -292,7 +299,8 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
             stRadioCfg_Rx.iqInverted,
             stRadioCfg_Rx.rxContinuous);
 	Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
-	Radio.Rx( chip,0 );*/
+	Radio.Rx( chip,0 );
+	#endif
     //SX1276IoIrqInit(0);
     //SX1276IoIrqInit(1);
     //Radio.Rx( 0,RX_TIMEOUT_VALUE );
@@ -452,24 +460,30 @@ static int lora_dev_close(struct inode *inode, struct file *file)
 	kthread_stop(radio_routin);
     Radio.Sleep(0);
     Radio.Sleep(1);
-    //Radio.Sleep(2);
-
+	#if defined(GATEWAY_V2_3CHANNEL)
+    Radio.Sleep(2);
+	#endif
     del_timer(&TxTimeoutTimer[0]);
     del_timer(&RxTimeoutTimer[0]);
+	
     //del_timer(&RxTimeoutSyncWord[0]);
     del_timer(&TxTimeoutTimer[1]);
     del_timer(&RxTimeoutTimer[1]);
     //del_timer(&RxTimeoutSyncWord[1]);
-    //del_timer(&TxTimeoutTimer[2]);
-    //del_timer(&RxTimeoutTimer[2]);
+    #if defined(GATEWAY_V2_3CHANNEL)
+    del_timer(&TxTimeoutTimer[2]);
+    del_timer(&RxTimeoutTimer[2]);
+    #endif
     //del_timer(&RxTimeoutSyncWord[2]);
 
     SX1276IoIrqFree(0);
     SX1276IoFree(0);
     SX1276IoIrqFree(1);
     SX1276IoFree(1);
-    //SX1276IoIrqFree(2);
-    //SX1276IoFree(2);
+	#if defined(GATEWAY_V2_3CHANNEL)
+    SX1276IoIrqFree(2);
+    SX1276IoFree(2);
+	#endif
     
     return 0;
 }
