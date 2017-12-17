@@ -1,0 +1,60 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<title>网关参数配置</title>
+</head>
+
+<body>
+	<form>
+<p>无线参数配置<br/>
+  <label>
+    网络类型<br />
+	  <input type="radio" name="nettype" value="private" id="nettype_0" />
+    公网</label>
+  <br />
+  <label>
+    <input type="radio" name="nettype" value="public" id="nettype_1" />
+    私网</label>
+  <br />
+	收发器1信道（0~95）<input type="number" name="channel1" value="1" /><br />
+	收发器1速率<select name="datarate1">
+            <option value="DR_0" selected="selected">DR_0</option>
+            <option value="DR_1">DR_1</option>
+            <option value="DR_2">DR_2</option>
+            <option value="DR_3">DR_3</option>
+            <option value="DR_4">DR_4</option>
+            <option value="DR_5">DR_5</option>
+        </select>
+        <br/>
+	收发器2信道（0~95）<input type="number"  name="channel2" value="2"/><br />
+	收发器2速率<select name="datarate2">
+            <option value="DR_0" selected="selected">DR_0</option>
+            <option value="DR_1">DR_1</option>
+            <option value="DR_2">DR_2</option>
+            <option value="DR_3">DR_3</option>
+            <option value="DR_4">DR_4</option>
+            <option value="DR_5">DR_5</option>
+        </select>
+        <br/>
+	收发器3信道（0~95）<input type="number" name="channel3" value="3" /><br />
+	收发器3速率<select name="datarate3">
+            <option value="DR_0" selected="selected">DR_0</option>
+            <option value="DR_1">DR_1</option>
+            <option value="DR_2">DR_2</option>
+            <option value="DR_3">DR_3</option>
+            <option value="DR_4">DR_4</option>
+            <option value="DR_5">DR_5</option>
+        </select>
+        <br/>
+</p>
+	<p>服务器参数配置<br/>
+		服务器IP：<input type="text" name="server_ip" value="192.168.1.100"/><br/>
+		服务器端口：<input type="text" name="server_port" value="32500"/><br/>
+		本地IP：<input type="text" name="local_ip" value="192.168.1.100"/><br/>
+		本地端口：<input type="text" name="local_port" value="32500"/><br/>
+	</p>
+		<input type="submit" /><input type="reset" /><br/>
+	</form>
+</body>
+</html>

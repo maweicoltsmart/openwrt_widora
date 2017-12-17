@@ -1,14 +1,25 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-<meta charset="utf-8">
-<title>网关参数配置</title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <title>form</title>
 </head>
 <body>
-    <form ACTION="/cgi-bin/lora_param_set">
-        <P>计算两个数的乘积，请输入两个乘数。
-        <INPUT NAME="m" SIZE="5">
-        <INPUT NAME="n" SIZE="5"><BR>
-        <INPUT TYPE="SUBMIT" values="提交">
+    <form>
+        公网/私网:<input type="radio" name="nettype" value="public"/>public
+              <input type="radio" name="nettype" value="private" checked="checked" />private <br/>
+        请输入信道:<input type="text" name="user"/><br/>
+        请选择速率<select name="country">
+            <option value="DR_0" selected="selected">DR_0</option>
+            <option value="DR_1">DR_1</option>
+            <option value="DR_2">DR_2</option>
+            <option value="DR_3">DR_3</option>
+            <option value="DR_4">DR_4</option>
+            <option value="DR_5">DR_5</option>
+        </select>
+        <br/>
+         <input type="submit" onclick="alert('提交成功')" value="提交数据"><br/>
     </form>
 </body>
 </html>

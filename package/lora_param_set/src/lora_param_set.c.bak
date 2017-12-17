@@ -1,0 +1,27 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+
+int main(void)
+{
+    char *data;
+    long m,n;
+    int len;
+    unsigned char *nettype = NULL;
+    unsigned char radio1channel,radio2channel,radio3channel;
+    unsigned char *radio1datarate,*radio2datarate,*radio3datarate;
+    unsigned char *serverip = NULL;
+    unsigned char serverport;
+    unsigned char *localip = NULL;
+    unsigned long localport;
+
+    printf("%s\n\n","Content-Type:text/html;charset=utf-8");
+    data = getenv("QUERY_STRING"); //获得form传来的参数——两个乘数m和n
+    if(data == NULL)
+        printf("<P>错误！数据没有被输入或者数据传输有问题");
+    if(len = sscanf(data,"nettype=%s&channel1=%lddatarate1=%s&channel2=%lddatarate2=%s&channel3=%lddatarate1=%sserverip=%sserverport=%ldlocalip=%slocalport=%ld",nettype,&radio1channel,radio1datarate,&radio2channel,radio2datarate,&radio3channel,radio3datarate,serverip,&serverport,localip,&localport) < 11)
+    {
+        printf("<P>错误！输入数据非法。表单中输入的必须是数字。len = %d; str = %s",len,data);
+    }
+    return 0;
+}
