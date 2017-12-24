@@ -209,6 +209,7 @@ int main(int argc, char*argv[])
             write(file,buf,strlen(buf));
             //printf("%s",buf);
             json_object_put(pragma);
+            execl("/etc/init.d/lora","lora","restart",NULL);
         }
     //printf("Content-Type: application/json");
     //printf("%s\n\n","Content-Type:text/html;charset=utf-8");
@@ -238,6 +239,7 @@ int DecodeAndProcessData(char *input)    //具体译码和处理数据
     write(file,input,strlen(input));
     close(file);
     system("sync");
+    execl("/etc/init.d/lora","lora","restart",NULL);
         // 补充具体操作
     return 0;
 }
