@@ -1,0 +1,294 @@
+﻿
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="shortcut icon" href="assets/ico/favicon.ico">
+
+    <title>Widora WIFI SET</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" type="text/css" href="css/bootstrap-select.min.css">
+    <link type="text/css" href="css/style.css" rel="stylesheet">
+
+    <!-- Just for debugging purposes. Don't actually copy this line! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+    <script type="text/javascript">
+ 	    function check_APPKEY() {
+ 	     	    var obj_APPKEY =document.getElementById("APPKEY") ;
+            var str = obj_APPKEY.value;
+            var reg=/^[0-9a-fA-F]{32}$/;
+            if (str.length!=32) {
+                alert('请输入32位16进制字符串');
+                 obj_APPKEY.focus();
+                return false;
+            }
+            else {
+                if (!reg.test(str)) {
+                    alert('请输入32位16进制字符串');
+                     obj_APPKEY.focus();
+                    return false;
+                }
+            }
+        }
+
+
+     function check_NetID() {
+ 	     	    var obj_NetID =document.getElementById("NetID") ;
+            var str = obj_NetID.value;
+            var reg=/^[0-9a-fA-F]{6}$/;
+            if (str.length!=6) {
+                alert('请输入6位16进制字符串');
+                 obj_NetID.focus();
+                return false;
+            }
+            else {
+                if (!reg.test(str)) {
+                    alert('请输入6位16进制字符串');
+                     obj_NetID.focus();
+                    return false;
+                }
+            }
+        }
+
+    function check_channel(paraObj){
+     	var reg=/^[0-9]*$/;
+
+     	var paraStr=paraObj.value;
+     	//alert(paraStr);
+     	if(reg.test(paraStr)){
+     		var paraInt=parseInt(paraStr) ;
+   	    //alert(paraInt);
+   	    if(paraInt<0 || paraInt>96){
+   	   	     alert('必须为0-96的整数');
+   	   	     paraObj .focus();
+   	   	     return false;
+   	   	}
+
+     	}else{
+     		alert('必须为0-96的整数');
+   	   	paraObj.focus();
+   	   	return false;
+
+     	}
+
+   }
+
+
+
+   function widoraset(){
+    var init_info='{"NetType":"Private","APPKEY":"2B7E151628AED2A6ABF7158809CF4F3C","AppNonce":"123456","NetID":"789ABC","serverip":"192.168.1.100","serverport":32500,"localip":"192.168.1.100","localport":32500,"radio":[{"index":0,"channel":0,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"},{"index":0,"channel":2,"datarate":"DR_0"}]}';
+
+    var init_info_json =JSON.parse(init_info);
+
+   	init_info_json.NetType =$("#NetType").val();
+   	init_info_json.APPKEY =$("#APPKEY").val();
+   	init_info_json.NetID =$("#NetID").val();
+   	init_info_json.serverip =$("#serverip").val();
+   	init_info_json.serverport =$("#serverport").val();
+   	init_info_json.localip =$("#localip").val();
+   	init_info_json.localport =$("#localport").val();
+
+   	var radioArray = init_info_json.radio;
+   	for(var i=0;i<radioArray.length;i++){
+   		 radioArray[i].index = $("#index_"+i).text();
+   		 radioArray[i].channel =$("#channel_"+i).val();
+   		 radioArray[i].datarate=$("#datarate_"+i).val();
+    }
+
+
+   	//alert(init_info_json.NetType);
+
+   	$.ajax({
+          type: "POST",
+          url: '/cgi-bin/lora_param_set',
+          dataType: "xml",
+          data:JSON.stringify(init_info_json),
+          contentType: "application/json; charset=utf-8",
+          success: function(data) {
+              alert('修改成功');
+          },
+          error: function(XMLHttpRequest, textStatus, errorThrown) {
+            alert("修改出错" + error.responseText);
+             //alert('readyState:'+XMLHttpRequest.readyState + 'status:'+XMLHttpRequest.status + 'responseText:'+XMLHttpRequest.responseText);
+          }
+        });
+
+   	//alert(JSON.stringify(init_info_json) );
+  }
+
+ 	</script>
+  </head>
+  <body>
+        <div class="main">
+            <div id="alertMsg"></div>
+            <form action="#" method="post" onsubmit="return setwifi();" class="well">
+
+            <fieldset>
+              <legend>LoRa设置</legend>
+
+               <div class="form-group">
+                <label for="NetType">NetType</label>
+                <select id="NetType" name="NetType" class="form-control" data-live-search="true">
+                  <option value="Private">Private</option>
+                  <option value="Public">Public</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="APPKEY">APPKEY</label>
+                <input id="APPKEY" type="text" name="APPKEY" class="form-control" onblur="check_APPKEY();"/>
+              </div>
+
+
+              <div class="form-group">
+                <label for="AppNonce">AppNonce</label>
+                <p id="AppNonce" > </p>
+              </div>
+
+              <div class="form-group">
+                <label for="NetID">NetID</label>
+                <input id="NetID" type="text" name="NetID" class="form-control" onblur="check_NetID();"/>
+              </div>
+
+              <div class="form-group">
+                <label for="serverip">serverip</label>
+                <input id="serverip" type="text" name="serverip" class="form-control"/>
+              </div>
+
+              <div class="form-group">
+                <label for="serverport">serverport</label>
+                <input id="serverport" type="text" name="serverport" class="form-control"/>
+              </div>
+
+              <div class="form-group">
+                <label for="localip">localip</label>
+                <input id="localip" type="text" name="localip" class="form-control"/>
+              </div>
+
+              <div class="form-group">
+                <label for="localport">localport</label>
+                <input id="localport" type="text" name="localport" class="form-control"/>
+              </div>
+
+
+
+             <div class="form-group">
+             <label for="widora_radio">lora_radio</label>
+             <table id='widora_radio' class="table table-bordered">
+	             <thead>
+		           <tr>
+			           <th>index</th>
+			           <th>channel</th>
+			           <th>datarate</th>
+		          </tr>
+	            </thead>
+	          <tbody>
+		          <tr>
+			           <td id="index_0"> </td>
+			           <td><input id="channel_0" type="text" name="channel_0" class="form-control" onblur="check_channel(this);"/></td>
+			           <td><select id="datarate_0" name="datarate_0" class="form-control" data-live-search="true">
+                  <option value="DR_0">DR_0</option>
+                  <option value="DR_1">DR_1</option>
+                  <option value="DR_2">DR_2</option>
+                  <option value="DR_3">DR_3</option>
+                  <option value="DR_4">DR_4</option>
+                  <option value="DR_5">DR_5</option>
+                </select></td>
+		          </tr>
+
+		            <tr>
+			           <td id="index_1"> </td>
+			           <td><input id="channel_1" type="text" name="channel_1" class="form-control" onblur="check_channel(this);"/></td>
+			           <td><select id="datarate_1" name="datarate_1" class="form-control" data-live-search="true">
+                  <option value="DR_0">DR_0</option>
+                  <option value="DR_1">DR_1</option>
+                  <option value="DR_2">DR_2</option>
+                  <option value="DR_3">DR_3</option>
+                  <option value="DR_4">DR_4</option>
+                  <option value="DR_5">DR_5</option>
+                </select></td>
+		          </tr>
+
+		            <tr>
+			           <td id="index_2"> </td>
+			           <td><input id="channel_2" type="text" name="channel_2" class="form-control" onblur="check_channel(this);"/></td>
+			           <td><select id="datarate_2" name="datarate_2" class="form-control" data-live-search="true">
+                  <option value="DR_0">DR_0</option>
+                  <option value="DR_1">DR_1</option>
+                  <option value="DR_2">DR_2</option>
+                  <option value="DR_3">DR_3</option>
+                  <option value="DR_4">DR_4</option>
+                  <option value="DR_5">DR_5</option>
+                </select></td>
+		          </tr>
+
+
+	          </tbody>
+           </table>
+
+
+              <div style="margin: 20px 0;">
+                <button type="button" class="btn btn-primary" onclick="widoraset();" >提交修改</button>
+              </div>
+            </fieldset>
+          </form>
+        </div>
+      <hr>
+    </div>
+
+  </body>
+  <script type="text/javascript" src="js/jquery.min.js"></script>
+  <script type="text/javascript" src="js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="js/docs.min.js"></script>
+  <script type="text/javascript" src="js/bootstrap-select.min.js"></script>
+
+ <script type="text/javascript">
+    $(window).on('load', function () {
+      $.ajax({
+        type: "GET",
+        url: "/cgi-bin/lora_param_set",
+        dataType: "json",
+        contentType: "application/json; charset=utf-8",
+        success: function(json) {
+
+
+
+           	$("#NetType").val(json.NetType) ;
+
+           	$("#APPKEY").val(json.APPKEY);
+           	$("#AppNonce").text(json.AppNonce);
+           	$("#NetID").val(json.NetID);
+           	$("#serverip").val(json.serverip);
+           	$("#serverport").val(json.serverport);
+           	$("#localip").val(json.localip);
+           	$("#localport").val(json.localport);
+
+           	var radioArray=json.radio;
+           	for(var i=0;i<radioArray.length;i++){
+           		$("#index_"+i).text(radioArray[i].index);
+           		$("#channel_"+i).val(radioArray[i].channel);
+           		$("#datarate_"+i).val(radioArray[i].datarate);
+           	}
+        },
+        error: function(error) {
+          //alert("调用出错" + error.responseText);
+        }
+      });
+
+    });
+  </script>
+
+</html>
