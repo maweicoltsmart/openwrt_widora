@@ -76,7 +76,7 @@ void LoRaMacInit(void)
 	int i;
     st_RadioCfg stRadioCfg;
 
-    GetGatewayPragma(&gateway_pragma);
+    GetGatewayPragma();
 
     fd_proc_cfg_rx = open("/proc/lora_procfs/lora_cfg_rx",O_RDWR);
     if (fd_proc_cfg_rx < 0)
@@ -133,12 +133,12 @@ void LoRaMacInit(void)
     stRadioCfg.power = 20;
     stRadioCfg.fdev = 0;
     stRadioCfg.bandwidth = 0;
-    stRadioCfg.datarate[0] = 7;
-	stRadioCfg.datarate[1] = 7;
-	stRadioCfg.datarate[2] = 7;
-	stRadioCfg.channel[0] = 0;
-	stRadioCfg.channel[1] = 1;
-	stRadioCfg.channel[2] = 2;
+    stRadioCfg.datarate[0] = gateway_pragma.radio[0].datarate;
+	stRadioCfg.datarate[1] = gateway_pragma.radio[1].datarate;
+	stRadioCfg.datarate[2] = gateway_pragma.radio[2].datarate;
+	stRadioCfg.channel[0] = gateway_pragma.radio[0].channel;
+	stRadioCfg.channel[1] = gateway_pragma.radio[1].channel;
+	stRadioCfg.channel[2] = gateway_pragma.radio[2].channel;
     stRadioCfg.coderate = 1;
     stRadioCfg.preambleLen = 8;
     stRadioCfg.fixLen = false;
@@ -151,7 +151,7 @@ void LoRaMacInit(void)
     stRadioCfg.symbTimeout = 24;
     stRadioCfg.payloadLen = 0;
     stRadioCfg.rxContinuous = true;
-	stRadioCfg.isPublic = false;
+	stRadioCfg.isPublic = gateway_pragma.NetType;
 
     write(fd_proc_cfg_rx,&stRadioCfg,sizeof(st_RadioCfg));
 
@@ -160,12 +160,12 @@ void LoRaMacInit(void)
     stRadioCfg.power = 20;
     stRadioCfg.fdev = 0;
     stRadioCfg.bandwidth = 0;
-    stRadioCfg.datarate[0] = 7;
-	stRadioCfg.datarate[1] = 7;
-	stRadioCfg.datarate[2] = 7;
-	stRadioCfg.channel[0] = 0;
-	stRadioCfg.channel[1] = 1;
-	stRadioCfg.channel[2] = 2;
+    stRadioCfg.datarate[0] = gateway_pragma.radio[0].datarate;
+	stRadioCfg.datarate[1] = gateway_pragma.radio[1].datarate;
+	stRadioCfg.datarate[2] = gateway_pragma.radio[2].datarate;
+	stRadioCfg.channel[0] = gateway_pragma.radio[0].channel % 48;
+	stRadioCfg.channel[1] = gateway_pragma.radio[1].channel % 48;
+	stRadioCfg.channel[2] = gateway_pragma.radio[2].channel % 48;
     stRadioCfg.coderate = 1;
     stRadioCfg.preambleLen = 8;
     stRadioCfg.fixLen = false;
@@ -178,7 +178,7 @@ void LoRaMacInit(void)
     stRadioCfg.symbTimeout = 24;
     stRadioCfg.payloadLen = 0;
     stRadioCfg.rxContinuous = true;
-	stRadioCfg.isPublic = false;
+	stRadioCfg.isPublic = gateway_pragma.NetType;
 
     write(fd_proc_cfg_tx,&stRadioCfg,sizeof(st_RadioCfg));
 

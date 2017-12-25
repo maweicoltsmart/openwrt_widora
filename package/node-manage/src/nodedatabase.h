@@ -37,6 +37,8 @@
 #include <sys/ipc.h>
 #include <sys/stat.h>
 #include <sys/msg.h>
+#include "GatewayPragma.h"
+
 #define MAX_NODE    100
 
 typedef struct
@@ -53,7 +55,7 @@ typedef struct
     uint8_t AppSKey[16];
 }node_pragma_t;
 
-typedef struct
+/*typedef struct
 {
     uint8_t APPKEY[16];
     uint8_t AppNonce[3];
@@ -61,7 +63,7 @@ typedef struct
     uint8_t server_ip[4];
     uint16_t server_port;
 }gateway_pragma_t;
-
+*/
 typedef struct
 {
     uint8_t APPEUI[8];
@@ -70,7 +72,6 @@ typedef struct
 }node_join_info_t;
 
 int16_t database_node_join(node_join_info_t* node);
-gateway_pragma_t gateway_pragma;
 node_pragma_t nodebase_node_pragma[MAX_NODE];
 
 #endif

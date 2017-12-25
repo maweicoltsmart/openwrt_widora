@@ -43,7 +43,7 @@ void Hex2Str( const char *sSrc,  char *sDest, int nSrcLen )
     return ;
 }
 
-void GetGatewayPragma(gateway_pragma_t *gateway)
+void GetGatewayPragma(void)
 {
 	int len;
 	int32_t tmp;
@@ -151,15 +151,33 @@ void GetGatewayPragma(gateway_pragma_t *gateway)
 		json_object_put(pragma);
 	}
 	pragma = json_tokener_parse((const char *)buf);
+	const char *nettype[2] = {"Private","Public"};
+
+	json_object_object_get_ex(pragma,"NetType",&obj);
+	memset(byte,0,100);
+	strcpy(byte,json_object_to_json_string(obj));
+	if(strcmp(byte,nettype[0]) == 0)
+	{
+		gateway_pragma.NetType = 0;
+	}
+	else
+	{
+		gateway_pragma.NetType = 1;
+	}
+
 	json_object_object_get_ex(pragma,"radio",&array);
+	char dataratename[10] = {0};
 	for(i = 0; i < json_object_array_length(array); i++) {
 		chip = json_object_array_get_idx(array, i);
 		json_object_object_get_ex(chip,"index",&obj);
-		tmp = json_object_get_int(obj);
+		gateway_pragma.radio[i].index = json_object_get_int(obj);
 		json_object_object_get_ex(chip,"channel",&obj);
-		tmp = json_object_get_int(obj);
+		gateway_pragma.radio[i].channel = json_object_get_int(obj);
 		json_object_object_get_ex(chip,"datarate",&obj);
-		tmp = json_object_get_int(obj);
+
+		strcpy(dataratename,json_object_to_json_string(obj));
+		//printf("datarate is : %c\r\n",dataratename[4]);
+		gateway_pragma.radio[i].datarate = 12 - (dataratename[4] - '0');
 	}
 	close(file);
 	json_object_put(pragma);
