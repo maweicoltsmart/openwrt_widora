@@ -13,9 +13,14 @@
 #include "GatewayPragma.h"
 #include "nodedatabase.h"
 
-#define GATEWAY_PRAGMA_FILE_PATH	"/usr/gatewaypragma.cfg"
+#define LORAWAN_APPLICATION_KEY                     { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C }
+#define GATEWAY_PRAGMA_FILE_PATH    "/usr/gatewaypragma.cfg"
+gateway_pragma_t gateway_pragma = {
+    .APPKEY = LORAWAN_APPLICATION_KEY,
+    .AppNonce = {0x12,0x34,0x56},
+    .NetID  ={0x78,0x9a,0xbc},
+};
 
-gateway_pragma_t gateway_pragma;
 int file;
 
 void hex2str(uint8_t *byte,uint8_t *str,int len)
