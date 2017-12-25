@@ -6,6 +6,10 @@
 #include <malloc.h>
 #include<unistd.h>
 #include <fcntl.h>
+#include <netdb.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include "GatewayPragma.h"
 #include "nodedatabase.h"
 
@@ -114,16 +118,31 @@ void GetGatewayPragma(gateway_pragma_t *gateway)
 		json_object_object_add(pragma,"NetID",json_object_new_string(byte));
 		json_object_object_add(pragma,"serverip",json_object_new_string("192.168.1.100"));
 		json_object_object_add(pragma,"serverport",json_object_new_string("32500"));
-		json_object_object_add(pragma,"localip",json_object_new_string("192.168.1.100"));
+		char hname[128];
+    	struct hostent *hent;
+    	int i;
+
+    	gethostname(hname, sizeof(hname));
+
+    	//hent = gethostent();
+    	hent = gethostbyname(hname);
+
+    	printf("hostname: %s/naddress list: ", hent->h_name);
+    	for(i = 0; hent->h_addr_list[i]; i++) {
+        	printf("%s/t", inet_ntoa(*(struct in_addr*)(hent->h_addr_list[i])));
+    	}
+
+		json_object_object_add(pragma,"localip",json_object_new_string(inet_ntoa(*(struct in_addr*)(hent->h_addr_list[0]))));
 		json_object_object_add(pragma,"localport",json_object_new_string("32500"));
 
 		json_object_object_add(pragma,"radio",array = json_object_new_array());
+		const char* drname[3] = {"DR_0","DR_3","DR_5"};
 		for(loop = 0;loop < 3;loop++)
 		{
 			json_object_array_add(array,chip=json_object_new_object());
 			json_object_object_add(chip,"index",json_object_new_int(loop));
 			json_object_object_add(chip,"channel",json_object_new_int(loop));
-			json_object_object_add(chip,"datarate",json_object_new_string("DR_0"));
+			json_object_object_add(chip,"datarate",json_object_new_string(drname[loop]));
 		}
 		memset(buf,0,4096);
 		strcpy(buf,json_object_to_json_string(pragma));
