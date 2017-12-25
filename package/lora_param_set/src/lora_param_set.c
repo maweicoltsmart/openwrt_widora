@@ -28,7 +28,7 @@ typedef struct
 }gateway_pragma_t;
 
 #define LORAWAN_APPLICATION_KEY                     { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C }
-#define GATEWAY_PRAGMA_FILE_PATH    "/overlay/upper/usr/gatewaypragma.cfg"
+#define GATEWAY_PRAGMA_FILE_PATH    "/usr/gatewaypragma.cfg"
 const gateway_pragma_t gateway_pragma = {
     .APPKEY = LORAWAN_APPLICATION_KEY,
     .AppNonce = {0x12,0x34,0x56},
@@ -110,6 +110,7 @@ int main(int argc, char*argv[])
         InputBuffer[i] = '\0';
         ContentLength   =   i;
         DecodeAndProcessData(InputBuffer);                 //具体译码和处理数据，该函数代码略
+        //execl("/etc/init.d/lora","lora","restart",NULL);
     }
     else if (strcasecmp(pRequestMethod,"GET")==0)
     {
@@ -145,7 +146,7 @@ int main(int argc, char*argv[])
             //printf("%s,%d,%d\r\n",__func__,__LINE__,errno);
         }
         //printf("%s%d%s%d",__func__,__LINE__,buf,len);
-        pragma = json_tokener_parse( buf );
+        pragma = json_tokener_parse( (const char *)buf );
         //pragma = (struct json_object *)buf;
         //obj = json_object_object_get(pragma,"NetType");
         bool found;
@@ -167,11 +168,11 @@ int main(int argc, char*argv[])
         //if(gateway_pragma.nettype == 0)
             {
 
-            //json_object_object_add(pragma,"NetType",json_object_new_string("Private"));
+            json_object_object_add(pragma,"NetType",json_object_new_string("Private"));
             }
         //else
         //{
-            json_object_object_add(pragma,"NetType",json_object_new_string("Public"));
+            //json_object_object_add(pragma,"NetType",json_object_new_string("Public"));
         //}
             /*memset(byte,0,100);
             sprintf(byte,"%032X",gateway_pragma.APPKEY);
@@ -201,7 +202,7 @@ int main(int argc, char*argv[])
             {
                 json_object_array_add(array,chip=json_object_new_object());
                 json_object_object_add(chip,"index",json_object_new_int(loop));
-                json_object_object_add(chip,"channel",json_object_new_string("2"));
+                json_object_object_add(chip,"channel",json_object_new_int(loop));
                 json_object_object_add(chip,"datarate",json_object_new_string("DR_0"));
             }
             memset(buf,0,4096);
@@ -209,7 +210,8 @@ int main(int argc, char*argv[])
             write(file,buf,strlen(buf));
             //printf("%s",buf);
             json_object_put(pragma);
-            execl("/etc/init.d/lora","lora","restart",NULL);
+            system("/etc/init.d/lora restart");
+            //execl("/etc/init.d/lora","lora","restart",NULL);
         }
     //printf("Content-Type: application/json");
     //printf("%s\n\n","Content-Type:text/html;charset=utf-8");
@@ -239,7 +241,8 @@ int DecodeAndProcessData(char *input)    //具体译码和处理数据
     write(file,input,strlen(input));
     close(file);
     system("sync");
-    execl("/etc/init.d/lora","lora","restart",NULL);
+    system("/etc/init.d/lora restart");
+    //usleep(100000);
         // 补充具体操作
     return 0;
 }
