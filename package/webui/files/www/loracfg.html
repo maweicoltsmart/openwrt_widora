@@ -42,6 +42,8 @@
                     return false;
                 }
             }
+             
+           return true;
         }
 
 
@@ -61,6 +63,8 @@
                     return false;
                 }
             }
+             
+           return true;
         }
 
     function check_channel(paraObj){
@@ -89,6 +93,19 @@
 
 
    function widoraset(){
+    	
+    var isLegal=true;
+    	
+    isLegal=check_APPKEY();
+    if(isLegal){
+     	 isLegal=check_NetID();
+    }
+    
+    //check_channel($("#channel_0"));
+    //check_channel($("#channel_1")); 
+    //check_channel($("#channel_2"));
+    	
+    if(isLegal){
     var init_info='{"NetType":"Private","APPKEY":"2B7E151628AED2A6ABF7158809CF4F3C","AppNonce":"123456","NetID":"789ABC","serverip":"192.168.1.100","serverport":32500,"localip":"192.168.1.100","localport":32500,"radio":[{"index":0,"channel":0,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"},{"index":0,"channel":2,"datarate":"DR_0"}]}';
 
     var init_info_json =JSON.parse(init_info);
@@ -125,7 +142,7 @@
              //alert('readyState:'+XMLHttpRequest.readyState + 'status:'+XMLHttpRequest.status + 'responseText:'+XMLHttpRequest.responseText);
           }
         });
-
+    }
    	//alert(JSON.stringify(init_info_json) );
   }
 
@@ -149,7 +166,7 @@
 
               <div class="form-group">
                 <label for="APPKEY">APPKEY</label>
-                <input id="APPKEY" type="text" name="APPKEY" class="form-control" onblur="check_APPKEY();"/>
+                <input id="APPKEY" type="text" name="APPKEY" class="form-control"/>
               </div>
 
 
@@ -160,7 +177,7 @@
 
               <div class="form-group">
                 <label for="NetID">NetID</label>
-                <input id="NetID" type="text" name="NetID" class="form-control" onblur="check_NetID();"/>
+                <input id="NetID" type="text" name="NetID" class="form-control"/>
               </div>
 
               <div class="form-group">
@@ -198,7 +215,7 @@
 	          <tbody>
 		          <tr>
 			           <td id="index_0"> </td>
-			           <td><input id="channel_0" type="text" name="channel_0" class="form-control" onblur="check_channel(this);"/></td>
+			           <td><input id="channel_0" type="text" name="channel_0" class="form-control" /></td>
 			           <td><select id="datarate_0" name="datarate_0" class="form-control" data-live-search="true">
                   <option value="DR_0">DR_0</option>
                   <option value="DR_1">DR_1</option>
@@ -211,7 +228,7 @@
 
 		            <tr>
 			           <td id="index_1"> </td>
-			           <td><input id="channel_1" type="text" name="channel_1" class="form-control" onblur="check_channel(this);"/></td>
+			           <td><input id="channel_1" type="text" name="channel_1" class="form-control" /></td>
 			           <td><select id="datarate_1" name="datarate_1" class="form-control" data-live-search="true">
                   <option value="DR_0">DR_0</option>
                   <option value="DR_1">DR_1</option>
@@ -224,7 +241,7 @@
 
 		            <tr>
 			           <td id="index_2"> </td>
-			           <td><input id="channel_2" type="text" name="channel_2" class="form-control" onblur="check_channel(this);"/></td>
+			           <td><input id="channel_2" type="text" name="channel_2" class="form-control" /></td>
 			           <td><select id="datarate_2" name="datarate_2" class="form-control" data-live-search="true">
                   <option value="DR_0">DR_0</option>
                   <option value="DR_1">DR_1</option>
