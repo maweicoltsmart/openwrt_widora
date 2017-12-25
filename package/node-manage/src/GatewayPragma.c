@@ -151,7 +151,7 @@ void GetGatewayPragma(void)
 		json_object_put(pragma);
 	}
 	pragma = json_tokener_parse((const char *)buf);
-	const char *nettype[2] = {"Private","Public"};
+	const char *nettype[2] = {"\"Private\"","\"Public\""};
 
 	json_object_object_get_ex(pragma,"NetType",&obj);
 	memset(byte,0,100);
