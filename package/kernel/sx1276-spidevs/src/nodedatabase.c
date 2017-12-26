@@ -31,6 +31,7 @@ void database_init(void)
 int16_t database_node_join(node_join_info_t* node)
 {
     uint16_t loop;
+	uint8_t tmp[6];
     //time_t   now;
     //struct timex  txc;
     //struct rtc_time tm;
@@ -39,7 +40,9 @@ int16_t database_node_join(node_join_info_t* node)
     for(loop = 0;loop < node_cnt;loop ++)
     {
         if(!memcmp(node->DevEUI,nodebase_node_pragma[loop].DevEUI,8)){
-            LoRaMacJoinComputeSKeys( gateway_pragma.APPKEY, gateway_pragma.AppNonce, node->DevNonce, nodebase_node_pragma[loop].NwkSKey, nodebase_node_pragma[loop].AppSKey );
+			memcpy(tmp,gateway_pragma.AppNonce,3);
+			memcpy(&tmp[3],gateway_pragma.NetID,3);
+            LoRaMacJoinComputeSKeys( gateway_pragma.APPKEY, tmp, node->DevNonce, nodebase_node_pragma[loop].NwkSKey, nodebase_node_pragma[loop].AppSKey );
             nodebase_node_pragma[loop].DevNonce = node->DevNonce;
             //time(&now);
             /* 获取当前的UTC时间 */
@@ -74,7 +77,9 @@ int16_t database_node_join(node_join_info_t* node)
         //time函数读取现在的时间(国际标准时间非北京时间)，然后传值给now
         //nodebase_node_pragma[loop].LastComunication   =   localtime(&now);
         do_gettimeofday(&(nodebase_node_pragma[loop].LastComunication.time));
-        LoRaMacJoinComputeSKeys( gateway_pragma.APPKEY, gateway_pragma.AppNonce, node->DevNonce, nodebase_node_pragma[loop].NwkSKey, nodebase_node_pragma[loop].AppSKey );
+		memcpy(tmp,gateway_pragma.AppNonce,3);
+		memcpy(&tmp[3],gateway_pragma.NetID,3);
+        LoRaMacJoinComputeSKeys( gateway_pragma.APPKEY, tmp, node->DevNonce, nodebase_node_pragma[loop].NwkSKey, nodebase_node_pragma[loop].AppSKey );
         *(uint32_t*)nodebase_node_pragma[loop].DevAddr = loop;
         DEBUG_OUTPUT_INFO("APPEUI: 0x");
         DEBUG_OUTPUT_DATA((unsigned char *)node->APPEUI,8);

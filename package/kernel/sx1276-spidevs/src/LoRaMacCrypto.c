@@ -132,7 +132,7 @@ void LoRaMacPayloadEncrypt( const uint8_t *buffer, uint16_t size, const uint8_t 
     {
         aBlock[15] = ( ( ctr ) & 0xFF );
         ctr++;
-        aes_encrypt( aBlock, sBlock, &AesContext );
+        aes_decrypt( aBlock, sBlock, &AesContext );
         for( i = 0; i < 16; i++ )
         {
             encBuffer[bufferIndex + i] = buffer[bufferIndex + i] ^ sBlock[i];
@@ -144,7 +144,7 @@ void LoRaMacPayloadEncrypt( const uint8_t *buffer, uint16_t size, const uint8_t 
     if( size > 0 )
     {
         aBlock[15] = ( ( ctr ) & 0xFF );
-        aes_encrypt( aBlock, sBlock, &AesContext );
+        aes_decrypt( aBlock, sBlock, &AesContext );
         for( i = 0; i < size; i++ )
         {
             encBuffer[bufferIndex + i] = buffer[bufferIndex + i] ^ sBlock[i];

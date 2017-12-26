@@ -34,6 +34,8 @@ typedef struct
 	struct timer_list *timer;
 	uint32_t jiffies1;
 	uint32_t jiffies2;
+	uint32_t sequenceCounter_Down;
+	uint32_t sequenceCounter_Up;
 	struct lora_tx_data lora_tx_list;
 }node_pragma_t;
 
