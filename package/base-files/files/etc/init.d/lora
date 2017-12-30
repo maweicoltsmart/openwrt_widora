@@ -9,6 +9,7 @@ SERVICE_WRITE_PID=1
 SERVICE_DAEMONIZE=1
 
 start() {
+	widora_mode router
         service_start /bin/$APP
 }
 
