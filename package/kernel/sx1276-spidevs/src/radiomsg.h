@@ -8,19 +8,21 @@
 struct lora_rx_data{
     uint8_t *buffer;
     uint32_t jiffies;
-	uint32_t chip;
-	uint16_t size;
-	int16_t rssi;
-	int8_t snr;
+    uint32_t chip;
+    uint16_t size;
+    int16_t rssi;
+    int8_t snr;
     struct list_head list;
 };
 
 struct lora_tx_data{
     uint8_t *buffer;
-	uint32_t chip;
-	uint16_t size;
-	int16_t rssi;
-	int8_t snr;
+    //uint32_t chip;
+    uint16_t size;
+    //int16_t rssi;
+    //int8_t snr;
+    uint8_t fPort;
+    uint32_t addres;
     struct list_head list;
 };
 

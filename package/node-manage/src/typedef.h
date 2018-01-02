@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include "radio.h"
+
 #ifndef TimerTime_t
 typedef uint32_t TimerTime_t;
 #endif
@@ -20,7 +21,7 @@ struct msg_st
     char text[BUFFER_SIZE];
 };
 
-typedef struct
+/*typedef struct
 {
 	uint32_t jiffies;
 	uint32_t chip;
@@ -35,7 +36,7 @@ typedef struct
 	uint32_t len;
 	struct timer_list *timer;
 }st_lora_tx_data_type,*pst_lora_tx_data_type;
-
+*/
 typedef struct
 {
 	uint32_t freq_tx[48];

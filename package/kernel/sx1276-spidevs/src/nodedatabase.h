@@ -15,8 +15,16 @@
 #include <linux/timex.h>
 #include <linux/rtc.h>
 #include "radiomsg.h"
+#include "LoRaMac.h"
 
 #define MAX_NODE    100
+
+typedef enum
+{
+    enStateInit,
+    enStateJoinning,
+    enStateJoined,
+}en_NodeState;
 
 typedef struct
 {
@@ -30,13 +38,22 @@ typedef struct
     uint32_t RX2_Window;
     uint8_t NwkSKey[16];
     uint8_t AppSKey[16];
-	uint8_t chip;
-	struct timer_list *timer;
-	uint32_t jiffies1;
-	uint32_t jiffies2;
-	uint32_t sequenceCounter_Down;
-	uint32_t sequenceCounter_Up;
-	struct lora_tx_data lora_tx_list;
+    uint8_t chip;
+    struct timer_list *timer;
+    uint32_t jiffies1;
+    uint32_t jiffies2;
+    uint32_t sequenceCounter_Down;
+    uint32_t sequenceCounter_Up;
+    struct lora_tx_data lora_tx_list;
+    en_NodeState state;
+    int16_t rssi;
+    int8_t snr;
+    bool is_ack_req;    // node reqest ack
+    bool need_ack;  // gateway request ack
+    uint8_t cmdbuf[LORA_MAC_COMMAND_MAX_LENGTH];
+    uint8_t cmdlen;
+    uint8_t *repeatbuf;
+    uint16_t repeatlen;
 }node_pragma_t;
 
 typedef struct
@@ -53,13 +70,16 @@ typedef struct
     uint8_t APPEUI[8];
     uint8_t DevEUI[8];
     uint16_t DevNonce;
-	uint8_t chip;
+    uint8_t chip;
+    int16_t rssi;
+    int8_t snr;
 }node_join_info_t;
 
 void database_init(void);
-int16_t database_node_join(node_join_info_t* node);
+int16_t database_node_join(node_join_info_t* node,uint32_t jiffiesval);
+uint8_t verify_net_addr(uint32_t addr);
 void get_msg_to_send( unsigned long index );
-int RadioTxMsgListAdd(int index,uint8_t *data,int len);
+int RadioTxMsgListAdd(struct lora_tx_data *p);
 void update_node_info(int index,int chip);
 
 

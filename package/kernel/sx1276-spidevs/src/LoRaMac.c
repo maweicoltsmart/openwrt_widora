@@ -144,8 +144,15 @@ int Radio_routin(void *data){
                     node_join_info.chip = p1->chip;
                     node_join_info.DevNonce = pkg[17];
                     node_join_info.DevNonce |= pkg[18] << 8;
+                    node_join_info.snr = p1->snr;
+                    node_join_info.rssi = p1->rssi;
                     //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
-                    index = database_node_join(&node_join_info);
+                    index = database_node_join(&node_join_info,p1->jiffies);
+                    if(index < 0)
+                    {
+                        break;
+                    }
+                    #if 0
                     //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
                     //p2 = (struct lora_tx_data *)&radiotxbuffer[1];
                     pkg = (uint8_t*)&radiotxbuffer[1][0];
@@ -169,6 +176,7 @@ int Radio_routin(void *data){
                     //p2->freq = CN470_FIRST_RX1_CHANNEL + ( p2->chip ) * CN470_STEPWIDTH_RX1_CHANNEL;
                     //p2->freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
                     //Radio.Send(radiotxbuffer[1],17);
+                    #endif
                     break;
                 case FRAME_TYPE_DATA_UNCONFIRMED_UP:
                     DEBUG_OUTPUT_EVENT(p1->chip,EV_DATA_UNCONFIRMED_UP);
@@ -204,6 +212,12 @@ int Radio_routin(void *data){
                     address |= ( (uint32_t)payload[pktHeaderLen++] << 8 );
                     address |= ( (uint32_t)payload[pktHeaderLen++] << 16 );
                     address |= ( (uint32_t)payload[pktHeaderLen++] << 24 );
+                    if(!verify_net_addr(address))
+                    {
+                        break;
+                    }
+                    nodebase_node_pragma[address].jiffies1 = p1->jiffies + LoRaMacParams.ReceiveDelay1;
+                    nodebase_node_pragma[address].jiffies2 = p1->jiffies + LoRaMacParams.ReceiveDelay2;
                     printk("%08X\r\n",address);
                     //break;
                     /*if( address != LoRaMacDevAddr )
@@ -291,6 +305,15 @@ int Radio_routin(void *data){
 
                     if( isMicOk == true )
                     {
+                        if(fCtrl.Bits.Ack)
+                        {
+                            kfree(nodebase_node_pragma[address].repeatbuf);
+                            nodebase_node_pragma[address].repeatbuf = NULL;
+                            nodebase_node_pragma[address].repeatlen = 0;
+                            del_timer(nodebase_node_pragma[address].timer);
+                            kfree(nodebase_node_pragma[address].timer);
+                            nodebase_node_pragma[address].timer = NULL;
+                        }
                         /*McpsIndication.Status = LORAMAC_EVENT_INFO_STATUS_OK;
                         McpsIndication.Multicast = multicast;
                         McpsIndication.FramePending = fCtrl.Bits.FPending;

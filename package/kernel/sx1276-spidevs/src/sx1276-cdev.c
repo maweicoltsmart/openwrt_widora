@@ -392,18 +392,27 @@ void lora_dev_tx_queue_routin( unsigned long data )
 
 static ssize_t lora_dev_write(struct file *filp, const char __user *buf, size_t size, loff_t *ppos)
 {
-    #if 0
-    pst_lora_tx_data_type p;
-    struct timer_list *timer;
-    timer = kmalloc(sizeof(struct timer_list),GFP_KERNEL);
-    init_timer(timer);
+    #if 1
+    uint8_t *p;
+    struct lora_tx_data *pst_lora_tx_list;
+    //struct timer_list *timer;
+    //timer = kmalloc(sizeof(struct timer_list),GFP_KERNEL);
+    //init_timer(timer);
     p = kmalloc(size,GFP_KERNEL);
+    pst_lora_tx_list = (struct lora_tx_data *)p;
     copy_from_user((void*)p, buf, size);
-    timer->function = lora_dev_tx_queue_routin;
-    timer->data = (unsigned long)p;
-    timer->expires = p->jiffies_start;
-    p->timer = timer;
-    add_timer(timer);
+    pst_lora_tx_list->addres = 0x00;
+    pst_lora_tx_list->fPort = 0x01;
+    pst_lora_tx_list->size = &p[9];
+    pst_lora_tx_list->buffer = &p[10];
+    //memcpy(pst_lora_tx_list->buffer,p[sizeof(struct lora_tx_data)],pst_lora_tx_list->size);
+    RadioTxMsgListAdd(pst_lora_tx_list);
+    kfree(p);
+    //timer->function = lora_dev_tx_queue_routin;
+    //timer->data = (unsigned long)p;
+    //timer->expires = p->jiffies_start;
+    //p->timer = timer;
+    //add_timer(timer);
     #endif
     return size;
 #if 0
@@ -465,7 +474,7 @@ static int lora_dev_close(struct inode *inode, struct file *file)
 	#endif
     del_timer(&TxTimeoutTimer[0]);
     del_timer(&RxTimeoutTimer[0]);
-	
+
     //del_timer(&RxTimeoutSyncWord[0]);
     del_timer(&TxTimeoutTimer[1]);
     del_timer(&RxTimeoutTimer[1]);
@@ -484,7 +493,7 @@ static int lora_dev_close(struct inode *inode, struct file *file)
     SX1276IoIrqFree(2);
     SX1276IoFree(2);
 	#endif
-    
+
     return 0;
 }
 static unsigned int lora_dev_poll(struct file *file, struct poll_table_struct *wait)

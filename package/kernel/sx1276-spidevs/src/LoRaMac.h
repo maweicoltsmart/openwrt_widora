@@ -1712,4 +1712,18 @@ void OnMacRxTimeout( int chip );
 void OnMacRxError( int chip );
 int Radio_routin(void *data);
 
+/*!
+ * Maximum PHY layer payload size
+ */
+#define LORAMAC_PHY_MAXPAYLOAD                      255
+
+/*!
+ * Maximum MAC commands buffer size
+ */
+#define LORA_MAC_COMMAND_MAX_LENGTH                 128
+
+/*!
+ * Maximum length of the fOpts field
+ */
+#define LORA_MAC_COMMAND_MAX_FOPTS_LENGTH           15
 #endif // __LORAMAC_H__

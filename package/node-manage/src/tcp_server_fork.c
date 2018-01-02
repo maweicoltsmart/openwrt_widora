@@ -73,6 +73,8 @@ void str_echo(int sockfd)
     char buffer[BUFFER_SIZE];
     int len;
     int err;
+    uint8_t *tmp;
+    int index;
     pthread_t main_tid;
     err = pthread_create(&main_tid, NULL, server_send, &sockfd); //创建线程
     pid_t pid = getpid();
@@ -92,7 +94,19 @@ void str_echo(int sockfd)
         }
         printf("pid:%d %dreceive:\r\n",pid,len);
         fputs(buffer, stdout);
-        write(fd,buffer,len);
+        tmp = malloc(10 + len);
+        tmp[index ++] = 0x00;   // address
+        tmp[index ++] = 0x00;
+        tmp[index ++] = 0x00;
+        tmp[index ++] = 0x00;
+        tmp[index ++] = 0x00;
+        tmp[index ++] = 0x00;
+        tmp[index ++] = 0x00;
+        tmp[index ++] = 0x00;
+        tmp[index ++] = 0x01;   // port
+        memcpy(&tmp[index],buffer,len);
+        tmp[index + len] = len;
+        write(fd,tmp,10 + len);
         /*len = send(sockfd, buffer, len, 0);
     if(len < 1)
         {

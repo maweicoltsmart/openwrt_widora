@@ -226,8 +226,8 @@ void *Radio_routin(void *param){
 	//int fd = *(int *)data;
 	int chip = 0;
     int index;
-    pst_lora_rx_data_type p1;
-    pst_lora_tx_data_type p2,p3;
+    //pst_lora_rx_data_type p1;
+    //pst_lora_tx_data_type p2,p3;
     LoRaMacHeader_t macHdr;
     LoRaMacFrameCtrl_t fCtrl;
     uint32_t mic = 0;
