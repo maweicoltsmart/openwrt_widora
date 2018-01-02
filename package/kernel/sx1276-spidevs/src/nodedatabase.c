@@ -178,7 +178,7 @@ void get_msg_to_send( unsigned long index )
             pkg[1 + 3 + 3 + 4] = 0; //DLSettings
             pkg[1 + 3 + 3 + 4 + 1] = 0; //RxDelay
             LoRaMacJoinComputeMic(radiotxbuffer[1],13,gateway_pragma.APPKEY,(uint32_t*)&pkg[1 + 3 + 3 + 4 + 1 + 1]);   // mic
-            debug_output_data(pkg,17);
+            //debug_output_data(pkg,17);
             LoRaMacJoinDecrypt(&pkg[1],12 + 4,gateway_pragma.APPKEY,&radiotxbuffer[0][1]);
             pkg = (uint8_t*)&radiotxbuffer[0][0];
             pkg[0]= macHdr.Value;
@@ -207,10 +207,11 @@ void get_msg_to_send( unsigned long index )
             stRadioCfg_Tx.iqInverted,
             stRadioCfg_Tx.timeout);
             Radio.SetChannel(nodebase_node_pragma[index].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[nodebase_node_pragma[index].chip]]);
-            DEBUG_OUTPUT_EVENT(nodebase_node_pragma[index].chip,EV_TX_START);
-            DEBUG_OUTPUT_DATA(get->buffer,get->size);
+            
+            //DEBUG_OUTPUT_DATA(get->buffer,get->size);
             Radio.Send(nodebase_node_pragma[index].chip,pkg,17);
-            debug_output_data(pkg,17);
+			DEBUG_OUTPUT_EVENT(nodebase_node_pragma[index].chip,EV_TX_START);
+            DEBUG_OUTPUT_DATA(pkg,17);
             break;
         case enStateJoined:
             if(nodebase_node_pragma[index].repeatlen > 0)
@@ -231,10 +232,11 @@ void get_msg_to_send( unsigned long index )
                 stRadioCfg_Tx.iqInverted,
                 stRadioCfg_Tx.timeout);
                 Radio.SetChannel(nodebase_node_pragma[index].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[nodebase_node_pragma[index].chip]]);
-                DEBUG_OUTPUT_EVENT(nodebase_node_pragma[index].chip,EV_TX_START);
-                DEBUG_OUTPUT_DATA(get->buffer,get->size);
+                
+                //DEBUG_OUTPUT_DATA(get->buffer,get->size);
                 Radio.Send(nodebase_node_pragma[index].chip,nodebase_node_pragma[index].repeatbuf,nodebase_node_pragma[index].repeatlen);
-                debug_output_data(nodebase_node_pragma[index].repeatbuf,nodebase_node_pragma[index].repeatlen);
+				DEBUG_OUTPUT_EVENT(nodebase_node_pragma[index].chip,EV_TX_START);
+				DEBUG_OUTPUT_DATA(nodebase_node_pragma[index].repeatbuf,nodebase_node_pragma[index].repeatlen);
                 printk("send again\r\n");
                 if(time_after(jiffies,(unsigned long)nodebase_node_pragma[index].jiffies2))
                 {
@@ -367,10 +369,11 @@ void get_msg_to_send( unsigned long index )
             stRadioCfg_Tx.iqInverted,
             stRadioCfg_Tx.timeout);
             Radio.SetChannel(nodebase_node_pragma[index].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[nodebase_node_pragma[index].chip]]);
-            DEBUG_OUTPUT_EVENT(nodebase_node_pragma[index].chip,EV_TX_START);
-            DEBUG_OUTPUT_DATA(get->buffer,get->size);
+            
+            //DEBUG_OUTPUT_DATA(get->buffer,get->size);
             Radio.Send(nodebase_node_pragma[index].chip,LoRaMacBuffer,LoRaMacBufferPktLen);
-            debug_output_data(LoRaMacBuffer,LoRaMacBufferPktLen);
+			DEBUG_OUTPUT_EVENT(nodebase_node_pragma[index].chip,EV_TX_START);
+			DEBUG_OUTPUT_DATA(LoRaMacBuffer,LoRaMacBufferPktLen);
 
             list_del(&get->list);
             if(get->size > 0)
@@ -410,7 +413,7 @@ void get_msg_to_send( unsigned long index )
         return;
     }
 */
-    Radio.Sleep(nodebase_node_pragma[index].chip);
+    /*Radio.Sleep(nodebase_node_pragma[index].chip);
     Radio.SetTxConfig(nodebase_node_pragma[index].chip,
             stRadioCfg_Tx.modem,
             stRadioCfg_Tx.power,
@@ -450,7 +453,7 @@ void get_msg_to_send( unsigned long index )
     {
         kfree(get->buffer);
     }
-    kfree(get);
+    kfree(get);*/
 }
 
 int RadioTxMsgListAdd(struct lora_tx_data *p)

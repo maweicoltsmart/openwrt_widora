@@ -14,7 +14,6 @@ void RadioMsgListInit(void)
 int RadioRxMsgListAdd( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
     struct lora_rx_data *new;
-    DEBUG_OUTPUT_DATA(payload,size);
     new = (struct lora_rx_data *)kmalloc(sizeof(struct lora_rx_data),GFP_KERNEL);
     if(!new)
     {

@@ -24,9 +24,10 @@ void LoRaMacInit(void)
 
 void OnMacRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
-    DEBUG_OUTPUT_EVENT(chip, EV_RXCOMPLETE);
     Radio.Sleep( chip);
     RadioRxMsgListAdd( chip,payload,size,rssi,snr );
+	DEBUG_OUTPUT_EVENT(chip, EV_RXCOMPLETE);
+	DEBUG_OUTPUT_DATA(payload,size);
     Radio.Rx( chip,0 );
     rx_done = true;
     wake_up(&lora_wait);
@@ -179,7 +180,7 @@ int Radio_routin(void *data){
                     #endif
                     break;
                 case FRAME_TYPE_DATA_UNCONFIRMED_UP:
-                    DEBUG_OUTPUT_EVENT(p1->chip,EV_DATA_UNCONFIRMED_UP);
+                    //DEBUG_OUTPUT_EVENT(p1->chip,EV_DATA_UNCONFIRMED_UP);
                     //break;
                 case FRAME_TYPE_DATA_CONFIRMED_UP:
                     sequenceCounter = 0;
@@ -189,7 +190,7 @@ int Radio_routin(void *data){
                     isMicOk = false;
                     payload = pkg;
                     macHdr.Value = payload[pktHeaderLen++];
-                    DEBUG_OUTPUT_EVENT(p1->chip,EV_DATA_CONFIRMED_UP);
+                    //DEBUG_OUTPUT_EVENT(p1->chip,EV_DATA_CONFIRMED_UP);
                     /*// Check if the received payload size is valid
                     getPhy.UplinkDwellTime = LoRaMacParams.DownlinkDwellTime;
                     getPhy.Datarate = McpsIndication.RxDatarate;
@@ -305,6 +306,19 @@ int Radio_routin(void *data){
 
                     if( isMicOk == true )
                     {
+                    	switch(macHdr.Bits.MType)
+                    	{
+                    		case FRAME_TYPE_DATA_CONFIRMED_UP:
+                    			nodebase_node_pragma[address].is_ack_req = true;
+								DEBUG_OUTPUT_EVENT(p1->chip,EV_DATA_CONFIRMED_UP);
+								break;
+							case FRAME_TYPE_DATA_UNCONFIRMED_UP:
+								nodebase_node_pragma[address].is_ack_req = false;
+								DEBUG_OUTPUT_EVENT(p1->chip,EV_DATA_UNCONFIRMED_UP);
+								break;
+							default:
+								break;
+                    	}
                         if(fCtrl.Bits.Ack)
                         {
                             kfree(nodebase_node_pragma[address].repeatbuf);
