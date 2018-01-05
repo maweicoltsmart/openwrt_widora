@@ -179,10 +179,10 @@ void OnRxError( int chip )
 
 static int lora_dev_open(struct inode * inode, struct file * filp)
 {
-	int chip;
+    int chip;
     RadioMsgListInit();
-	database_init();
-	LoRaMacInit();
+    database_init();
+    LoRaMacInit();
     RadioEvents.TxDone = OnMacTxDone;
     RadioEvents.RxDone = OnMacRxDone;
     RadioEvents.RxError = OnMacRxError;
@@ -190,19 +190,19 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
     RadioEvents.RxTimeout = OnMacRxTimeout;
     Radio.Init(0,&RadioEvents);
     Radio.Init(1,&RadioEvents);
-	#if defined(GATEWAY_V2_3CHANNEL)
+    #if defined(GATEWAY_V2_3CHANNEL)
     Radio.Init(2,&RadioEvents);
-	#endif
+    #endif
     Radio.Sleep(0);
     Radio.Sleep(1);
-	#if defined(GATEWAY_V2_3CHANNEL)
+    #if defined(GATEWAY_V2_3CHANNEL)
     Radio.Sleep(2);
-	#endif
+    #endif
     Radio.SetPublicNetwork(0,stRadioCfg_Rx.isPublic);
-	Radio.SetPublicNetwork(1,stRadioCfg_Rx.isPublic);
-	#if defined(GATEWAY_V2_3CHANNEL)
-	Radio.SetPublicNetwork(2,stRadioCfg_Rx.isPublic);
-	#endif
+    Radio.SetPublicNetwork(1,stRadioCfg_Rx.isPublic);
+    #if defined(GATEWAY_V2_3CHANNEL)
+    Radio.SetPublicNetwork(2,stRadioCfg_Rx.isPublic);
+    #endif
     chip = 0;
     Radio.SetTxConfig(chip,
             stRadioCfg_Tx.modem,
@@ -218,7 +218,7 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
             stRadioCfg_Tx.hopPeriod,
             stRadioCfg_Tx.iqInverted,
             stRadioCfg_Tx.timeout);
-	Radio.SetRxConfig(chip,
+    Radio.SetRxConfig(chip,
             stRadioCfg_Rx.modem,
             stRadioCfg_Rx.bandwidth,
             stRadioCfg_Rx.datarate[chip],
@@ -233,10 +233,10 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
             stRadioCfg_Rx.hopPeriod,
             stRadioCfg_Rx.iqInverted,
             stRadioCfg_Rx.rxContinuous);
-	Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
-	Radio.Rx( chip,0 );
-	chip = 1;
-	Radio.SetTxConfig(chip,
+    Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
+    Radio.Rx( chip,0 );
+    chip = 1;
+    Radio.SetTxConfig(chip,
             stRadioCfg_Tx.modem,
             stRadioCfg_Tx.power,
             stRadioCfg_Tx.fdev,
@@ -250,7 +250,7 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
             stRadioCfg_Tx.hopPeriod,
             stRadioCfg_Tx.iqInverted,
             stRadioCfg_Tx.timeout);
-	Radio.SetRxConfig(chip,
+    Radio.SetRxConfig(chip,
             stRadioCfg_Rx.modem,
             stRadioCfg_Rx.bandwidth,
             stRadioCfg_Rx.datarate[chip],
@@ -265,11 +265,11 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
             stRadioCfg_Rx.hopPeriod,
             stRadioCfg_Rx.iqInverted,
             stRadioCfg_Rx.rxContinuous);
-	Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
-	Radio.Rx( chip,0 );
-	#if defined(GATEWAY_V2_3CHANNEL)
-	chip = 2;
-	Radio.SetTxConfig(chip,
+    Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
+    Radio.Rx( chip,0 );
+    #if defined(GATEWAY_V2_3CHANNEL)
+    chip = 2;
+    Radio.SetTxConfig(chip,
             stRadioCfg_Tx.modem,
             stRadioCfg_Tx.power,
             stRadioCfg_Tx.fdev,
@@ -283,7 +283,7 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
             stRadioCfg_Tx.hopPeriod,
             stRadioCfg_Tx.iqInverted,
             stRadioCfg_Tx.timeout);
-	Radio.SetRxConfig(chip,
+    Radio.SetRxConfig(chip,
             stRadioCfg_Rx.modem,
             stRadioCfg_Rx.bandwidth,
             stRadioCfg_Rx.datarate[chip],
@@ -298,17 +298,17 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
             stRadioCfg_Rx.hopPeriod,
             stRadioCfg_Rx.iqInverted,
             stRadioCfg_Rx.rxContinuous);
-	Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
-	Radio.Rx( chip,0 );
-	#endif
+    Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
+    Radio.Rx( chip,0 );
+    #endif
     //SX1276IoIrqInit(0);
     //SX1276IoIrqInit(1);
     //Radio.Rx( 0,RX_TIMEOUT_VALUE );
     //Radio.Rx( 1,RX_TIMEOUT_VALUE );
     printk("create radio routin\r\n");
     radio_routin = kthread_create(Radio_routin, NULL, "Radio routin thread");
-	wake_up_process(radio_routin);
-	return 0;
+    wake_up_process(radio_routin);
+    return 0;
 }
 
 static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,loff_t *ppos)
@@ -354,7 +354,7 @@ static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,l
     kfree(get);
     return ret;
     #endif
-	return 0;
+    return 0;
 }
 
 void lora_dev_tx_queue_routin( unsigned long data )
@@ -401,9 +401,9 @@ static ssize_t lora_dev_write(struct file *filp, const char __user *buf, size_t 
     p = kmalloc(size,GFP_KERNEL);
     pst_lora_tx_list = (struct lora_tx_data *)p;
     copy_from_user((void*)p, buf, size);
-    pst_lora_tx_list->addres = 0x00;
-    pst_lora_tx_list->fPort = 0x01;
-    pst_lora_tx_list->size = &p[9];
+    node_get_net_addr(&pst_lora_tx_list->addres,p);
+    pst_lora_tx_list->fPort = 1;//p[8];
+    pst_lora_tx_list->size = (uint16_t)p[9];
     pst_lora_tx_list->buffer = &p[10];
     //memcpy(pst_lora_tx_list->buffer,p[sizeof(struct lora_tx_data)],pst_lora_tx_list->size);
     RadioTxMsgListAdd(pst_lora_tx_list);
@@ -466,12 +466,12 @@ static ssize_t lora_dev_write(struct file *filp, const char __user *buf, size_t 
 static int lora_dev_close(struct inode *inode, struct file *file)
 {
     printk("%s,%d\r\n",__func__,__LINE__);
-	kthread_stop(radio_routin);
+    kthread_stop(radio_routin);
     Radio.Sleep(0);
     Radio.Sleep(1);
-	#if defined(GATEWAY_V2_3CHANNEL)
+    #if defined(GATEWAY_V2_3CHANNEL)
     Radio.Sleep(2);
-	#endif
+    #endif
     del_timer(&TxTimeoutTimer[0]);
     del_timer(&RxTimeoutTimer[0]);
 
@@ -489,10 +489,10 @@ static int lora_dev_close(struct inode *inode, struct file *file)
     SX1276IoFree(0);
     SX1276IoIrqFree(1);
     SX1276IoFree(1);
-	#if defined(GATEWAY_V2_3CHANNEL)
+    #if defined(GATEWAY_V2_3CHANNEL)
     SX1276IoIrqFree(2);
     SX1276IoFree(2);
-	#endif
+    #endif
 
     return 0;
 }

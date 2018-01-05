@@ -72,8 +72,8 @@ LoRaMacParams_t LoRaMacParamsDefaults;
 
 void LoRaMacInit(void)
 {
-	int chip = 0;
-	int i;
+    int chip = 0;
+    int i;
     st_RadioCfg stRadioCfg;
 
     GetGatewayPragma();
@@ -122,11 +122,11 @@ void LoRaMacInit(void)
 
     for( i = 0; i < CN470_MAX_NB_CHANNELS; i++ )
     {
-    	stRadioCfg.freq_rx[i] = ( uint32_t )( ( double )(470300000 + i * 200000) / ( double )FREQ_STEP );
+        stRadioCfg.freq_rx[i] = ( uint32_t )( ( double )(470300000 + i * 200000) / ( double )FREQ_STEP );
     }
     for( i = 0; i < 48; i++ )
     {
-    	stRadioCfg.freq_tx[i] = ( uint32_t )( ( double )(CN470_FIRST_RX1_CHANNEL + ( i ) * CN470_STEPWIDTH_RX1_CHANNEL) / ( double )FREQ_STEP );
+        stRadioCfg.freq_tx[i] = ( uint32_t )( ( double )(CN470_FIRST_RX1_CHANNEL + ( i ) * CN470_STEPWIDTH_RX1_CHANNEL) / ( double )FREQ_STEP );
     }
     stRadioCfg.dr_range = (DR_5 << 16) | DR_0;
     stRadioCfg.modem = MODEM_LORA;
@@ -134,11 +134,11 @@ void LoRaMacInit(void)
     stRadioCfg.fdev = 0;
     stRadioCfg.bandwidth = 0;
     stRadioCfg.datarate[0] = gateway_pragma.radio[0].datarate;
-	stRadioCfg.datarate[1] = gateway_pragma.radio[1].datarate;
-	stRadioCfg.datarate[2] = gateway_pragma.radio[2].datarate;
-	stRadioCfg.channel[0] = gateway_pragma.radio[0].channel;
-	stRadioCfg.channel[1] = gateway_pragma.radio[1].channel;
-	stRadioCfg.channel[2] = gateway_pragma.radio[2].channel;
+    stRadioCfg.datarate[1] = gateway_pragma.radio[1].datarate;
+    stRadioCfg.datarate[2] = gateway_pragma.radio[2].datarate;
+    stRadioCfg.channel[0] = gateway_pragma.radio[0].channel;
+    stRadioCfg.channel[1] = gateway_pragma.radio[1].channel;
+    stRadioCfg.channel[2] = gateway_pragma.radio[2].channel;
     stRadioCfg.coderate = 1;
     stRadioCfg.preambleLen = 8;
     stRadioCfg.fixLen = false;
@@ -151,7 +151,7 @@ void LoRaMacInit(void)
     stRadioCfg.symbTimeout = 24;
     stRadioCfg.payloadLen = 0;
     stRadioCfg.rxContinuous = true;
-	stRadioCfg.isPublic = gateway_pragma.NetType;
+    stRadioCfg.isPublic = gateway_pragma.NetType;
 
     write(fd_proc_cfg_rx,&stRadioCfg,sizeof(st_RadioCfg));
 
@@ -161,11 +161,11 @@ void LoRaMacInit(void)
     stRadioCfg.fdev = 0;
     stRadioCfg.bandwidth = 0;
     stRadioCfg.datarate[0] = gateway_pragma.radio[0].datarate;
-	stRadioCfg.datarate[1] = gateway_pragma.radio[1].datarate;
-	stRadioCfg.datarate[2] = gateway_pragma.radio[2].datarate;
-	stRadioCfg.channel[0] = gateway_pragma.radio[0].channel % 48;
-	stRadioCfg.channel[1] = gateway_pragma.radio[1].channel % 48;
-	stRadioCfg.channel[2] = gateway_pragma.radio[2].channel % 48;
+    stRadioCfg.datarate[1] = gateway_pragma.radio[1].datarate;
+    stRadioCfg.datarate[2] = gateway_pragma.radio[2].datarate;
+    stRadioCfg.channel[0] = gateway_pragma.radio[0].channel % 48;
+    stRadioCfg.channel[1] = gateway_pragma.radio[1].channel % 48;
+    stRadioCfg.channel[2] = gateway_pragma.radio[2].channel % 48;
     stRadioCfg.coderate = 1;
     stRadioCfg.preambleLen = 8;
     stRadioCfg.fixLen = false;
@@ -178,19 +178,19 @@ void LoRaMacInit(void)
     stRadioCfg.symbTimeout = 24;
     stRadioCfg.payloadLen = 0;
     stRadioCfg.rxContinuous = true;
-	stRadioCfg.isPublic = gateway_pragma.NetType;
+    stRadioCfg.isPublic = gateway_pragma.NetType;
 
     write(fd_proc_cfg_tx,&stRadioCfg,sizeof(st_RadioCfg));
 
-	sleep(1);
-	fd_cdev = open("/dev/lora_radio",O_RDWR);
+    sleep(1);
+    fd_cdev = open("/dev/lora_radio",O_RDWR);
     if (fd_cdev < 0)
     {
         printf("open lora_radio error\r\n");
         return;
     }
 /*
-	int ioarg = false;
+    int ioarg = false;
     ioarg = ioarg | (chip << 31);
     ioctl(fd_cdev, LORADEV_RADIO_SET_PUBLIC, &ioarg);
 
@@ -198,19 +198,19 @@ void LoRaMacInit(void)
     uint32_t datarate;
     for(i = 0;i < 2;i ++)
     {
-	    chip = i;
-	    ioarg = 0;
-	    ioarg = ioarg | (chip << 8);	// channel
-	    datarate = DataratesCN470[5];
-	    ioarg = ioarg | (datarate & 0x000000ff);	// datarate
-	    ioarg = ioarg | (chip << 31);
-	    ioctl(fd_cdev, LORADEV_RADIO_CHANNEL, &ioarg);
+        chip = i;
+        ioarg = 0;
+        ioarg = ioarg | (chip << 8);    // channel
+        datarate = DataratesCN470[5];
+        ioarg = ioarg | (datarate & 0x000000ff);    // datarate
+        ioarg = ioarg | (chip << 31);
+        ioctl(fd_cdev, LORADEV_RADIO_CHANNEL, &ioarg);
 
-	    ioarg = 0;
-	    ioarg = ioarg | (chip << 31);
-	    ioctl(fd_cdev, LORADEV_RADIO_SET_RX, &ioarg);
-	}
-	*/
+        ioarg = 0;
+        ioarg = ioarg | (chip << 31);
+        ioctl(fd_cdev, LORADEV_RADIO_SET_RX, &ioarg);
+    }
+    */
 }
 
 uint8_t radiorxbuffer[300];
@@ -223,8 +223,8 @@ void *Radio_routin(void *param){
     int msgid = -1;
     //struct msg_st data;
     int len;
-	//int fd = *(int *)data;
-	int chip = 0;
+    //int fd = *(int *)data;
+    int chip = 0;
     int index;
     //pst_lora_rx_data_type p1;
     //pst_lora_tx_data_type p2,p3;
@@ -246,7 +246,7 @@ void *Radio_routin(void *param){
     }
     while(1)
     {
-    	sleep(1);
+        sleep(1);
     #if 0
         memset(radiorxbuffer,0,300);
         if((len = read(fd_cdev,radiorxbuffer,300)) > 0)
@@ -271,7 +271,7 @@ void *Radio_routin(void *param){
                     memset(radiotxbuffer[1],0,300);
                     p2 = (pst_lora_tx_data_type)&radiotxbuffer[0];
                     p3 = (pst_lora_tx_data_type)&radiotxbuffer[1];
-                    p3->jiffies_start = p1->jiffies + (LoRaMacParams.JoinAcceptDelay1 / 1000 * CPU_SYS_TICK_HZ) + 10;	// 10 jiffis = 100ms
+                    p3->jiffies_start = p1->jiffies + (LoRaMacParams.JoinAcceptDelay1 / 1000 * CPU_SYS_TICK_HZ) + 10;   // 10 jiffis = 100ms
                     p3->jiffies_end = p1->jiffies + ((LoRaMacParams.JoinAcceptDelay1 + LoRaMacParams.MaxRxWindow + LoRaMacParams.JoinAcceptDelay2) / 1000 * CPU_SYS_TICK_HZ);
                     p3->chip = p1->chip;
                     p3->len = 17;
@@ -292,7 +292,7 @@ void *Radio_routin(void *param){
                     LoRaMacJoinDecrypt(&pkg1[1],12 + 4,gateway_pragma.APPKEY,pkg2 + 1);
                     printf("%s,%d,%d,%d\r\n",__func__,__LINE__,pkg1[0],pkg2[0]);
                     printf("data is: 0x");
-            		hexdump((const unsigned char *)p3,p3->len + sizeof(st_lora_tx_data_type));
+                    hexdump((const unsigned char *)p3,p3->len + sizeof(st_lora_tx_data_type));
                     write(fd_cdev,(void*)p3,p3->len + sizeof(st_lora_tx_data_type));
                     break;
                 case FRAME_TYPE_DATA_UNCONFIRMED_UP:
@@ -320,7 +320,7 @@ void *Radio_routin(void *param){
         {
             usleep(10000);
         }
-		#endif
+        #endif
     }
 }
 

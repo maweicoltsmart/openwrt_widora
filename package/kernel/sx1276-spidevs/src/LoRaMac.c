@@ -20,6 +20,8 @@ void LoRaMacInit(void)
 {
     LoRaMacParams.JoinAcceptDelay1 = 5 * HZ;
     LoRaMacParams.JoinAcceptDelay2 = 6 * HZ;
+    LoRaMacParams.ReceiveDelay1 = 1 * HZ;
+    LoRaMacParams.ReceiveDelay2 = 2 * HZ;
 }
 
 void OnMacRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
@@ -35,7 +37,6 @@ void OnMacRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t
 
 void OnMacTxDone( int chip )
 {
-    DEBUG_OUTPUT_EVENT(chip,EV_TXCOMPLETE);
     Radio.Sleep( chip);
     SX1276SetRxConfig(chip,
             stRadioCfg_Rx.modem,
@@ -54,6 +55,7 @@ void OnMacTxDone( int chip )
             stRadioCfg_Rx.rxContinuous);
     Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
     Radio.Rx( chip,0 );
+    DEBUG_OUTPUT_EVENT(chip,EV_TXCOMPLETE);
     //State = TX;
 }
 
@@ -105,7 +107,7 @@ int Radio_routin(void *data){
     node_join_info_t node_join_info;
     uint8_t *pkg;
     uint32_t micRX,micTX;
-    printk("%s,%d\r\n",__func__,__LINE__);
+    //printk("%s,%d\r\n",__func__,__LINE__);
     while (true)
     {
         if( kthread_should_stop())
@@ -123,7 +125,7 @@ int Radio_routin(void *data){
         {
             p1 = (struct lora_rx_data*)radiorxbuffer;
             pkg = (uint8_t*)&radiorxbuffer[sizeof(struct lora_rx_data)];
-            DEBUG_OUTPUT_DATA(pkg,p1->size);
+            //DEBUG_OUTPUT_DATA(pkg,p1->size);
             macHdr.Value = pkg[0];
             switch( macHdr.Bits.MType )
             {
@@ -147,37 +149,13 @@ int Radio_routin(void *data){
                     node_join_info.DevNonce |= pkg[18] << 8;
                     node_join_info.snr = p1->snr;
                     node_join_info.rssi = p1->rssi;
+                    node_join_info.jiffies = p1->jiffies;
                     //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
-                    index = database_node_join(&node_join_info,p1->jiffies);
+                    index = node_database_join(&node_join_info);
                     if(index < 0)
                     {
                         break;
                     }
-                    #if 0
-                    //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
-                    //p2 = (struct lora_tx_data *)&radiotxbuffer[1];
-                    pkg = (uint8_t*)&radiotxbuffer[1][0];
-                    macHdr.Bits.MType = FRAME_TYPE_JOIN_ACCEPT;
-                    pkg[0] = macHdr.Value;
-                    memcpy(&pkg[1],gateway_pragma.AppNonce,3); // AppNonce
-                    memcpy(&pkg[1 + 3],gateway_pragma.NetID,3); // NetID
-                    memcpy(&pkg[1 + 3 + 3],nodebase_node_pragma[index].DevAddr,4);  // DevAddr
-                    pkg[1 + 3 + 3 + 4] = 0; //DLSettings
-                    pkg[1 + 3 + 3 + 4 + 1] = 0; //RxDelay
-                    LoRaMacJoinComputeMic(radiotxbuffer[1],13,gateway_pragma.APPKEY,(uint32_t*)&pkg[1 + 3 + 3 + 4 + 1 + 1]);   // mic
-                    debug_output_data(pkg,17);
-                    LoRaMacJoinDecrypt(&pkg[1],12 + 4,gateway_pragma.APPKEY,&radiotxbuffer[0][1]);
-                    pkg = (uint8_t*)&radiotxbuffer[0][0];
-                    pkg[0]= macHdr.Value;
-                    //p2 = (struct lora_tx_data *)&radiotxbuffer[0];
-                    //p2->chip = p1->chip;
-                    //p2->size = 17;
-                    update_node_info(index,p1->chip);
-                    RadioTxMsgListAdd(index,pkg,17);
-                    //p2->freq = CN470_FIRST_RX1_CHANNEL + ( p2->chip ) * CN470_STEPWIDTH_RX1_CHANNEL;
-                    //p2->freq = ( uint32_t )( ( double )freq / ( double )FREQ_STEP );
-                    //Radio.Send(radiotxbuffer[1],17);
-                    #endif
                     break;
                 case FRAME_TYPE_DATA_UNCONFIRMED_UP:
                     //DEBUG_OUTPUT_EVENT(p1->chip,EV_DATA_UNCONFIRMED_UP);
@@ -190,67 +168,15 @@ int Radio_routin(void *data){
                     isMicOk = false;
                     payload = pkg;
                     macHdr.Value = payload[pktHeaderLen++];
-                    //DEBUG_OUTPUT_EVENT(p1->chip,EV_DATA_CONFIRMED_UP);
-                    /*// Check if the received payload size is valid
-                    getPhy.UplinkDwellTime = LoRaMacParams.DownlinkDwellTime;
-                    getPhy.Datarate = McpsIndication.RxDatarate;
-                    getPhy.Attribute = PHY_MAX_PAYLOAD;
 
-                    // Get the maximum payload length
-                    if( RepeaterSupport == true )
-                    {
-                        getPhy.Attribute = PHY_MAX_PAYLOAD_REPEATER;
-                    }
-                    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
-                    if( MAX( 0, ( int16_t )( ( int16_t )size - ( int16_t )LORA_MAC_FRMPAYLOAD_OVERHEAD ) ) > phyParam.Value )
-                    {
-                        McpsIndication.Status = LORAMAC_EVENT_INFO_STATUS_ERROR;
-                        PrepareRxDoneAbort( );
-                        return;
-                    }*/
-                    hexdump(payload,p1->size);
                     address = payload[pktHeaderLen++];
                     address |= ( (uint32_t)payload[pktHeaderLen++] << 8 );
                     address |= ( (uint32_t)payload[pktHeaderLen++] << 16 );
                     address |= ( (uint32_t)payload[pktHeaderLen++] << 24 );
-                    if(!verify_net_addr(address))
+                    if(!node_verify_net_addr(address))
                     {
                         break;
                     }
-                    nodebase_node_pragma[address].jiffies1 = p1->jiffies + LoRaMacParams.ReceiveDelay1;
-                    nodebase_node_pragma[address].jiffies2 = p1->jiffies + LoRaMacParams.ReceiveDelay2;
-                    printk("%08X\r\n",address);
-                    //break;
-                    /*if( address != LoRaMacDevAddr )
-                    {
-                        curMulticastParams = MulticastChannels;
-                        while( curMulticastParams != NULL )
-                        {
-                            if( address == curMulticastParams->Address )
-                            {
-                                multicast = 1;
-                                nwkSKey = curMulticastParams->NwkSKey;
-                                appSKey = curMulticastParams->AppSKey;
-                                downLinkCounter = curMulticastParams->DownLinkCounter;
-                                break;
-                            }
-                            curMulticastParams = curMulticastParams->Next;
-                        }
-                        if( multicast == 0 )
-                        {
-                            // We are not the destination of this frame.
-                            McpsIndication.Status = LORAMAC_EVENT_INFO_STATUS_ADDRESS_FAIL;
-                            PrepareRxDoneAbort( );
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        multicast = 0;
-                        nwkSKey = LoRaMacNwkSKey;
-                        appSKey = LoRaMacAppSKey;
-                        downLinkCounter = DownLinkCounter;
-                    }*/
 
                     downLinkCounter = ( uint16_t )nodebase_node_pragma[address].sequenceCounter_Up;
                     fCtrl.Value = payload[pktHeaderLen++];
@@ -293,19 +219,10 @@ int Radio_routin(void *data){
                         }
                     }
 
-                    /*// Check for a the maximum allowed counter difference
-                    getPhy.Attribute = PHY_MAX_FCNT_GAP;
-                    phyParam = RegionGetPhyParam( LoRaMacRegion, &getPhy );
-                    if( sequenceCounterDiff >= phyParam.Value )
-                    {
-                        McpsIndication.Status = LORAMAC_EVENT_INFO_STATUS_DOWNLINK_TOO_MANY_FRAMES_LOSS;
-                        McpsIndication.DownLinkCounter = downLinkCounter;
-                        PrepareRxDoneAbort( );
-                        return;
-                    }*/
-
                     if( isMicOk == true )
                     {
+                        node_update_info(index,p1);
+                        node_time_start(address);
                     	switch(macHdr.Bits.MType)
                     	{
                     		case FRAME_TYPE_DATA_CONFIRMED_UP:
@@ -321,90 +238,10 @@ int Radio_routin(void *data){
                     	}
                         if(fCtrl.Bits.Ack)
                         {
-                            kfree(nodebase_node_pragma[address].repeatbuf);
-                            nodebase_node_pragma[address].repeatbuf = NULL;
-                            nodebase_node_pragma[address].repeatlen = 0;
-                            del_timer(nodebase_node_pragma[address].timer);
-                            kfree(nodebase_node_pragma[address].timer);
-                            nodebase_node_pragma[address].timer = NULL;
+                            node_delete_repeat_buf(address);
+                            node_timer_stop(address);
                         }
-                        /*McpsIndication.Status = LORAMAC_EVENT_INFO_STATUS_OK;
-                        McpsIndication.Multicast = multicast;
-                        McpsIndication.FramePending = fCtrl.Bits.FPending;
-                        McpsIndication.Buffer = NULL;
-                        McpsIndication.BufferSize = 0;
-                        McpsIndication.DownLinkCounter = downLinkCounter;
-
-                        McpsConfirm.Status = LORAMAC_EVENT_INFO_STATUS_OK;
-
-                        AdrAckCounter = 0;
-                        MacCommandsBufferToRepeatIndex = 0;
-
-                        // Update 32 bits downlink counter
-                        if( multicast == 1 )
-                        {
-                            McpsIndication.McpsIndication = MCPS_MULTICAST;
-
-                            if( ( curMulticastParams->DownLinkCounter == downLinkCounter ) &&
-                                ( curMulticastParams->DownLinkCounter != 0 ) )
-                            {
-                                McpsIndication.Status = LORAMAC_EVENT_INFO_STATUS_DOWNLINK_REPEATED;
-                                McpsIndication.DownLinkCounter = downLinkCounter;
-                                PrepareRxDoneAbort( );
-                                return;
-                            }
-                            curMulticastParams->DownLinkCounter = downLinkCounter;
-                        }
-                        else*/
-                        {
-                            /*if( macHdr.Bits.MType == FRAME_TYPE_DATA_CONFIRMED_DOWN )
-                            {
-                                SrvAckRequested = true;
-                                McpsIndication.McpsIndication = MCPS_CONFIRMED;
-
-                                if( ( DownLinkCounter == downLinkCounter ) &&
-                                    ( DownLinkCounter != 0 ) )
-                                {
-                                    // Duplicated confirmed downlink. Skip indication.
-                                    // In this case, the MAC layer shall accept the MAC commands
-                                    // which are included in the downlink retransmission.
-                                    // It should not provide the same frame to the application
-                                    // layer again.
-                                    skipIndication = true;
-                                }
-                            }
-                            else
-                            {
-                                SrvAckRequested = false;
-                                McpsIndication.McpsIndication = MCPS_UNCONFIRMED;
-
-                                if( ( DownLinkCounter == downLinkCounter ) &&
-                                    ( DownLinkCounter != 0 ) )
-                                {
-                                    McpsIndication.Status = LORAMAC_EVENT_INFO_STATUS_DOWNLINK_REPEATED;
-                                    McpsIndication.DownLinkCounter = downLinkCounter;
-                                    PrepareRxDoneAbort( );
-                                    return;
-                                }
-                            }*/
-                            nodebase_node_pragma[address].sequenceCounter_Up = downLinkCounter;
-                        }
-
-                        // This must be done before parsing the payload and the MAC commands.
-                        // We need to reset the MacCommandsBufferIndex here, since we need
-                        // to take retransmissions and repetitions into account. Error cases
-                        // will be handled in function OnMacStateCheckTimerEvent.
-                        /*if( McpsConfirm.McpsRequest == MCPS_CONFIRMED )
-                        {
-                            if( fCtrl.Bits.Ack == 1 )
-                            {// Reset MacCommandsBufferIndex when we have received an ACK.
-                                MacCommandsBufferIndex = 0;
-                            }
-                        }
-                        else
-                        {// Reset the variable if we have received any valid frame.
-                            MacCommandsBufferIndex = 0;
-                        }*/
+                        nodebase_node_pragma[address].sequenceCounter_Up = downLinkCounter;
 
                         // Process payload and MAC commands
                         if( ( ( p1->size - 4 ) - appPayloadStartIndex ) > 0 )
@@ -419,7 +256,7 @@ int Radio_routin(void *data){
                             frameLen = ( p1->size - 4 ) - appPayloadStartIndex;
 
                             //McpsIndication.Port = port;
-                            printk("%02X, %04X, %02X, %02X, %08X\r\n",port,sequenceCounter, fCtrl.Value,frameLen,address);
+                            //printk("%02X, %04X, %02X, %02X, %08X\r\n",port,sequenceCounter, fCtrl.Value,frameLen,address);
                             memset(LoRaMacRxPayload,0,300);
                             if( port == 0 )
                             {
@@ -457,8 +294,8 @@ int Radio_routin(void *data){
                                                        UP_LINK,
                                                        sequenceCounter,
                                                        LoRaMacRxPayload );
-                                hexdump(nodebase_node_pragma[address].AppSKey,16);
-                                hexdump(payload + appPayloadStartIndex,frameLen);
+                                //hexdump(nodebase_node_pragma[address].AppSKey,16);
+                                //hexdump(payload + appPayloadStartIndex,frameLen);
                                 hexdump(LoRaMacRxPayload,frameLen);
 
                                 /*if( skipIndication == false )

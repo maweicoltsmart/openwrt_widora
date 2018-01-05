@@ -104,8 +104,9 @@ void str_echo(int sockfd)
         tmp[index ++] = 0x00;
         tmp[index ++] = 0x00;
         tmp[index ++] = 0x01;   // port
+        tmp[index ++] = len;    // len
         memcpy(&tmp[index],buffer,len);
-        tmp[index + len] = len;
+
         write(fd,tmp,10 + len);
         /*len = send(sockfd, buffer, len, 0);
     if(len < 1)

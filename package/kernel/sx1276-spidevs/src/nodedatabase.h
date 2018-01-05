@@ -40,8 +40,9 @@ typedef struct
     uint8_t AppSKey[16];
     uint8_t chip;
     struct timer_list *timer;
-    uint32_t jiffies1;
-    uint32_t jiffies2;
+    uint32_t jiffies;
+    //uint32_t jiffies1;
+    //uint32_t jiffies2;
     uint32_t sequenceCounter_Down;
     uint32_t sequenceCounter_Up;
     struct lora_tx_data lora_tx_list;
@@ -52,7 +53,7 @@ typedef struct
     bool need_ack;  // gateway request ack
     uint8_t cmdbuf[LORA_MAC_COMMAND_MAX_LENGTH];
     uint8_t cmdlen;
-    uint8_t *repeatbuf;
+    uint8_t repeatbuf[256];
     uint16_t repeatlen;
 }node_pragma_t;
 
@@ -73,15 +74,19 @@ typedef struct
     uint8_t chip;
     int16_t rssi;
     int8_t snr;
+    uint32_t jiffies;
 }node_join_info_t;
 
 void database_init(void);
-int16_t database_node_join(node_join_info_t* node,uint32_t jiffiesval);
-uint8_t verify_net_addr(uint32_t addr);
-void get_msg_to_send( unsigned long index );
+void node_delete_repeat_buf(uint32_t index);
+int16_t node_database_join(node_join_info_t* node);
+uint8_t node_verify_net_addr(uint32_t addr);
+void node_get_msg_to_send( unsigned long index );
 int RadioTxMsgListAdd(struct lora_tx_data *p);
-void update_node_info(int index,int chip);
-
+void node_timer_stop(uint32_t index);
+void node_time_start(uint32_t index);
+void node_update_info(int index,struct lora_rx_data *p1);
+void node_get_net_addr(uint32_t *addr,uint8_t *ieeeaddr);
 
 extern const gateway_pragma_t gateway_pragma;
 extern node_pragma_t nodebase_node_pragma[];
