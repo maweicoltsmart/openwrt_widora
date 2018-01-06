@@ -172,7 +172,7 @@ int init_procfs_lora(void)
 
 
 no_foo:
-    remove_proc_entry("jiffies", lora_dir);
+    remove_proc_entry("MODULE_NAME", lora_dir);
 
 out:
     return rv;
