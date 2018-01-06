@@ -172,7 +172,8 @@ int init_procfs_lora(void)
 
 
 no_foo:
-    remove_proc_entry("MODULE_NAME", lora_dir);
+    printk("%s create fail\r\n",MODULE_NAME);
+    remove_proc_entry(MODULE_NAME, lora_dir);
 
 out:
     return rv;
@@ -181,8 +182,9 @@ out:
 
 void cleanup_procfs_lora(void)
 {
-    remove_proc_entry("lora_cfg_rx", lora_cfg_rx_file);
-    remove_proc_entry("lora_cfg_tx", lora_cfg_tx_file);
+    remove_proc_entry("lora_cfg_rx", lora_dir);
+    remove_proc_entry("lora_cfg_tx", lora_dir);
     //remove_proc_entry("lora_chan", lora_chan_file);
     remove_proc_entry(MODULE_NAME, NULL);
+    //remove_proc_entry(MODULE_NAME, NULL);
 }
