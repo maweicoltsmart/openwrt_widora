@@ -56,7 +56,7 @@
 static struct fasync_struct *lora_node_event_button_fasync;
 
 /* 定义并初始化等待队列头 */
-static DECLARE_WAIT_QUEUE_HEAD(lora_wait);
+DECLARE_WAIT_QUEUE_HEAD(read_from_user_space_wait);
 
 
 static struct class *lora_dev_class;
@@ -78,7 +78,7 @@ struct cdev cdev;
  */
 
 bool isMaster = true;
-bool rx_done = 0;
+bool have_data = 0;
 RadioEvents_t RadioEvents;
 
 
@@ -152,7 +152,7 @@ void OnRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t sn
     RssiValue = rssi;
     SnrValue = snr;
     State = RX;
-    rx_done = 1;
+    have_data = 1;
     wake_up(&lora_wait);
 }
 
@@ -305,7 +305,7 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
     //SX1276IoIrqInit(1);
     //Radio.Rx( 0,RX_TIMEOUT_VALUE );
     //Radio.Rx( 1,RX_TIMEOUT_VALUE );
-    printk("create radio routin\r\n");
+    printk("create radio routin, HZ = %d\r\n",HZ);
     radio_routin = kthread_create(Radio_routin, NULL, "Radio routin thread");
     wake_up_process(radio_routin);
     return 0;
@@ -313,48 +313,24 @@ static int lora_dev_open(struct inode * inode, struct file * filp)
 
 static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,loff_t *ppos)
 {
-    #if 0
     int ret = 0;
-    struct lora_rx_data *get;
-    struct list_head *pos;
-    while (list_empty(&lora_rx_list.list)) /* 没有数据可读，考虑为什么不用if，而用while */
+    uint8_t buffer[256];
+    while ((ret = Radio2ServerMsgListGet(buffer)) < 0) /* 没有数据可读，考虑为什么不用if，而用while */
     {
         //printk("%s,%d\r\n",__func__,__LINE__);
         if (filp->f_flags & O_NONBLOCK)
             return -EAGAIN;
-        rx_done = 0;
-        wait_event_interruptible(lora_wait,rx_done);
+        have_data = 0;
+        wait_event_interruptible(read_from_user_space_wait,have_data);
     }
     //printk("%s,%d\r\n",__func__,__LINE__);
-    pos = lora_rx_list.list.next;
-    get = list_entry(pos, struct lora_rx_data, list);
-    if(!get)
-    {
-        return 0;
-    }
-    //printk("%s, %d, len = %d\r\n",__func__,__LINE__,get->len);
     /*读数据到用户空间*/
-    if (copy_to_user(user, (void*)(get->buffer), get->len))
+    if (copy_to_user(user, (void*)buffer, ret))
     {
         //printk("%s, %d, len = %d\r\n",__func__,__LINE__,get->len);
         ret =  - EFAULT;
     }
-    else
-    {
-        //printk(KERN_INFO "read %d bytes(s) from list\n", get->len);
-        //printk("%s, %d, len = %d\r\n",__func__,__LINE__,get->len);
-        ret = get->len;
-    }
-    //printk("%s,%d\r\n",__func__,__LINE__);
-    list_del(&get->list);
-    if(get->len > 0)
-    {
-        kfree(get->buffer);
-    }
-    kfree(get);
     return ret;
-    #endif
-    return 0;
 }
 
 void lora_dev_tx_queue_routin( unsigned long data )

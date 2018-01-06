@@ -48,16 +48,18 @@ creat_msg_q:
     //从队列中获取消息，直到遇到end消息为止
     while(1)
     {
-        if(msgrcv(msgid, (void*)&data, BUFFER_SIZE, msgtype, 0) == -1)
+        if((len = msgrcv(msgid, (void*)&data, BUFFER_SIZE, msgtype, 0)) < 0)
         {
             printf("msgrcv failed with errno: %d\n", errno);
             goto creat_msg_q;
         }
-        len = send(sockfd, data.text, strlen(data.text), 0);
+        hexdump(data.text,len);
+        len = send(sockfd, data.text, len, 0);
         if(len < 1)
         {
             pthread_exit(NULL);
         }
+
         memset(data.text,0,BUFFER_SIZE);
     }
     //删除消息队列

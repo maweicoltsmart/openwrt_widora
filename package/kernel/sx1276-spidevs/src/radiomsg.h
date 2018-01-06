@@ -15,6 +15,12 @@ struct lora_rx_data{
     struct list_head list;
 };
 
+struct lora_rx_server_data{
+    uint8_t *buffer;
+    uint16_t size;
+    struct list_head list;
+};
+
 struct lora_tx_data{
     uint8_t *buffer;
     //uint32_t chip;
@@ -29,5 +35,6 @@ struct lora_tx_data{
 void RadioMsgListInit(void);
 int RadioRxMsgListAdd( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr );
 int RadioRxMsgListGet(uint8_t *buf);
-
+int Radio2ServerMsgListAdd( uint32_t addr,uint8_t fPort,uint8_t *payload, uint16_t size );
+int Radio2ServerMsgListGet( uint8_t *buffer );
 #endif

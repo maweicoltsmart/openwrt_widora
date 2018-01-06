@@ -43,12 +43,13 @@ creat_msg_q:
     //从队列中获取消息，直到遇到end消息为止
     while(1)
     {
-        if(msgrcv(msgid, (void*)&data, BUFFER_SIZE, msgtype, 0) == -1)
+        if((len = msgrcv(msgid, (void*)&data, BUFFER_SIZE, msgtype, 0)) < 0)
         {
 			printf("recreat msg q %d\r\n",__LINE__);
 			goto creat_msg_q;
         }
-        len = send(sockfd, data.text, strlen(data.text), 0);
+        hexdump(data.text,len);
+        len = send(sockfd, data.text, len, 0);
         if(len < 1)
         {
         	printf("reconnect %d\r\n",__LINE__);
@@ -70,7 +71,7 @@ void *tcp_client_routin(void *data)
     int sock_cli;
     struct sockaddr_in servaddr;
     int err;
-	int flag,old_flag; 
+	int flag,old_flag;
 	int ret;
     pthread_t main_tid;
     int fd = *(int*)data;
@@ -83,71 +84,71 @@ connect:
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = inet_addr("192.168.1.149");
     servaddr.sin_port = htons(PORT);  //服务器端口
-	flag |= O_NONBLOCK;  
-    old_flag = flag = fcntl(sock_cli, F_SETFL, O_NONBLOCK ); //将连接套接字设置为非阻塞。 
+	flag |= O_NONBLOCK;
+    old_flag = flag = fcntl(sock_cli, F_SETFL, O_NONBLOCK ); //将连接套接字设置为非阻塞。
     //连接服务器，成功返回0，错误返回-1
     ret = connect(sock_cli, (struct sockaddr *)&servaddr, sizeof(servaddr));
-	if(ret != 0)  
-	{  
-		if(errno != EINPROGRESS) //connect返回错误。  
-		{  
-			//printf("connect failed\n");  
-		}  
-		//连接正在建立  
-		else  
-		{  
-			struct timeval tm;	//1.定时	
-			tm.tv_sec = 5;  
-			tm.tv_usec = 0;  
-		  
-			fd_set wset;  
-			FD_ZERO(&wset);  
-			FD_SET(sock_cli,&wset);   
-			//printf("selcet start\n");  
-			int res = select(sock_cli+1, NULL, &wset, NULL, &tm);  
-			//printf("select end\n");  
-			if(res <= 0)  
-			{  
-				//printf("res <= 0\n");  
-				close(sock_cli);  
+	if(ret != 0)
+	{
+		if(errno != EINPROGRESS) //connect返回错误。
+		{
+			//printf("connect failed\n");
+		}
+		//连接正在建立
+		else
+		{
+			struct timeval tm;	//1.定时
+			tm.tv_sec = 5;
+			tm.tv_usec = 0;
+
+			fd_set wset;
+			FD_ZERO(&wset);
+			FD_SET(sock_cli,&wset);
+			//printf("selcet start\n");
+			int res = select(sock_cli+1, NULL, &wset, NULL, &tm);
+			//printf("select end\n");
+			if(res <= 0)
+			{
+				//printf("res <= 0\n");
+				close(sock_cli);
 				sleep(1);
 				goto connect;
-				//return 2;  
-			}  
-					  
-			if(FD_ISSET(sock_cli,&wset))  
-			{  
-				//printf("test \n");	
-				int err = -1;  
-				socklen_t len = sizeof(int);  
-						  
-				if(getsockopt(sock_cli, SOL_SOCKET, SO_ERROR, &err, &len ) < 0) //两种错误处理方式	
-				{  
-					printf("errno :%d %s\n",errno, strerror(errno));  
-					close(sock_cli);  
+				//return 2;
+			}
+
+			if(FD_ISSET(sock_cli,&wset))
+			{
+				//printf("test \n");
+				int err = -1;
+				socklen_t len = sizeof(int);
+
+				if(getsockopt(sock_cli, SOL_SOCKET, SO_ERROR, &err, &len ) < 0) //两种错误处理方式
+				{
+					printf("errno :%d %s\n",errno, strerror(errno));
+					close(sock_cli);
 					sleep(1);
 					goto connect;
-					//return 3;  
-				}  
-		  
-				if(err)  
-				{  
-					//printf("connect faile\n");	
-					errno = err;  
-					close(sock_cli);  
-					//return 4;  
+					//return 3;
+				}
+
+				if(err)
+				{
+					//printf("connect faile\n");
+					errno = err;
+					close(sock_cli);
+					//return 4;
 					sleep(1);
 					goto connect;
-				}  
-		  
-				printf("connetct success\n");  
-			}  
-		  
-		}  
-		  
-	}  
-		  
-	fcntl(sock_cli, F_SETFL, old_flag); //最后恢复sock的阻塞属性。  
+				}
+
+				printf("connetct success\n");
+			}
+
+		}
+
+	}
+
+	fcntl(sock_cli, F_SETFL, old_flag); //最后恢复sock的阻塞属性。
 #if 0
 	{
         perror("connect");

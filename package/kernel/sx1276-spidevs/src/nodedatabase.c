@@ -413,6 +413,13 @@ void node_get_net_addr(uint32_t *addr,uint8_t *ieeeaddr)
     *addr = 0;
     return;
 }
+
+void node_get_ieeeaddr(uint32_t addr,uint8_t *ieeeaddr)
+{
+    memcpy(ieeeaddr,nodebase_node_pragma[addr].DevEUI,8);
+    return;
+}
+
 int RadioTxMsgListAdd(struct lora_tx_data *p)
 {
     //struct timer_list *timer;

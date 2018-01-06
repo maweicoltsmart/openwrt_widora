@@ -43,7 +43,7 @@
 #include "GatewayPragma.h"
 
 int fd_proc_cfg_rx,fd_proc_cfg_tx;
-int fd_cdev;
+int fd_cdev = 0;
 
 
 static uint8_t *LoRaMacAppKey;
@@ -222,6 +222,9 @@ void *Radio_routin(void *param){
     MibRequestConfirm_t mibReq;
     int msgid = -1;
     //struct msg_st data;
+    struct msg_st data;
+    long int msgtype = 0; //注意1
+
     int len;
     //int fd = *(int *)data;
     int chip = 0;
@@ -246,81 +249,20 @@ void *Radio_routin(void *param){
     }
     while(1)
     {
-        sleep(1);
-    #if 0
-        memset(radiorxbuffer,0,300);
+        //sleep(1);
+        //printf("fd_cdev = %d\r\n", fd_cdev);
         if((len = read(fd_cdev,radiorxbuffer,300)) > 0)
         {
-            //printf("%s, %d, %d\r\n",__func__,__LINE__,len);
-            usleep(1000000);
-            p1 = (pst_lora_rx_data_type)radiorxbuffer;
-            pkg = (uint8_t*)&radiorxbuffer[sizeof(st_lora_rx_data_type)];
-            macHdr.Value = pkg[0];
-            printf("%s, %d, %d\r\n",__func__,__LINE__,macHdr.Value);
-            switch( macHdr.Bits.MType )
-            {
-                case FRAME_TYPE_JOIN_REQ:
-
-                    memcpy(node_join_info.APPEUI,pkg + 1,8);
-                    memcpy(node_join_info.DevEUI,pkg + 9,8);
-                    node_join_info.DevNonce = *(uint16_t*)&pkg[17];
-                    //printf("%s, %d, %d\r\n",__func__,__LINE__,len);
-                    index = database_node_join(&node_join_info);
-                    //printf("%s, %d, %d\r\n",__func__,__LINE__,len);
-                    memset(radiotxbuffer[0],0,300);
-                    memset(radiotxbuffer[1],0,300);
-                    p2 = (pst_lora_tx_data_type)&radiotxbuffer[0];
-                    p3 = (pst_lora_tx_data_type)&radiotxbuffer[1];
-                    p3->jiffies_start = p1->jiffies + (LoRaMacParams.JoinAcceptDelay1 / 1000 * CPU_SYS_TICK_HZ) + 10;   // 10 jiffis = 100ms
-                    p3->jiffies_end = p1->jiffies + ((LoRaMacParams.JoinAcceptDelay1 + LoRaMacParams.MaxRxWindow + LoRaMacParams.JoinAcceptDelay2) / 1000 * CPU_SYS_TICK_HZ);
-                    p3->chip = p1->chip;
-                    p3->len = 17;
-                    pkg1 = (uint8_t*)&radiotxbuffer[0][sizeof(st_lora_tx_data_type)];
-                    pkg2 = (uint8_t*)&radiotxbuffer[1][sizeof(st_lora_tx_data_type)];
-                    macHdr.Bits.MType = FRAME_TYPE_JOIN_ACCEPT;
-                    pkg1[0] = macHdr.Value;
-                    pkg2[0] = macHdr.Value;
-                    printf("%s,%d,%d,%d\r\n",__func__,__LINE__,pkg1[0],pkg2[0]);
-                    memcpy(&pkg1[1],gateway_pragma.AppNonce,3); // AppNonce
-                    memcpy(&pkg1[1 + 3],gateway_pragma.NetID,3); // NetID
-                    memcpy(&pkg1[1 + 3 + 3],nodebase_node_pragma[index].DevAddr,4);  // DevAddr
-                    pkg1[1 + 3 + 3 + 4] = 0; //DLSettings
-                    pkg1[1 + 3 + 3 + 4 + 1] = 0; //RxDelay
-                    printf("%s,%d,%d,%d\r\n",__func__,__LINE__,pkg1[0],pkg2[0]);
-                    LoRaMacJoinComputeMic(pkg1,13,gateway_pragma.APPKEY,(uint32_t *)&pkg1[1 + 3 + 3 + 4 + 1 + 1]);   // mic
-                    printf("%s,%d,%d,%d\r\n",__func__,__LINE__,pkg1[0],pkg2[0]);
-                    LoRaMacJoinDecrypt(&pkg1[1],12 + 4,gateway_pragma.APPKEY,pkg2 + 1);
-                    printf("%s,%d,%d,%d\r\n",__func__,__LINE__,pkg1[0],pkg2[0]);
-                    printf("data is: 0x");
-                    hexdump((const unsigned char *)p3,p3->len + sizeof(st_lora_tx_data_type));
-                    write(fd_cdev,(void*)p3,p3->len + sizeof(st_lora_tx_data_type));
-                    break;
-                case FRAME_TYPE_DATA_UNCONFIRMED_UP:
-                    break;
-                case FRAME_TYPE_DATA_CONFIRMED_UP:
-
-                    break;
-                case FRAME_TYPE_PROPRIETARY:
-                    break;
-                default:
-
-                    break;
-            }
-            /*
             data.msg_type = 1;    //注意2
-            memcpy(data.text, radio2tcpbuffer,len);
+            memcpy(data.text, radiorxbuffer,len);
             //向队列发送数据
+            //printf("send msg\r\n");
             if(msgsnd(msgid, (void*)&data, len, 0) == -1)
             {
                 printf("msgsnd failed\r\n");
                 goto creat_msg_q;
-            }*/
+            }
         }
-        else
-        {
-            usleep(10000);
-        }
-        #endif
     }
 }
 

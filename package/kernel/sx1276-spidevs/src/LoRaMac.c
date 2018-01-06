@@ -271,7 +271,9 @@ int Radio_routin(void *data){
                                                            sequenceCounter,
                                                            LoRaMacRxPayload );
 
-                                    hexdump(LoRaMacRxPayload,frameLen);                                 // Decode frame payload MAC commands
+                                    hexdump(LoRaMacRxPayload,frameLen);
+                                    Radio2ServerMsgListAdd(address,port,LoRaMacRxPayload,frameLen);
+                                    // Decode frame payload MAC commands
                                     //ProcessMacCommands( LoRaMacRxPayload, 0, frameLen, snr );
                                 }
                                 else
@@ -297,7 +299,7 @@ int Radio_routin(void *data){
                                 //hexdump(nodebase_node_pragma[address].AppSKey,16);
                                 //hexdump(payload + appPayloadStartIndex,frameLen);
                                 hexdump(LoRaMacRxPayload,frameLen);
-
+                                Radio2ServerMsgListAdd(address,port,LoRaMacRxPayload,frameLen);
                                 /*if( skipIndication == false )
                                 {
                                     McpsIndication.Buffer = LoRaMacRxPayload;
