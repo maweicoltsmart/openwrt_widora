@@ -36,6 +36,7 @@
 #include "LoRaDevOps.h"
 //#include "routin.h"
 
+extern void serverpkgformat(void);
 void *tcp_client_routin(void *data);
 void* tcp_server_routin(void *data);
 
@@ -54,6 +55,7 @@ int main(int argc ,char *argv[])
     int msgid = -1;
     struct msg_st data;
     int len;
+    serverpkgformat();
     ret = pthread_create(&radio_routin_handle, NULL, Radio_routin, &fd);
     ret = pthread_create(&tcp_client_handle, NULL, tcp_client_routin, &fd);
     ret = pthread_create(&tcp_server_handle, NULL, tcp_server_routin, &fd);
