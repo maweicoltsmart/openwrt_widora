@@ -83,6 +83,7 @@ int16_t node_database_join(node_join_info_t* node);
 uint8_t node_verify_net_addr(uint32_t addr);
 void node_get_ieeeaddr(uint32_t addr,uint8_t *ieeeaddr);
 void node_get_msg_to_send( unsigned long index );
+void node_have_confirm(uint32_t addr);
 int RadioTxMsgListAdd(struct lora_tx_data *p);
 void node_timer_stop(uint32_t index);
 void node_time_start(uint32_t index);

@@ -71,6 +71,7 @@ void OnMacRxTimeout( int chip )
     Radio.Sleep( chip);
     Radio.Rx( chip,0 );
     //State = RX_TIMEOUT;
+    printk("%s, %d\r\n",__func__,__LINE__);
 }
 
 void OnMacRxError( int chip )
@@ -238,8 +239,7 @@ int Radio_routin(void *data){
                     	}
                         if(fCtrl.Bits.Ack)
                         {
-                            node_delete_repeat_buf(address);
-                            node_timer_stop(address);
+                            node_have_confirm(address);
                         }
                         nodebase_node_pragma[address].sequenceCounter_Up = downLinkCounter;
 

@@ -75,7 +75,7 @@ void LoRaMacInit(void)
     int chip = 0;
     int i;
     st_RadioCfg stRadioCfg;
-
+    //const uint8_t symbpreamble[12] = {0,1,2,3,4,5,6,24,14,9,};
     GetGatewayPragma();
 
     fd_proc_cfg_rx = open("/proc/lora_procfs/lora_cfg_rx",O_RDWR);
@@ -183,7 +183,7 @@ void LoRaMacInit(void)
     write(fd_proc_cfg_tx,&stRadioCfg,sizeof(st_RadioCfg));
 
     sleep(1);
-    fd_cdev = open("/dev/lora_radio",O_RDWR);
+    fd_cdev = open("/dev/lora_radio",O_RDWR | O_NONBLOCK);
     if (fd_cdev < 0)
     {
         printf("open lora_radio error\r\n");
@@ -262,6 +262,10 @@ void *Radio_routin(void *param){
                 printf("msgsnd failed\r\n");
                 goto creat_msg_q;
             }
+        }
+        else
+        {
+            usleep(100000);
         }
     }
 }
