@@ -8,6 +8,7 @@ typedef enum{
 	EV_RXCOMPLETE,
 	EV_TXCOMPLETE,
 	EV_TX_START,
+	EV_DATA_PREPARE_TO_SEND,
 	EV_LAST
 }en_Event;
 

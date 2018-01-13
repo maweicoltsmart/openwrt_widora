@@ -26,11 +26,11 @@ void LoRaMacInit(void)
 
 void OnMacRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
-    Radio.Sleep( chip);
     RadioRxMsgListAdd( chip,payload,size,rssi,snr );
-	DEBUG_OUTPUT_EVENT(chip, EV_RXCOMPLETE);
-	DEBUG_OUTPUT_DATA(payload,size);
+    Radio.Sleep( chip);
     Radio.Rx( chip,0 );
+    DEBUG_OUTPUT_EVENT(chip, EV_RXCOMPLETE);
+    //DEBUG_OUTPUT_DATA(payload,size);
     rx_done = true;
     wake_up(&lora_wait);
 }
@@ -222,21 +222,21 @@ int Radio_routin(void *data){
 
                     if( isMicOk == true )
                     {
-                        node_update_info(index,p1);
-                        node_time_start(address);
-                    	switch(macHdr.Bits.MType)
-                    	{
-                    		case FRAME_TYPE_DATA_CONFIRMED_UP:
-                    			nodebase_node_pragma[address].is_ack_req = true;
-								DEBUG_OUTPUT_EVENT(p1->chip,EV_DATA_CONFIRMED_UP);
-								break;
-							case FRAME_TYPE_DATA_UNCONFIRMED_UP:
-								nodebase_node_pragma[address].is_ack_req = false;
-								DEBUG_OUTPUT_EVENT(p1->chip,EV_DATA_UNCONFIRMED_UP);
-								break;
-							default:
-								break;
-                    	}
+                        node_update_info(address,p1);
+                        node_timer_start(address);
+                        switch(macHdr.Bits.MType)
+                        {
+                            case FRAME_TYPE_DATA_CONFIRMED_UP:
+                                nodebase_node_pragma[address].is_ack_req = true;
+                                DEBUG_OUTPUT_EVENT(p1->chip,EV_DATA_CONFIRMED_UP);
+                                break;
+                            case FRAME_TYPE_DATA_UNCONFIRMED_UP:
+                                nodebase_node_pragma[address].is_ack_req = false;
+                                DEBUG_OUTPUT_EVENT(p1->chip,EV_DATA_UNCONFIRMED_UP);
+                                break;
+                            default:
+                                break;
+                        }
                         if(fCtrl.Bits.Ack)
                         {
                             node_have_confirm(address);

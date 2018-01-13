@@ -72,7 +72,8 @@ int16_t node_database_join(node_join_info_t* node)
                 nodebase_node_pragma[loop].rssi = node->rssi;
                 nodebase_node_pragma[loop].jiffies = node->jiffies;
                 nodebase_node_pragma[loop].state = enStateJoinning;
-                node_time_start(loop);
+                node_prepare_joinaccept_package(loop);
+                node_timer_start(loop);
             }
 
             return loop;
@@ -106,7 +107,8 @@ int16_t node_database_join(node_join_info_t* node)
         nodebase_node_pragma[loop].rssi = node->rssi;
         nodebase_node_pragma[loop].jiffies = node->jiffies;
         nodebase_node_pragma[loop].state = enStateJoinning;
-        node_time_start(loop);
+        node_prepare_joinaccept_package(loop);
+        node_timer_start(loop);
         node_cnt ++;
     }
     else
@@ -134,60 +136,43 @@ void node_delete_repeat_buf(uint32_t index)
 
 void node_timer_stop(uint32_t index)
 {
-    if(nodebase_node_pragma[index].timer != NULL)
+    if(nodebase_node_pragma[index].timer1 != NULL)
     {
-        del_timer(nodebase_node_pragma[index].timer);
-        kfree(nodebase_node_pragma[index].timer);
-        nodebase_node_pragma[index].timer = NULL;
+        del_timer(nodebase_node_pragma[index].timer1);
+    }
+    if(nodebase_node_pragma[index].timer2 != NULL)
+    {
+        del_timer(nodebase_node_pragma[index].timer2);
     }
 }
 
-void node_time_start(uint32_t index)
+void node_timer_start(uint32_t index)
 {
-    uint32_t jiffiesval;
     node_timer_stop(index);
-    switch(nodebase_node_pragma[index].state)
+
+    if(nodebase_node_pragma[index].timer1 == NULL)
     {
-        case enStateInit:
-        case enStateJoinning:
-            if(time_after((unsigned long)(nodebase_node_pragma[index].jiffies + LoRaMacParams.JoinAcceptDelay1),jiffies))
-            {
-                jiffiesval = nodebase_node_pragma[index].jiffies + LoRaMacParams.JoinAcceptDelay1;
-            }
-            else if(time_after((unsigned long)(nodebase_node_pragma[index].jiffies + LoRaMacParams.JoinAcceptDelay2),jiffies))
-            {
-                jiffiesval = nodebase_node_pragma[index].jiffies + LoRaMacParams.JoinAcceptDelay2;
-            }
-            else
-            {
-                return;
-            }
-            break;
-        case enStateJoined:
-            if(time_after((unsigned long)(nodebase_node_pragma[index].jiffies + LoRaMacParams.ReceiveDelay1),jiffies))
-            {
-                jiffiesval = nodebase_node_pragma[index].jiffies + LoRaMacParams.ReceiveDelay1;
-            }
-            else if(time_after((unsigned long)(nodebase_node_pragma[index].jiffies + LoRaMacParams.ReceiveDelay2),jiffies))
-            {
-                jiffiesval = nodebase_node_pragma[index].jiffies + LoRaMacParams.ReceiveDelay2;
-            }
-            else
-            {
-                return;
-            }
-            break;
-        default:
-            break;
+        nodebase_node_pragma[index].timer1 = kmalloc(sizeof(struct timer_list),GFP_KERNEL);
+        init_timer(nodebase_node_pragma[index].timer1);
+        nodebase_node_pragma[index].timer1->function = node_get_msg_to_send;
+        nodebase_node_pragma[index].timer1->data = (unsigned long)index;
     }
-    nodebase_node_pragma[index].timer = kmalloc(sizeof(struct timer_list),GFP_KERNEL);
-    if(nodebase_node_pragma[index].timer)
+    if(nodebase_node_pragma[index].timer2 == NULL)
     {
-        init_timer(nodebase_node_pragma[index].timer);
-        nodebase_node_pragma[index].timer->function = node_get_msg_to_send;
-        nodebase_node_pragma[index].timer->data = (unsigned long)index;
-        nodebase_node_pragma[index].timer->expires = jiffiesval;
-        add_timer(nodebase_node_pragma[index].timer);
+        nodebase_node_pragma[index].timer2 = kmalloc(sizeof(struct timer_list),GFP_KERNEL);
+        init_timer(nodebase_node_pragma[index].timer2);
+        nodebase_node_pragma[index].timer2->function = node_get_msg_to_send;
+        nodebase_node_pragma[index].timer2->data = (unsigned long)index;
+    }
+    if(nodebase_node_pragma[index].timer1)
+    {
+        nodebase_node_pragma[index].timer1->expires = nodebase_node_pragma[index].jiffies1;
+        add_timer(nodebase_node_pragma[index].timer1);
+    }
+    if(nodebase_node_pragma[index].timer2)
+    {
+        nodebase_node_pragma[index].timer2->expires = nodebase_node_pragma[index].jiffies2;
+        add_timer(nodebase_node_pragma[index].timer2);
     }
 }
 
@@ -222,17 +207,48 @@ int node_get_data_to_send(uint32_t index,uint8_t *buffer,uint8_t *more,uint8_t *
     return len;
 }
 
-void node_get_msg_to_send( unsigned long index )
+void node_prepare_joinaccept_package( unsigned long index )
 {
-    //struct list_head *pos;
-    //struct lora_tx_data *get;
-    unsigned char LoRaMacBufferFinal[256];
+    //unsigned char LoRaMacBufferFinal[256];
+    uint8_t payload[256];
+    uint8_t *LoRaMacBuffer;
+    //uint8_t *pkg;
+    LoRaMacHeader_t macHdr;
+    //LoRaMacFrameCtrl_t fCtrl;
+    //uint16_t i;
+    //uint8_t pktHeaderLen = 0;
+    //uint32_t mic = 0;
+    //void* payload;
+    //uint8_t more;
+    //uint16_t LoRaMacBufferPktLen = 0;
+
+    nodebase_node_pragma[index].jiffies1 = nodebase_node_pragma[index].jiffies + LoRaMacParams.JoinAcceptDelay1;
+    nodebase_node_pragma[index].jiffies2 = nodebase_node_pragma[index].jiffies + LoRaMacParams.JoinAcceptDelay2;
+    LoRaMacBuffer = nodebase_node_pragma[index].repeatbuf;
+    macHdr.Bits.MType = FRAME_TYPE_JOIN_ACCEPT;
+    payload[0] = macHdr.Value;
+    LoRaMacBuffer[0] = macHdr.Value;
+    memcpy(&payload[1],gateway_pragma.AppNonce,3); // AppNonce
+    memcpy(&payload[1 + 3],gateway_pragma.NetID,3); // NetID
+    memcpy(&payload[1 + 3 + 3],nodebase_node_pragma[index].DevAddr,4);  // DevAddr
+    payload[1 + 3 + 3 + 4] = 0; //DLSettings
+    payload[1 + 3 + 3 + 4 + 1] = 0; //RxDelay
+    LoRaMacJoinComputeMic(payload,13,gateway_pragma.APPKEY,(uint32_t*)&payload[1 + 3 + 3 + 4 + 1 + 1]);   // mic
+    LoRaMacJoinDecrypt(&payload[1],12 + 4,gateway_pragma.APPKEY,&LoRaMacBuffer[1]);
+
+    nodebase_node_pragma[index].repeatlen = 17;
+    nodebase_node_pragma[index].state ++;
+}
+
+void node_prepare_data_package( unsigned long index )
+{
+    //unsigned char LoRaMacBufferFinal[256];
     uint8_t payload[256];
     uint8_t *LoRaMacBuffer;
     //uint8_t *pkg;
     LoRaMacHeader_t macHdr;
     LoRaMacFrameCtrl_t fCtrl;
-    uint16_t i;
+    //uint16_t i;
     uint8_t pktHeaderLen = 0;
     uint32_t mic = 0;
     //void* payload;
@@ -240,193 +256,176 @@ void node_get_msg_to_send( unsigned long index )
     uint16_t LoRaMacBufferPktLen = 0;
     int len;
     uint8_t fPort;
-    bool need_tx = false;
-    switch(nodebase_node_pragma[index].state)
-    {
-        case enStateInit:
-            //break;
-        case enStateJoinning:
-            //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
-            //p2 = (struct lora_tx_data *)&radiotxbuffer[1];
-            //pkg = payload;
-            LoRaMacBuffer = LoRaMacBufferFinal;
-            macHdr.Bits.MType = FRAME_TYPE_JOIN_ACCEPT;
-            payload[0] = macHdr.Value;
-            LoRaMacBuffer[0] = macHdr.Value;
-            memcpy(&payload[1],gateway_pragma.AppNonce,3); // AppNonce
-            memcpy(&payload[1 + 3],gateway_pragma.NetID,3); // NetID
-            memcpy(&payload[1 + 3 + 3],nodebase_node_pragma[index].DevAddr,4);  // DevAddr
-            payload[1 + 3 + 3 + 4] = 0; //DLSettings
-            payload[1 + 3 + 3 + 4 + 1] = 0; //RxDelay
-            LoRaMacJoinComputeMic(payload,13,gateway_pragma.APPKEY,(uint32_t*)&payload[1 + 3 + 3 + 4 + 1 + 1]);   // mic
-            //debug_output_data(pkg,17);
-            LoRaMacJoinDecrypt(&payload[1],12 + 4,gateway_pragma.APPKEY,&LoRaMacBuffer[1]);
-
-            LoRaMacBufferPktLen = 17;
-            need_tx = true;
-            break;
-        case enStateJoined:
-            if(nodebase_node_pragma[index].repeatlen > 0)
-            {
-                LoRaMacBuffer = nodebase_node_pragma[index].repeatbuf;
-                LoRaMacBufferPktLen = nodebase_node_pragma[index].repeatlen;
-                need_tx = true;
-                goto send;
-            }
-            LoRaMacBuffer = LoRaMacBufferFinal;
-            //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
-            len = node_get_data_to_send(index,payload,&more,&fPort);
-            if((len > 0) || ( nodebase_node_pragma[index].cmdlen > 0 ))
-            {
-                macHdr.Bits.MType = FRAME_TYPE_DATA_CONFIRMED_DOWN;
-                need_tx = true;
-            }
-            else
-            {
-                macHdr.Bits.MType = FRAME_TYPE_DATA_UNCONFIRMED_DOWN;
-            }
-            //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
-            fCtrl.Bits.FPending = more;
-
-            if(nodebase_node_pragma[index].is_ack_req)
-            {
-                fCtrl.Bits.Ack = 1;
-                need_tx = true;
-            }
-            LoRaMacBuffer[pktHeaderLen++] = macHdr.Value;
-            //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
-            // device addres
-            LoRaMacBuffer[pktHeaderLen++] = ( index ) & 0xFF;
-            LoRaMacBuffer[pktHeaderLen++] = ( index >> 8 ) & 0xFF;
-            LoRaMacBuffer[pktHeaderLen++] = ( index >> 16 ) & 0xFF;
-            LoRaMacBuffer[pktHeaderLen++] = ( index >> 24 ) & 0xFF;
-
-            LoRaMacBuffer[pktHeaderLen++] = fCtrl.Value;
-
-            LoRaMacBuffer[pktHeaderLen++] = nodebase_node_pragma[index].sequenceCounter_Down & 0xFF;
-            LoRaMacBuffer[pktHeaderLen++] = ( nodebase_node_pragma[index].sequenceCounter_Down >> 8 ) & 0xFF;
-
-            // Copy the MAC commands which must be re-send into the MAC command buffer
-            //memcpy1( &MacCommandsBuffer[MacCommandsBufferIndex], MacCommandsBufferToRepeat, MacCommandsBufferToRepeatIndex );
-            //MacCommandsBufferIndex += MacCommandsBufferToRepeatIndex;
-            nodebase_node_pragma[index].cmdlen = 4;
-            nodebase_node_pragma[index].cmdbuf[0] = stRadioCfg_Tx.datarate[nodebase_node_pragma[index].chip] << 4;
-            nodebase_node_pragma[index].cmdbuf[0] |= stRadioCfg_Tx.power & 0x0f;//stRadioCfg_Tx.datarate[nodebase_node_pragma[index].chip] & 0x0f;
-            *(uint16_t*)&nodebase_node_pragma[index].cmdbuf[1] = (uint16_t)1 << stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[nodebase_node_pragma[index].chip]];
-            nodebase_node_pragma[index].cmdbuf[3] = 0x00;
-            //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
-
-            #if 0
-            if( nodebase_node_pragma[index].cmdlen > 0 )
-            {
-                fCtrl.Bits.FOptsLen = nodebase_node_pragma[index].cmdlen;
-
-                // Update FCtrl field with new value of OptionsLength
-                LoRaMacBuffer[0x05] = fCtrl.Value;
-                for( i = 0; i < nodebase_node_pragma[index].cmdlen; i++ )
-                {
-                    LoRaMacBuffer[pktHeaderLen++] = nodebase_node_pragma[index].cmdbuf[i];
-                }
-                need_tx = true;
-            }
-            else
-            {
-                fCtrl.Bits.FOptsLen = 0;
-                LoRaMacBuffer[0x05] = fCtrl.Value;
-                /*LoRaMacTxPayloadLen = MacCommandsBufferIndex;
-                payload = MacCommandsBuffer;
-                framePort = 0;*/
-            }
-            #endif
-            //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
-            if( len > 0 )// && ( LoRaMacTxPayloadLen > 0 ) )
-            {
-                LoRaMacBuffer[pktHeaderLen++] = fPort;
-                LoRaMacBufferPktLen = pktHeaderLen + len;
-                LoRaMacPayloadEncrypt( (uint8_t* ) payload, len, nodebase_node_pragma[index].AppSKey, index, DOWN_LINK, nodebase_node_pragma[index].sequenceCounter_Down, &LoRaMacBuffer[pktHeaderLen] );
-            }
-            else
-            {
-                LoRaMacBuffer[pktHeaderLen++] = fPort;
-                LoRaMacBufferPktLen = pktHeaderLen;
-            }
-            //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
-            LoRaMacComputeMic( LoRaMacBuffer, LoRaMacBufferPktLen, nodebase_node_pragma[index].NwkSKey, index, DOWN_LINK, nodebase_node_pragma[index].sequenceCounter_Down, &mic );
-
-            LoRaMacBuffer[LoRaMacBufferPktLen + 0] = mic & 0xFF;
-            LoRaMacBuffer[LoRaMacBufferPktLen + 1] = ( mic >> 8 ) & 0xFF;
-            LoRaMacBuffer[LoRaMacBufferPktLen + 2] = ( mic >> 16 ) & 0xFF;
-            LoRaMacBuffer[LoRaMacBufferPktLen + 3] = ( mic >> 24 ) & 0xFF;
-
-            LoRaMacBufferPktLen += LORAMAC_MFR_LEN;
-            nodebase_node_pragma[index].sequenceCounter_Down ++;
-            //nodebase_node_pragma[index].repeatbuf = kmalloc(LoRaMacBufferPktLen,GFP_KERNEL);
-            //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
-            memcpy(nodebase_node_pragma[index].repeatbuf,LoRaMacBuffer,LoRaMacBufferPktLen);
-            //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
-            nodebase_node_pragma[index].repeatlen = LoRaMacBufferPktLen;
-            break;
-        default:
-            //return LORAMAC_STATUS_SERVICE_UNKNOWN;
-            break;
-    }
-    if(nodebase_node_pragma[index].state == enStateJoinning)
-    {
-        if(time_after_eq(jiffies,(unsigned long)(nodebase_node_pragma[index].jiffies + LoRaMacParams.JoinAcceptDelay2)))
-        {
-            node_timer_stop(index);
-            Radio.SetChannel(nodebase_node_pragma[index].chip,stRadioCfg_Tx.freq_tx[25]);
-            nodebase_node_pragma[index].state = enStateJoined;
-        }
-        else
-        {
-            node_time_start(index);
-            Radio.SetChannel(nodebase_node_pragma[index].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[nodebase_node_pragma[index].chip]]);
-        }
-    }
-    else
-    {
-        if(time_after_eq(jiffies,(unsigned long)(nodebase_node_pragma[index].jiffies + LoRaMacParams.ReceiveDelay2)))
-        {
-            node_timer_stop(index);
-            Radio.SetChannel(nodebase_node_pragma[index].chip,stRadioCfg_Tx.freq_tx[25]);
-            nodebase_node_pragma[index].state = enStateJoined;
-        }
-        else
-        {
-            node_time_start(index);
-            Radio.SetChannel(nodebase_node_pragma[index].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[nodebase_node_pragma[index].chip]]);
-        }
-    }
-send:
-    if(need_tx == false)
+    bool newpkg = false;
+    if(nodebase_node_pragma[index].state != enStateJoined)
     {
         return;
     }
-    Radio.Sleep(nodebase_node_pragma[index].chip);
-    Radio.SetTxConfig(nodebase_node_pragma[index].chip,
-    stRadioCfg_Tx.modem,
-    stRadioCfg_Tx.power,
-    stRadioCfg_Tx.fdev,
-    stRadioCfg_Tx.bandwidth,
-    stRadioCfg_Tx.datarate[nodebase_node_pragma[index].chip],
-    stRadioCfg_Tx.coderate,
-    stRadioCfg_Tx.preambleLen,
-    stRadioCfg_Tx.fixLen,
-    stRadioCfg_Tx.crcOn,
-    stRadioCfg_Tx.freqHopOn,
-    stRadioCfg_Tx.hopPeriod,
-    stRadioCfg_Tx.iqInverted,
-    stRadioCfg_Tx.timeout);
-    //DEBUG_OUTPUT_DATA(get->buffer,get->size);
-    Radio.Send(nodebase_node_pragma[index].chip,LoRaMacBuffer,LoRaMacBufferPktLen);
-    DEBUG_OUTPUT_EVENT(nodebase_node_pragma[index].chip,EV_TX_START);
-    DEBUG_OUTPUT_DATA(LoRaMacBuffer,LoRaMacBufferPktLen);
-    /*if(time_after_eq((unsigned long)(nodebase_node_pragma[index].jiffies + LoRaMacParams.ReceiveDelay2),jiffies))
+
+    LoRaMacBuffer = nodebase_node_pragma[index].repeatbuf;
+    len = node_get_data_to_send(index,payload,&more,&fPort);
+    if((len > 0) || ( nodebase_node_pragma[index].cmdlen > 0 ))
+    {
+        macHdr.Bits.MType = FRAME_TYPE_DATA_CONFIRMED_DOWN;
+        nodebase_node_pragma[index].need_ack = true;
+        newpkg = true;
+    }
+    else
+    {
+        macHdr.Bits.MType = FRAME_TYPE_DATA_UNCONFIRMED_DOWN;
+        nodebase_node_pragma[index].need_ack = false;
+    }
+    //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
+    fCtrl.Bits.FPending = more;
+
+    if(nodebase_node_pragma[index].is_ack_req)
+    {
+        fCtrl.Bits.Ack = 1;
+        newpkg = true;
+    }
+    LoRaMacBuffer[pktHeaderLen++] = macHdr.Value;
+
+    LoRaMacBuffer[pktHeaderLen++] = ( index ) & 0xFF;
+    LoRaMacBuffer[pktHeaderLen++] = ( index >> 8 ) & 0xFF;
+    LoRaMacBuffer[pktHeaderLen++] = ( index >> 16 ) & 0xFF;
+    LoRaMacBuffer[pktHeaderLen++] = ( index >> 24 ) & 0xFF;
+
+    LoRaMacBuffer[pktHeaderLen++] = fCtrl.Value;
+
+    LoRaMacBuffer[pktHeaderLen++] = nodebase_node_pragma[index].sequenceCounter_Down & 0xFF;
+    LoRaMacBuffer[pktHeaderLen++] = ( nodebase_node_pragma[index].sequenceCounter_Down >> 8 ) & 0xFF;
+
+    // Copy the MAC commands which must be re-send into the MAC command buffer
+    //memcpy1( &MacCommandsBuffer[MacCommandsBufferIndex], MacCommandsBufferToRepeat, MacCommandsBufferToRepeatIndex );
+    //MacCommandsBufferIndex += MacCommandsBufferToRepeatIndex;
+    nodebase_node_pragma[index].cmdlen = 4;
+    nodebase_node_pragma[index].cmdbuf[0] = stRadioCfg_Tx.datarate[nodebase_node_pragma[index].chip] << 4;
+    nodebase_node_pragma[index].cmdbuf[0] |= stRadioCfg_Tx.power & 0x0f;//stRadioCfg_Tx.datarate[nodebase_node_pragma[index].chip] & 0x0f;
+    *(uint16_t*)&nodebase_node_pragma[index].cmdbuf[1] = (uint16_t)1 << stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[nodebase_node_pragma[index].chip]];
+    nodebase_node_pragma[index].cmdbuf[3] = 0x00;
+    //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
+
+    #if 0
+    if( nodebase_node_pragma[index].cmdlen > 0 )
+    {
+        fCtrl.Bits.FOptsLen = nodebase_node_pragma[index].cmdlen;
+
+        // Update FCtrl field with new value of OptionsLength
+        LoRaMacBuffer[0x05] = fCtrl.Value;
+        for( i = 0; i < nodebase_node_pragma[index].cmdlen; i++ )
+        {
+            LoRaMacBuffer[pktHeaderLen++] = nodebase_node_pragma[index].cmdbuf[i];
+        }
+        need_tx = true;
+    }
+    else
+    {
+        fCtrl.Bits.FOptsLen = 0;
+        LoRaMacBuffer[0x05] = fCtrl.Value;
+        /*LoRaMacTxPayloadLen = MacCommandsBufferIndex;
+        payload = MacCommandsBuffer;
+        framePort = 0;*/
+    }
+    #endif
+    //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
+    if( len > 0 )// && ( LoRaMacTxPayloadLen > 0 ) )
+    {
+        LoRaMacBuffer[pktHeaderLen++] = fPort;
+        LoRaMacBufferPktLen = pktHeaderLen + len;
+        LoRaMacPayloadEncrypt( (uint8_t* ) payload, len, nodebase_node_pragma[index].AppSKey, index, DOWN_LINK, nodebase_node_pragma[index].sequenceCounter_Down, &LoRaMacBuffer[pktHeaderLen] );
+    }
+    else
+    {
+        LoRaMacBuffer[pktHeaderLen++] = fPort;
+        LoRaMacBufferPktLen = pktHeaderLen;
+    }
+    //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
+    LoRaMacComputeMic( LoRaMacBuffer, LoRaMacBufferPktLen, nodebase_node_pragma[index].NwkSKey, index, DOWN_LINK, nodebase_node_pragma[index].sequenceCounter_Down, &mic );
+
+    LoRaMacBuffer[LoRaMacBufferPktLen + 0] = mic & 0xFF;
+    LoRaMacBuffer[LoRaMacBufferPktLen + 1] = ( mic >> 8 ) & 0xFF;
+    LoRaMacBuffer[LoRaMacBufferPktLen + 2] = ( mic >> 16 ) & 0xFF;
+    LoRaMacBuffer[LoRaMacBufferPktLen + 3] = ( mic >> 24 ) & 0xFF;
+
+    LoRaMacBufferPktLen += LORAMAC_MFR_LEN;
+    nodebase_node_pragma[index].sequenceCounter_Down ++;
+    //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
+    memcpy(nodebase_node_pragma[index].repeatbuf,LoRaMacBuffer,LoRaMacBufferPktLen);
+    //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
+    nodebase_node_pragma[index].repeatlen = LoRaMacBufferPktLen;
+
+    if(newpkg == true)
+    {
+        nodebase_node_pragma[index].state = enStateRxWindow1;
+        DEBUG_OUTPUT_EVENT(nodebase_node_pragma[index].chip,EV_DATA_PREPARE_TO_SEND);
+        DEBUG_OUTPUT_DATA(nodebase_node_pragma[index].repeatbuf,nodebase_node_pragma[index].repeatlen);
+        node_timer_start(index);
+    }
+    nodebase_node_pragma[index].state = enStateRxWindow1;
+}
+
+void node_get_msg_to_send( unsigned long index )
+{
+    if(nodebase_node_pragma[index].repeatlen > 0)
+    {
+        switch(nodebase_node_pragma[index].state)
+        {
+            case enStateJoinaccept1:
+            case enStateRxWindow1:
+                Radio.Sleep(nodebase_node_pragma[index].chip);
+                Radio.SetTxConfig(nodebase_node_pragma[index].chip,
+                stRadioCfg_Tx.modem,
+                stRadioCfg_Tx.power,
+                stRadioCfg_Tx.fdev,
+                stRadioCfg_Tx.bandwidth,
+                stRadioCfg_Tx.datarate[nodebase_node_pragma[index].chip],
+                stRadioCfg_Tx.coderate,
+                stRadioCfg_Tx.preambleLen,
+                stRadioCfg_Tx.fixLen,
+                stRadioCfg_Tx.crcOn,
+                stRadioCfg_Tx.freqHopOn,
+                stRadioCfg_Tx.hopPeriod,
+                stRadioCfg_Tx.iqInverted,
+                stRadioCfg_Tx.timeout);
+                Radio.SetChannel(nodebase_node_pragma[index].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[nodebase_node_pragma[index].chip]]);
+                Radio.Send(nodebase_node_pragma[index].chip,nodebase_node_pragma[index].repeatbuf,nodebase_node_pragma[index].repeatlen);
+                node_delete_repeat_buf(index);
+                break;
+            case enStateJoinaccept2:
+            case enStateRxWindow2:
+                Radio.Sleep(nodebase_node_pragma[index].chip);
+                Radio.SetTxConfig(nodebase_node_pragma[index].chip,
+                stRadioCfg_Tx.modem,
+                stRadioCfg_Tx.power,
+                stRadioCfg_Tx.fdev,
+                stRadioCfg_Tx.bandwidth,
+                12,
+                stRadioCfg_Tx.coderate,
+                stRadioCfg_Tx.preambleLen,
+                stRadioCfg_Tx.fixLen,
+                stRadioCfg_Tx.crcOn,
+                stRadioCfg_Tx.freqHopOn,
+                stRadioCfg_Tx.hopPeriod,
+                stRadioCfg_Tx.iqInverted,
+                stRadioCfg_Tx.timeout);
+                Radio.SetChannel(nodebase_node_pragma[index].chip,stRadioCfg_Tx.freq_tx[25]);
+                Radio.Send(nodebase_node_pragma[index].chip,nodebase_node_pragma[index].repeatbuf,nodebase_node_pragma[index].repeatlen);
+                node_delete_repeat_buf(index);
+                break;
+            default:
+                break;
+        }
+        DEBUG_OUTPUT_EVENT(nodebase_node_pragma[index].chip,EV_TX_START);
+    }
+    else
+    {
+        DEBUG_OUTPUT_INFO("%d: %s",nodebase_node_pragma[index].chip,"NO_DATA_TO_SEND\r\n");
+    }
+    nodebase_node_pragma[index].state ++;
+    if(nodebase_node_pragma[index].state > enStateRxWindow2)
     {
         nodebase_node_pragma[index].state = enStateJoined;
-    }*/
-    //node_time_start(index);
+    }
 }
 
 void node_have_confirm(uint32_t addr)
@@ -478,7 +477,6 @@ int RadioTxMsgListAdd(struct lora_tx_data *p)
     //nodebase_node_pragma[index].jiffies1 = jiffies + LoRaMacParams.JoinAcceptDelay1;
     //nodebase_node_pragma[index].jiffies2 = jiffies + LoRaMacParams.JoinAcceptDelay2;
     list_add_tail(&(pst_lora_tx_list->list), &nodebase_node_pragma[p->addres].lora_tx_list.list);
-
     /*init_timer(timer);
     timer->function = get_msg_to_send;
     timer->data = (unsigned long)index;
@@ -493,6 +491,8 @@ void node_update_info(int index,struct lora_rx_data *p1)
     nodebase_node_pragma[index].jiffies = p1->jiffies;
     nodebase_node_pragma[index].snr = p1->snr;
     nodebase_node_pragma[index].rssi = p1->rssi;
+    nodebase_node_pragma[index].jiffies1 = nodebase_node_pragma[index].jiffies + LoRaMacParams.ReceiveDelay1;
+    nodebase_node_pragma[index].jiffies2 = nodebase_node_pragma[index].jiffies + LoRaMacParams.ReceiveDelay2;
 }
 
 /*void start_timer(uint32_t index,uint32_t jiffiesval)

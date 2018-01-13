@@ -10,6 +10,7 @@ unsigned char* enEventName[] = {
 	[EV_RXCOMPLETE] = "EV_RXCOMPLETE",
 	[EV_TXCOMPLETE] = "EV_TXCOMPLETE",
 	[EV_TX_START] = "EV_TX_START",
+	[EV_DATA_PREPARE_TO_SEND] = "EV_DATA_PREPARE_TO_SEND",
 };
 
 void debug_output_data(uint8_t *data,int len)
