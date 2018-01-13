@@ -1,1 +1,1 @@
-{ "FrameType": "DataUp", "DevEUI": "01234567ABCDEF89", "AppEUI": "01234567ABCDEF89", "NetAddr": 0, "Port": 0, "Battery": 0, "Data": "1Jr8PdOdN5" }
+{ "FrameType": "DataUp", "DevEUI": "01234567ABCDEF89", "AppEUI": "01234567ABCDEF89", "NetAddr": 0, "Port": 0, "AckRequest": "true", "Ack": "true", "Battery": 0, "Rssi": -12, "Snr": 5.6, "Data": "1Jr8PdOdN5" }
