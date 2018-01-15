@@ -370,19 +370,25 @@ static ssize_t lora_dev_write(struct file *filp, const char __user *buf, size_t 
 {
     #if 1
     uint8_t *p;
-    struct lora_tx_data *pst_lora_tx_list;
+    lora_server_down_data_type *datadown;
+    struct lora_tx_data st_lora_tx_list;
     //struct timer_list *timer;
     //timer = kmalloc(sizeof(struct timer_list),GFP_KERNEL);
     //init_timer(timer);
     p = kmalloc(size,GFP_KERNEL);
-    pst_lora_tx_list = (struct lora_tx_data *)p;
+    //pst_lora_tx_list = (struct lora_tx_data *)p;
     copy_from_user((void*)p, buf, size);
-    node_get_net_addr(&pst_lora_tx_list->addres,p);
-    pst_lora_tx_list->fPort = 1;//p[8];
-    pst_lora_tx_list->size = (uint16_t)p[9];
-    pst_lora_tx_list->buffer = &p[10];
+    datadown = (lora_server_down_data_type *)p;
+    node_get_net_addr(&st_lora_tx_list.addres,datadown->DevEUI);
+    st_lora_tx_list.fPort = datadown->fPort;
+    st_lora_tx_list.size = datadown->size;
+
+    st_lora_tx_list.buffer = &p[sizeof(lora_server_down_data_type)];
+    st_lora_tx_list.CtrlBits.AckRequest = datadown->CtrlBits.AckRequest;
+    st_lora_tx_list.CtrlBits.Ack = datadown->CtrlBits.Ack;
     //memcpy(pst_lora_tx_list->buffer,p[sizeof(struct lora_tx_data)],pst_lora_tx_list->size);
-    RadioTxMsgListAdd(pst_lora_tx_list);
+    //printk("%s , %d\r\n",__func__,__LINE__);
+    RadioTxMsgListAdd(&st_lora_tx_list);
     kfree(p);
     //timer->function = lora_dev_tx_queue_routin;
     //timer->data = (unsigned long)p;

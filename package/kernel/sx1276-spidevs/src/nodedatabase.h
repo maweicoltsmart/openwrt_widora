@@ -56,11 +56,12 @@ typedef struct
     int16_t rssi;
     int8_t snr;
     bool is_ack_req;    // node reqest ack
-    bool need_ack;  // gateway request ack
+    bool have_ack;  // node have receiv
     uint8_t cmdbuf[LORA_MAC_COMMAND_MAX_LENGTH];
     uint8_t cmdlen;
     uint8_t repeatbuf[256];
     uint16_t repeatlen;
+    uint8_t Battery;
     //uint8_t retrycnt;
 }node_pragma_t;
 
@@ -89,6 +90,8 @@ void node_delete_repeat_buf(uint32_t index);
 int16_t node_database_join(node_join_info_t* node);
 uint8_t node_verify_net_addr(uint32_t addr);
 void node_get_ieeeaddr(uint32_t addr,uint8_t *ieeeaddr);
+void node_get_appeui(uint32_t addr,uint8_t *appeui);
+void node_get_Battery(uint32_t addr,uint8_t *Battery);
 void node_prepare_joinaccept_package( unsigned long index );
 void node_prepare_data_package( unsigned long index );
 void node_get_msg_to_send( unsigned long index );

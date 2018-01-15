@@ -20,24 +20,26 @@
 #include <sys/stat.h>
 #include <sys/msg.h>
 #include <errno.h>
+#include <json-c/json.h>
+
 #include "typedef.h"
+#include "LoRaDevOps.h"
 
 #define PORT  8890
 #define QUEUE_SIZE   10
-#define BUFFER_SIZE 1024
+extern int fd_cdev;
 
-static int fd;
 void *server_send(void *arg)
 {
     int sockfd = *(int*)arg;
-    unsigned char buffer[1024];
+    unsigned char buffer[MSG_Q_BUFFER_SIZE];
     int len;
     //strcpy(buffer,"hello\r\n");
     //len = strlen(buffer);
     struct msg_st data;
     long int msgtype = 0; //注意1
     int msgid = -1;
-    memset(data.text,0,BUFFER_SIZE);
+    memset(data.text,0,MSG_Q_BUFFER_SIZE);
 creat_msg_q:
     //建立消息队列
     while((msgid = msgget((key_t)1234, 0666 | IPC_CREAT) == -1))
@@ -48,19 +50,18 @@ creat_msg_q:
     //从队列中获取消息，直到遇到end消息为止
     while(1)
     {
-        if((len = msgrcv(msgid, (void*)&data, BUFFER_SIZE, msgtype, 0)) < 0)
+        if((len = msgrcv(msgid, (void*)&data, MSG_Q_BUFFER_SIZE, msgtype, 0)) < 0)
         {
             printf("msgrcv failed with errno: %d\n", errno);
             goto creat_msg_q;
         }
-        hexdump(data.text,len);
+        //printf("%s\r\n",data.text);
         len = send(sockfd, data.text, len, 0);
         if(len < 1)
         {
             pthread_exit(NULL);
         }
-
-        memset(data.text,0,BUFFER_SIZE);
+        memset(data.text,0,MSG_Q_BUFFER_SIZE);
     }
     //删除消息队列
     /*if(msgctl(msgid, IPC_RMID, 0) == -1)
@@ -72,12 +73,17 @@ creat_msg_q:
 
 void str_echo(int sockfd)
 {
-    char buffer[BUFFER_SIZE];
+    char buffer[MSG_Q_BUFFER_SIZE];
     int len;
     int err;
-    uint8_t *tmp;
-    int index;
+    //uint8_t *tmp;
+    //int index;
     pthread_t main_tid;
+    lora_server_down_data_type datadown;
+    struct json_object *pragma = NULL;
+    struct json_object *obj = NULL;
+    uint8_t stringformat[256 * 2];
+    uint8_t tx_data_buf[300];
     err = pthread_create(&main_tid, NULL, server_send, &sockfd); //创建线程
     pid_t pid = getpid();
     while(1)
@@ -91,25 +97,37 @@ void str_echo(int sockfd)
         }
         if(strcmp(buffer,"exit\n")==0)
         {
-        printf("child process: %d exited.\n",pid);
+            printf("child process: %d exited.\n",pid);
             break;
         }
-        printf("pid:%d %dreceive:\r\n",pid,len);
-        fputs(buffer, stdout);
-        tmp = malloc(10 + len);
-        tmp[index ++] = 0x00;   // address
-        tmp[index ++] = 0x00;
-        tmp[index ++] = 0x00;
-        tmp[index ++] = 0x00;
-        tmp[index ++] = 0x00;
-        tmp[index ++] = 0x00;
-        tmp[index ++] = 0x00;
-        tmp[index ++] = 0x00;
-        tmp[index ++] = 0x01;   // port
-        tmp[index ++] = len;    // len
-        memcpy(&tmp[index],buffer,len);
+        //printf("pid:%d %dreceive:\r\n",pid,len);
+        //fputs(buffer, stdout);
+        pragma = json_tokener_parse((const char *)buffer);
+        json_object_object_get_ex(pragma,"DevEUI",&obj);
+        memset(stringformat,0,256 * 2);
+        strcpy(stringformat,json_object_get_string(obj));
+        //printf("%s : %s\r\n", __func__,stringformat);
+        Str2Hex( &stringformat[0],  datadown.DevEUI, 8 );
+        //hexdump(datadown.DevEUI,8);
+        json_object_object_get_ex(pragma,"Port",&obj);
+        datadown.fPort = json_object_get_int(obj);
+        json_object_object_get_ex(pragma,"AckRequest",&obj);
+        datadown.CtrlBits.AckRequest = json_object_get_boolean(obj);
 
-        write(fd,tmp,10 + len);
+        json_object_object_get_ex(pragma,"Ack",&obj);
+        datadown.CtrlBits.Ack = json_object_get_boolean(obj);
+        //printf("AckRequest = %d\r\nAck = %d\r\n", datadown.CtrlBits.AckRequest,datadown.CtrlBits.Ack);
+        json_object_object_get_ex(pragma,"Data",&obj);
+        memset(stringformat,0,256 * 2);
+        strcpy(stringformat,json_object_get_string(obj));
+        datadown.size = strlen(stringformat) / 2;
+        //printf("%s\r\n", stringformat);
+        Str2Hex( &stringformat[0],  &tx_data_buf[sizeof(lora_server_down_data_type)], datadown.size );
+        hexdump(&tx_data_buf[sizeof(lora_server_down_data_type)],datadown.size);
+        memcpy(tx_data_buf,&datadown,sizeof(lora_server_down_data_type));
+        json_object_put(pragma);
+
+        write(fd_cdev,tx_data_buf,sizeof(lora_server_down_data_type) + datadown.size);
         /*len = send(sockfd, buffer, len, 0);
     if(len < 1)
         {
@@ -126,7 +144,6 @@ void* tcp_server_routin(void *data)
 
     //定义sockaddr_in
     struct sockaddr_in server_sockaddr;
-    fd = *(int*)data;
     server_sockaddr.sin_family = AF_INET;
     server_sockaddr.sin_addr.s_addr = htonl(INADDR_ANY);
     server_sockaddr.sin_port = htons(PORT);

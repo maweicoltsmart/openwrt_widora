@@ -9,7 +9,7 @@
 typedef uint32_t TimerTime_t;
 #endif
 
-#define BUFFER_SIZE 1024
+#define MSG_Q_BUFFER_SIZE 1024
 
 extern bool lora_rx_done;
 extern uint8_t lora_rx_len;
@@ -18,7 +18,7 @@ extern uint8_t radio2tcpbuffer[];
 struct msg_st
 {
     long int msg_type;
-    char text[BUFFER_SIZE];
+    char text[MSG_Q_BUFFER_SIZE];
 };
 
 /*typedef struct

@@ -39,15 +39,15 @@ void serverpkgformat(void)
     json_object_object_add(pragma,"AppEUI",json_object_new_string("01234567ABCDEF89"));
     json_object_object_add(pragma,"NetAddr",json_object_new_int(0));
     json_object_object_add(pragma,"Port",json_object_new_int(0));
-    json_object_object_add(pragma,"AckRequest",json_object_new_string("true"));
-    json_object_object_add(pragma,"Ack",json_object_new_string("true"));
+    json_object_object_add(pragma,"AckRequest",json_object_new_boolean(1));
+    json_object_object_add(pragma,"Ack",json_object_new_boolean(1));
     json_object_object_add(pragma,"Battery",json_object_new_int(0));
     json_object_object_add(pragma,"Rssi",json_object_new_int(-12));
     json_object_object_add(pragma,"Snr",json_object_new_double(5.6));
     json_object_object_add(pragma,"Data",json_object_new_string("1Jr8PdOdN5"));	/* data that encoded into Base64 */
     strcpy(buf,json_object_to_json_string(pragma));
 	write(file,buf,strlen(buf));
-    printf("%s",buf);
+    //printf("%s",buf);
 	json_object_put(pragma);
 	close(file);
 
@@ -68,7 +68,7 @@ void serverpkgformat(void)
     json_object_object_add(pragma,"Data",json_object_new_string("1Jr8PdOdN5"));	/* data that encoded into Base64 */
     strcpy(buf,json_object_to_json_string(pragma));
 	write(file,buf,strlen(buf));
-    printf("%s",buf);
+    //printf("%s",buf);
 	json_object_put(pragma);
 	close(file);
 
@@ -89,7 +89,7 @@ void serverpkgformat(void)
     json_object_object_add(pragma,"Result",json_object_new_string("Success"));	/* data that encoded into Base64 */
     strcpy(buf,json_object_to_json_string(pragma));
 	write(file,buf,strlen(buf));
-    printf("%s",buf);
+    //printf("%s",buf);
 	json_object_put(pragma);
 	close(file);
 }

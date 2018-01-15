@@ -51,9 +51,9 @@ int main(int argc ,char *argv[])
     int flag;
     int ret;
     int fd;
-    pthread_t lora_1_handle,lora_2_handle,tcp_client_handle,tcp_server_handle,radio_routin_handle;
+    pthread_t tcp_client_handle,tcp_server_handle,radio_routin_handle;
     int msgid = -1;
-    struct msg_st data;
+    //struct msg_st data;
     int len;
     serverpkgformat();
     ret = pthread_create(&radio_routin_handle, NULL, Radio_routin, &fd);

@@ -149,7 +149,7 @@ void node_timer_stop(uint32_t index)
 void node_timer_start(uint32_t index)
 {
     node_timer_stop(index);
-
+    //node_prepare_data_package(index);
     if(nodebase_node_pragma[index].timer1 == NULL)
     {
         nodebase_node_pragma[index].timer1 = kmalloc(sizeof(struct timer_list),GFP_KERNEL);
@@ -176,7 +176,7 @@ void node_timer_start(uint32_t index)
     }
 }
 
-int node_get_data_to_send(uint32_t index,uint8_t *buffer,uint8_t *more,uint8_t *fPort)
+/*int node_get_data_to_send(uint32_t index,uint8_t *buffer,uint8_t *more,uint8_t *fPort)
 {
     struct list_head *pos;
     struct lora_tx_data *get;
@@ -205,7 +205,7 @@ int node_get_data_to_send(uint32_t index,uint8_t *buffer,uint8_t *more,uint8_t *
     }
     //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
     return len;
-}
+}*/
 
 void node_prepare_joinaccept_package( unsigned long index )
 {
@@ -243,7 +243,7 @@ void node_prepare_joinaccept_package( unsigned long index )
 void node_prepare_data_package( unsigned long index )
 {
     //unsigned char LoRaMacBufferFinal[256];
-    uint8_t payload[256];
+    //uint8_t payload[256];
     uint8_t *LoRaMacBuffer;
     //uint8_t *pkg;
     LoRaMacHeader_t macHdr;
@@ -254,31 +254,59 @@ void node_prepare_data_package( unsigned long index )
     //void* payload;
     uint8_t more;
     uint16_t LoRaMacBufferPktLen = 0;
-    int len;
-    uint8_t fPort;
+    //int len;
+    //uint8_t fPort;
     bool newpkg = false;
-    if(nodebase_node_pragma[index].state != enStateJoined)
+    struct list_head *pos;
+    struct lora_tx_data *get;
+    //printk("%s , %d\r\n",__func__,__LINE__);
+    if(nodebase_node_pragma[index].state < enStateJoined)
     {
         return;
     }
+    if(nodebase_node_pragma[index].repeatlen > 0)
+    {
+        return;
+    }
+    //printk("%s , %d\r\n",__func__,__LINE__);
+    if(list_empty(&nodebase_node_pragma[index].lora_tx_list.list))
+    {
+        more = false;
+        return;
+    }
+    //printk("%s , %d\r\n",__func__,__LINE__);
+    //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
+    pos = nodebase_node_pragma[index].lora_tx_list.list.next;
+    get = list_entry(pos, struct lora_tx_data, list);
+    list_del(&get->list);
+    //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
+    //memcpy(buffer,get->buffer,get->size);
+    //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
+    //len = get->size;
+    if(list_empty(&nodebase_node_pragma[index].lora_tx_list.list))
+    {
+        //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
+        more = false;
+    }
+    else
+    {
+        more = true;
+    }
 
-    LoRaMacBuffer = nodebase_node_pragma[index].repeatbuf;
-    len = node_get_data_to_send(index,payload,&more,&fPort);
-    if((len > 0) || ( nodebase_node_pragma[index].cmdlen > 0 ))
+    if(get->CtrlBits.AckRequest)
     {
         macHdr.Bits.MType = FRAME_TYPE_DATA_CONFIRMED_DOWN;
-        nodebase_node_pragma[index].need_ack = true;
-        newpkg = true;
     }
     else
     {
         macHdr.Bits.MType = FRAME_TYPE_DATA_UNCONFIRMED_DOWN;
-        nodebase_node_pragma[index].need_ack = false;
     }
+    LoRaMacBuffer = nodebase_node_pragma[index].repeatbuf;
+
     //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
     fCtrl.Bits.FPending = more;
 
-    if(nodebase_node_pragma[index].is_ack_req)
+    if(get->CtrlBits.Ack)
     {
         fCtrl.Bits.Ack = 1;
         newpkg = true;
@@ -295,51 +323,16 @@ void node_prepare_data_package( unsigned long index )
     LoRaMacBuffer[pktHeaderLen++] = nodebase_node_pragma[index].sequenceCounter_Down & 0xFF;
     LoRaMacBuffer[pktHeaderLen++] = ( nodebase_node_pragma[index].sequenceCounter_Down >> 8 ) & 0xFF;
 
-    // Copy the MAC commands which must be re-send into the MAC command buffer
-    //memcpy1( &MacCommandsBuffer[MacCommandsBufferIndex], MacCommandsBufferToRepeat, MacCommandsBufferToRepeatIndex );
-    //MacCommandsBufferIndex += MacCommandsBufferToRepeatIndex;
-    nodebase_node_pragma[index].cmdlen = 4;
-    nodebase_node_pragma[index].cmdbuf[0] = stRadioCfg_Tx.datarate[nodebase_node_pragma[index].chip] << 4;
-    nodebase_node_pragma[index].cmdbuf[0] |= stRadioCfg_Tx.power & 0x0f;//stRadioCfg_Tx.datarate[nodebase_node_pragma[index].chip] & 0x0f;
-    *(uint16_t*)&nodebase_node_pragma[index].cmdbuf[1] = (uint16_t)1 << stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[nodebase_node_pragma[index].chip]];
-    nodebase_node_pragma[index].cmdbuf[3] = 0x00;
-    //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
-
-    #if 0
-    if( nodebase_node_pragma[index].cmdlen > 0 )
+    LoRaMacBuffer[pktHeaderLen++] = get->fPort;
+    if(get->size > 0)
     {
-        fCtrl.Bits.FOptsLen = nodebase_node_pragma[index].cmdlen;
-
-        // Update FCtrl field with new value of OptionsLength
-        LoRaMacBuffer[0x05] = fCtrl.Value;
-        for( i = 0; i < nodebase_node_pragma[index].cmdlen; i++ )
-        {
-            LoRaMacBuffer[pktHeaderLen++] = nodebase_node_pragma[index].cmdbuf[i];
-        }
-        need_tx = true;
+        LoRaMacBufferPktLen = pktHeaderLen + get->size;
+        LoRaMacPayloadEncrypt( (uint8_t* ) get->buffer, get->size, nodebase_node_pragma[index].AppSKey, index, DOWN_LINK, nodebase_node_pragma[index].sequenceCounter_Down, &LoRaMacBuffer[pktHeaderLen] );
     }
     else
     {
-        fCtrl.Bits.FOptsLen = 0;
-        LoRaMacBuffer[0x05] = fCtrl.Value;
-        /*LoRaMacTxPayloadLen = MacCommandsBufferIndex;
-        payload = MacCommandsBuffer;
-        framePort = 0;*/
-    }
-    #endif
-    //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
-    if( len > 0 )// && ( LoRaMacTxPayloadLen > 0 ) )
-    {
-        LoRaMacBuffer[pktHeaderLen++] = fPort;
-        LoRaMacBufferPktLen = pktHeaderLen + len;
-        LoRaMacPayloadEncrypt( (uint8_t* ) payload, len, nodebase_node_pragma[index].AppSKey, index, DOWN_LINK, nodebase_node_pragma[index].sequenceCounter_Down, &LoRaMacBuffer[pktHeaderLen] );
-    }
-    else
-    {
-        LoRaMacBuffer[pktHeaderLen++] = fPort;
         LoRaMacBufferPktLen = pktHeaderLen;
     }
-    //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
     LoRaMacComputeMic( LoRaMacBuffer, LoRaMacBufferPktLen, nodebase_node_pragma[index].NwkSKey, index, DOWN_LINK, nodebase_node_pragma[index].sequenceCounter_Down, &mic );
 
     LoRaMacBuffer[LoRaMacBufferPktLen + 0] = mic & 0xFF;
@@ -353,14 +346,16 @@ void node_prepare_data_package( unsigned long index )
     memcpy(nodebase_node_pragma[index].repeatbuf,LoRaMacBuffer,LoRaMacBufferPktLen);
     //printk("%s, %d, %d\r\n",__func__,__LINE__,len);
     nodebase_node_pragma[index].repeatlen = LoRaMacBufferPktLen;
-
+    kfree(get->buffer);
+    kfree(get);
     if(newpkg == true)
     {
         nodebase_node_pragma[index].state = enStateRxWindow1;
-        DEBUG_OUTPUT_EVENT(nodebase_node_pragma[index].chip,EV_DATA_PREPARE_TO_SEND);
-        DEBUG_OUTPUT_DATA(nodebase_node_pragma[index].repeatbuf,nodebase_node_pragma[index].repeatlen);
+        //DEBUG_OUTPUT_EVENT(nodebase_node_pragma[index].chip,EV_DATA_PREPARE_TO_SEND);
+        //DEBUG_OUTPUT_DATA(nodebase_node_pragma[index].repeatbuf,nodebase_node_pragma[index].repeatlen);
         node_timer_start(index);
     }
+    //printk("%s , %d\r\n",__func__,__LINE__);
     nodebase_node_pragma[index].state = enStateRxWindow1;
 }
 
@@ -433,6 +428,7 @@ void node_have_confirm(uint32_t addr)
     printk("%s, %d\r\n",__func__,__LINE__);
     node_delete_repeat_buf(addr);
     //node_timer_stop(addr);
+    nodebase_node_pragma[addr].have_ack = true;
 }
 void node_get_net_addr(uint32_t *addr,uint8_t *ieeeaddr)
 {
@@ -443,6 +439,18 @@ void node_get_net_addr(uint32_t *addr,uint8_t *ieeeaddr)
 void node_get_ieeeaddr(uint32_t addr,uint8_t *ieeeaddr)
 {
     memcpy(ieeeaddr,nodebase_node_pragma[addr].DevEUI,8);
+    return;
+}
+
+void node_get_appeui(uint32_t addr,uint8_t *appeui)
+{
+    memcpy(appeui,nodebase_node_pragma[addr].APPEUI,8);
+    return;
+}
+
+void node_get_Battery(uint32_t addr,uint8_t *Battery)
+{
+    *Battery = nodebase_node_pragma[addr].Battery;
     return;
 }
 
@@ -469,14 +477,15 @@ int RadioTxMsgListAdd(struct lora_tx_data *p)
         //kfree(timer);
         return -1;
     }
-    pst_lora_tx_list->buffer = buf;
     //nodebase_node_pragma[index].timer = timer;
     memcpy(buf,p->buffer,p->size);
     memcpy(pst_lora_tx_list,p,sizeof(struct lora_tx_data));
+    pst_lora_tx_list->buffer = buf;
     //pst_lora_tx_list->size = len;
     //nodebase_node_pragma[index].jiffies1 = jiffies + LoRaMacParams.JoinAcceptDelay1;
     //nodebase_node_pragma[index].jiffies2 = jiffies + LoRaMacParams.JoinAcceptDelay2;
     list_add_tail(&(pst_lora_tx_list->list), &nodebase_node_pragma[p->addres].lora_tx_list.list);
+    node_prepare_data_package(pst_lora_tx_list->addres);
     /*init_timer(timer);
     timer->function = get_msg_to_send;
     timer->data = (unsigned long)index;

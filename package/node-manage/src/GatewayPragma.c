@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include <json-c/json.h>
 #include <malloc.h>
-#include<unistd.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <netdb.h>
 #include <sys/socket.h>
@@ -12,6 +12,7 @@
 #include <arpa/inet.h>
 #include "GatewayPragma.h"
 #include "nodedatabase.h"
+#include "utilities.h"
 
 #define LORAWAN_APPLICATION_KEY                     { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C }
 #define GATEWAY_PRAGMA_FILE_PATH    "/usr/gatewaypragma.cfg"
@@ -22,31 +23,6 @@ gateway_pragma_t gateway_pragma = {
 };
 
 int file;
-
-void hex2str(uint8_t *byte,uint8_t *str,int len)
-{
-    char *ch = {"0123456789ABCDEF"};
-    int loop;
-    for(loop = 0;loop < len;loop++)
-    {
-        str[loop * 2] = ch[byte[loop] >> 4];
-        str[loop * 2 + 1] = ch[byte[loop] & 0x0f];
-    }
-}
-
-//字节流转换为十六进制字符串的另一种实现方式
-void Hex2Str( const char *sSrc,  char *sDest, int nSrcLen )
-{
-    int  i;
-    char szTmp[3];
-
-    for( i = 0; i < nSrcLen; i++ )
-    {
-        sprintf( szTmp, "%02X", (unsigned char) sSrc[i] );
-        memcpy( &sDest[i * 2], szTmp, 2 );
-    }
-    return ;
-}
 
 void GetGatewayPragma(void)
 {
@@ -113,13 +89,13 @@ void GetGatewayPragma(void)
             sprintf(byte,"%06X",gateway_pragma.NetID);
             json_object_object_add(pragma,"NetID",json_object_new_string(byte));*/
 		memset(byte,0,100);
-		hex2str(gateway_pragma.APPKEY,byte,16);
+		Hex2Str(gateway_pragma.APPKEY,byte,16);
 		json_object_object_add(pragma,"APPKEY",json_object_new_string(byte));
 		memset(byte,0,100);
-		hex2str(gateway_pragma.AppNonce,byte,3);
+		Hex2Str(gateway_pragma.AppNonce,byte,3);
 		json_object_object_add(pragma,"AppNonce",json_object_new_string(byte));
 		memset(byte,0,100);
-		hex2str(gateway_pragma.NetID,byte,3);
+		Hex2Str(gateway_pragma.NetID,byte,3);
 		json_object_object_add(pragma,"NetID",json_object_new_string(byte));
 		json_object_object_add(pragma,"serverip",json_object_new_string("192.168.1.100"));
 		json_object_object_add(pragma,"serverport",json_object_new_string("32500"));

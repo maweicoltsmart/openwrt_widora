@@ -32,6 +32,8 @@
 #include <sys/ipc.h>
 #include <sys/stat.h>
 #include <sys/msg.h>
+#include <json-c/json.h>
+
 #include "typedef.h"
 //#include "nodedatabase.h"
 #include "nodedatabase.h"
@@ -213,13 +215,13 @@ void LoRaMacInit(void)
     */
 }
 
-uint8_t radiorxbuffer[300];
-uint8_t radiotxbuffer[2][300];
-
 void *Radio_routin(void *param){
-    LoRaMacPrimitives_t LoRaMacPrimitives;
-    LoRaMacCallback_t LoRaMacCallbacks;
-    MibRequestConfirm_t mibReq;
+    //LoRaMacPrimitives_t LoRaMacPrimitives;
+    //LoRaMacCallback_t LoRaMacCallbacks;
+    //MibRequestConfirm_t mibReq;
+    uint8_t radiorxbuffer[300];
+    //uint8_t radiotxbuffer[2][300];
+    uint8_t stringformat[256 * 2];
     int msgid = -1;
     //struct msg_st data;
     struct msg_st data;
@@ -227,17 +229,19 @@ void *Radio_routin(void *param){
 
     int len;
     //int fd = *(int *)data;
-    int chip = 0;
-    int index;
+    //int chip = 0;
+    //int index;
     //pst_lora_rx_data_type p1;
     //pst_lora_tx_data_type p2,p3;
     LoRaMacHeader_t macHdr;
     LoRaMacFrameCtrl_t fCtrl;
-    uint32_t mic = 0;
+    //uint32_t mic = 0;
     //node_join_info_t node_join_info;
-    uint8_t *pkg,*pkg1,*pkg2;
+    //uint8_t *pkg,*pkg1,*pkg2;
     //printf("%s,%d\r\n",__func__,__LINE__);
-
+    struct json_object *pragma = NULL;
+    //struct json_object *jstring;
+    lora_server_up_data_type *dataup;
     LoRaMacInit();
 
     creat_msg_q:
@@ -253,11 +257,39 @@ void *Radio_routin(void *param){
         //printf("fd_cdev = %d\r\n", fd_cdev);
         if((len = read(fd_cdev,radiorxbuffer,300)) > 0)
         {
+            dataup = (lora_server_up_data_type *)radiorxbuffer;
             data.msg_type = 1;    //注意2
-            memcpy(data.text, radiorxbuffer,len);
+            pragma = json_object_new_object();
+
+            json_object_object_add(pragma,"FrameType",json_object_new_string("DataUp"));
+            memset(stringformat,0,256 * 2);
+            Hex2Str(dataup->DevEUI,stringformat,8);
+            //printf("%s\r\n", stringformat);
+            //hexdump(dataup->DevEUI,8);
+            //jstring = json_object_new_string(stringformat);
+            json_object_object_add(pragma,"DevEUI",json_object_new_string(stringformat));
+            memset(stringformat,0,256 * 2);
+            Hex2Str(dataup->APPEUI,stringformat,8);
+            json_object_object_add(pragma,"AppEUI",json_object_new_string(stringformat));
+            //memset(stringformat,0,256 * 2);
+            //Hex2Str(dataup->DevAddr,stringformat,4);
+            json_object_object_add(pragma,"NetAddr",json_object_new_int(dataup->DevAddr));
+            json_object_object_add(pragma,"Port",json_object_new_int(dataup->fPort));
+            json_object_object_add(pragma,"AckRequest",json_object_new_boolean(dataup->CtrlBits.AckRequest));
+            json_object_object_add(pragma,"Ack",json_object_new_boolean(dataup->CtrlBits.Ack));
+            json_object_object_add(pragma,"Battery",json_object_new_int(dataup->Battery));
+            json_object_object_add(pragma,"Rssi",json_object_new_int(dataup->rssi));
+            json_object_object_add(pragma,"Snr",json_object_new_double(dataup->snr));
+            memset(stringformat,0,256 * 2);
+            Hex2Str(&radiorxbuffer[sizeof(lora_server_up_data_type)],stringformat,dataup->size);
+            json_object_object_add(pragma,"Data",json_object_new_string(stringformat)); /* data that encoded into Base64 */
+            memset(data.text,0,MSG_Q_BUFFER_SIZE);
+            strcpy(data.text,json_object_to_json_string(pragma));
+            //printf("%s\r\n", data.text);
+            json_object_put(pragma);
             //向队列发送数据
             //printf("send msg\r\n");
-            if(msgsnd(msgid, (void*)&data, len, 0) == -1)
+            if(msgsnd(msgid, (void*)&data, strlen(data.text), 0) == -1)
             {
                 printf("msgsnd failed\r\n");
                 goto creat_msg_q;
