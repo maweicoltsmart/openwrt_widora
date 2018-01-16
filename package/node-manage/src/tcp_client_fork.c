@@ -23,8 +23,8 @@
 #include <errno.h>
 
 #define PORT  8890
-char sendbuf[MSG_Q_BUFFER_SIZE];
-char recvbuf[MSG_Q_BUFFER_SIZE];
+uint8_t sendbuf[MSG_Q_BUFFER_SIZE];
+uint8_t recvbuf[MSG_Q_BUFFER_SIZE * 100];
 extern int fd_cdev;
 
 void *client_send(void *arg)
@@ -84,6 +84,7 @@ void *tcp_client_routin(void *data)
     struct json_object *obj = NULL;
     uint8_t stringformat[256 * 2];
     uint8_t tx_data_buf[300];
+    uint8_t *pstrchr;
 connect:
     //定义IPV4的TCP连接的套接字描述符
     sock_cli = socket(AF_INET,SOCK_STREAM, 0);
@@ -187,42 +188,80 @@ connect:
         }
         printf("client receive:\n");*/
         //printf("client receive:\n");
-        len = recv(sock_cli, recvbuf, sizeof(recvbuf),0); ///接收
+        memset(recvbuf, 0, sizeof(recvbuf));
+        len = recv(sock_cli, recvbuf, sizeof(recvbuf) - 1,0); ///接收
         if(len < 1)
         {
             close(sock_cli);
 			printf("reconnect %d\r\n",__LINE__);
             goto connect;
         }
-        printf("%s\r\n",recvbuf);
-        pragma = json_tokener_parse((const char *)recvbuf);
-        json_object_object_get_ex(pragma,"DevEUI",&obj);
-        memset(stringformat,0,256 * 2);
-        strcpy(stringformat,json_object_get_string(obj));
-        //printf("%s :%s\r\n", __func__,stringformat);
-        Str2Hex( &stringformat[0],  datadown.DevEUI, 8 );
-        hexdump(datadown.DevEUI,8);
-        json_object_object_get_ex(pragma,"Port",&obj);
-        datadown.fPort = json_object_get_int(obj);
-        json_object_object_get_ex(pragma,"AckRequest",&obj);
-        datadown.CtrlBits.AckRequest = json_object_get_boolean(obj);
+        pstrchr = recvbuf;
+        //printf("%s\r\n", recvbuf);
+        while((pstrchr - recvbuf) < len)
+        {
+            pstrchr = strchr(pstrchr,'{');
+            if(pstrchr == NULL)
+            {
+                break;
+            }
+            else
+            {
+                pstrchr ++;
+            }
+            //printf("%s\r\n",recvbuf);
+            pragma = json_tokener_parse((const char *)(pstrchr - 1));
+            if(pragma == NULL)
+            {
+                break;
+            }
+            json_object_object_get_ex(pragma,"DevEUI",&obj);
+            if(obj == NULL)
+            {
+                    break;
+            }
+            memset(stringformat,0,256 * 2);
+            strcpy(stringformat,json_object_get_string(obj));
+            //printf("%s :%s\r\n", __func__,stringformat);
+            Str2Hex( &stringformat[0],  datadown.DevEUI, 8 );
+            hexdump(datadown.DevEUI,8);
+            json_object_object_get_ex(pragma,"Port",&obj);
+            if(obj == NULL)
+            {
+                    break;
+            }
+            datadown.fPort = json_object_get_int(obj);
+            json_object_object_get_ex(pragma,"AckRequest",&obj);
+            if(obj == NULL)
+            {
+                    break;
+            }
+            datadown.CtrlBits.AckRequest = json_object_get_boolean(obj);
 
-        json_object_object_get_ex(pragma,"Ack",&obj);
-        datadown.CtrlBits.Ack = json_object_get_boolean(obj);
-        //printf("AckRequest = %d\r\nAck = %d\r\n", datadown.CtrlBits.AckRequest,datadown.CtrlBits.Ack);
-        json_object_object_get_ex(pragma,"Data",&obj);
-        memset(stringformat,0,256 * 2);
-        strcpy(stringformat,json_object_get_string(obj));
-        datadown.size = strlen(stringformat) / 2;
-        //printf("%s\r\n", stringformat);
-        Str2Hex( &stringformat[0],  &tx_data_buf[sizeof(lora_server_down_data_type)], datadown.size );
-        hexdump(&tx_data_buf[sizeof(lora_server_down_data_type)],datadown.size);
-        memcpy(tx_data_buf,&datadown,sizeof(lora_server_down_data_type));
-        json_object_put(pragma);
+            json_object_object_get_ex(pragma,"Ack",&obj);
+            if(obj == NULL)
+            {
+                    break;
+            }
+            datadown.CtrlBits.Ack = json_object_get_boolean(obj);
+            //printf("AckRequest = %d\r\nAck = %d\r\n", datadown.CtrlBits.AckRequest,datadown.CtrlBits.Ack);
+            json_object_object_get_ex(pragma,"Data",&obj);
+            if(obj == NULL)
+            {
+                    break;
+            }
+            memset(stringformat,0,256 * 2);
+            strcpy(stringformat,json_object_get_string(obj));
+            datadown.size = strlen(stringformat) / 2;
+            //printf("%s\r\n", stringformat);
+            Str2Hex( &stringformat[0],  &tx_data_buf[sizeof(lora_server_down_data_type)], datadown.size );
+            hexdump(&tx_data_buf[sizeof(lora_server_down_data_type)],datadown.size);
+            memcpy(tx_data_buf,&datadown,sizeof(lora_server_down_data_type));
+            json_object_put(pragma);
 
-        write(fd_cdev,tx_data_buf,sizeof(lora_server_down_data_type) + datadown.size);
+            write(fd_cdev,tx_data_buf,sizeof(lora_server_down_data_type) + datadown.size);
+        }
         //memset(sendbuf, 0, sizeof(sendbuf));
-        memset(recvbuf, 0, sizeof(recvbuf));
     //sleep(1);
     }
 
