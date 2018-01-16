@@ -194,6 +194,7 @@ connect:
 			printf("reconnect %d\r\n",__LINE__);
             goto connect;
         }
+        printf("%s\r\n",recvbuf);
         pragma = json_tokener_parse((const char *)recvbuf);
         json_object_object_get_ex(pragma,"DevEUI",&obj);
         memset(stringformat,0,256 * 2);

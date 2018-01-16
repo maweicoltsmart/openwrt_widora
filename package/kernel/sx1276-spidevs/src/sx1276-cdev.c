@@ -447,7 +447,7 @@ static ssize_t lora_dev_write(struct file *filp, const char __user *buf, size_t 
 
 static int lora_dev_close(struct inode *inode, struct file *file)
 {
-    printk("%s,%d\r\n",__func__,__LINE__);
+    //printk("%s,%d\r\n",__func__,__LINE__);
     kthread_stop(radio_routin);
     Radio.Sleep(0);
     Radio.Sleep(1);

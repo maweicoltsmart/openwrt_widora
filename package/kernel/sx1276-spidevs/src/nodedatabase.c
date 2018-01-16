@@ -63,7 +63,7 @@ int16_t node_database_join(node_join_info_t* node)
             DEBUG_OUTPUT_DATA((unsigned char *)nodebase_node_pragma[loop].NwkSKey,16);
             if(nodebase_node_pragma[loop].state == enStateJoinning)
             {
-                printk("%s, %d\r\n",__func__,__LINE__);
+                //printk("%s, %d\r\n",__func__,__LINE__);
                 return -1;
             }else{
                 nodebase_node_pragma[loop].state = enStateJoinning;
@@ -168,6 +168,7 @@ void node_timer_start(uint32_t index)
     {
         nodebase_node_pragma[index].timer1->expires = nodebase_node_pragma[index].jiffies1;
         add_timer(nodebase_node_pragma[index].timer1);
+        nodebase_node_pragma[index].state = enStateRxWindow1;
     }
     if(nodebase_node_pragma[index].timer2)
     {
@@ -350,13 +351,17 @@ void node_prepare_data_package( unsigned long index )
     kfree(get);
     if(newpkg == true)
     {
-        nodebase_node_pragma[index].state = enStateRxWindow1;
+        if(nodebase_node_pragma[index].state == enStateJoined)
+        {
+            nodebase_node_pragma[index].state = enStateRxWindow1;
+        }
+        //printk("%s , %d\r\n",__func__,__LINE__);
         //DEBUG_OUTPUT_EVENT(nodebase_node_pragma[index].chip,EV_DATA_PREPARE_TO_SEND);
         //DEBUG_OUTPUT_DATA(nodebase_node_pragma[index].repeatbuf,nodebase_node_pragma[index].repeatlen);
-        node_timer_start(index);
+        //node_timer_start(index);
     }
     //printk("%s , %d\r\n",__func__,__LINE__);
-    nodebase_node_pragma[index].state = enStateRxWindow1;
+    //nodebase_node_pragma[index].state = enStateRxWindow1;
 }
 
 void node_get_msg_to_send( unsigned long index )
@@ -425,13 +430,22 @@ void node_get_msg_to_send( unsigned long index )
 
 void node_have_confirm(uint32_t addr)
 {
-    printk("%s, %d\r\n",__func__,__LINE__);
-    node_delete_repeat_buf(addr);
+    //printk("%s, %d\r\n",__func__,__LINE__);
+    //node_delete_repeat_buf(addr);
     //node_timer_stop(addr);
     nodebase_node_pragma[addr].have_ack = true;
 }
 void node_get_net_addr(uint32_t *addr,uint8_t *ieeeaddr)
 {
+    uint32_t index = 0;
+    for(index = 0;index < node_cnt;index ++)
+    {
+        if(memcmp(ieeeaddr,nodebase_node_pragma[index].DevEUI,8) == 0)
+        {
+            *addr = index;
+            return;
+        }
+    }
     *addr = 0;
     return;
 }
@@ -459,7 +473,7 @@ int RadioTxMsgListAdd(struct lora_tx_data *p)
     //struct timer_list *timer;
     struct lora_tx_data *pst_lora_tx_list;
     uint8_t *buf = kmalloc(p->size,GFP_KERNEL);
-
+    //printk("%s , %d\r\n",__func__,__LINE__);
     if(buf == NULL)
     {
         return -1;
@@ -470,6 +484,7 @@ int RadioTxMsgListAdd(struct lora_tx_data *p)
         kfree(buf);
         return -1;
     }*/
+    //printk("%s , %d\r\n",__func__,__LINE__);
     pst_lora_tx_list = kmalloc(sizeof(struct lora_tx_data),GFP_KERNEL);
     if(pst_lora_tx_list == NULL)
     {
@@ -477,6 +492,7 @@ int RadioTxMsgListAdd(struct lora_tx_data *p)
         //kfree(timer);
         return -1;
     }
+    //printk("%s , %d\r\n",__func__,__LINE__);
     //nodebase_node_pragma[index].timer = timer;
     memcpy(buf,p->buffer,p->size);
     memcpy(pst_lora_tx_list,p,sizeof(struct lora_tx_data));
@@ -502,6 +518,8 @@ void node_update_info(int index,struct lora_rx_data *p1)
     nodebase_node_pragma[index].rssi = p1->rssi;
     nodebase_node_pragma[index].jiffies1 = nodebase_node_pragma[index].jiffies + LoRaMacParams.ReceiveDelay1;
     nodebase_node_pragma[index].jiffies2 = nodebase_node_pragma[index].jiffies + LoRaMacParams.ReceiveDelay2;
+    node_timer_start(index);
+    node_prepare_data_package(index);
 }
 
 /*void start_timer(uint32_t index,uint32_t jiffiesval)

@@ -223,7 +223,7 @@ int Radio_routin(void *data){
                     if( isMicOk == true )
                     {
                         node_update_info(address,p1);
-                        node_timer_start(address);
+                        //node_timer_start(address);
                         switch(macHdr.Bits.MType)
                         {
                             case FRAME_TYPE_DATA_CONFIRMED_UP:
@@ -271,7 +271,7 @@ int Radio_routin(void *data){
                                                            sequenceCounter,
                                                            LoRaMacRxPayload );
 
-                                    hexdump(LoRaMacRxPayload,frameLen);
+                                    //hexdump(LoRaMacRxPayload,frameLen);
                                     Radio2ServerMsgListAdd(address,port,LoRaMacRxPayload,frameLen);
                                     // Decode frame payload MAC commands
                                     //ProcessMacCommands( LoRaMacRxPayload, 0, frameLen, snr );
@@ -298,7 +298,7 @@ int Radio_routin(void *data){
                                                        LoRaMacRxPayload );
                                 //hexdump(nodebase_node_pragma[address].AppSKey,16);
                                 //hexdump(payload + appPayloadStartIndex,frameLen);
-                                hexdump(LoRaMacRxPayload,frameLen);
+                                //hexdump(LoRaMacRxPayload,frameLen);
                                 Radio2ServerMsgListAdd(address,port,LoRaMacRxPayload,frameLen);
                                 /*if( skipIndication == false )
                                 {

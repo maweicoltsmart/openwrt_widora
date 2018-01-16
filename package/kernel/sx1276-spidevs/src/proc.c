@@ -30,12 +30,12 @@ static int lora_cfg_rx_proc_open(struct inode *inode,struct file *file)
 static int proc_write_lora_cfg_rx(struct file *file, const char *buffer, size_t len, loff_t *off)
 {
     int count;
-    printk("%s,%d\r\n",__func__,__LINE__);
+    //printk("%s,%d\r\n",__func__,__LINE__);
     if(len > sizeof(st_RadioCfg))
         count = sizeof(st_RadioCfg);
     else
         count = len;
-    printk("%s,%d\r\n",__func__,__LINE__);
+    //printk("%s,%d\r\n",__func__,__LINE__);
     memset(&stRadioCfg_Rx,0,sizeof(st_RadioCfg));
     if(copy_from_user((void*)&stRadioCfg_Rx, buffer, count))
         return -EFAULT;
