@@ -1,23 +1,14 @@
 #!/bin/sh /etc/rc.common
-# "new" style init scriptt
-# Look at /lib/functions/service.sh on a running system for explanations of what other SERVICE_
-# options you can use, and when you might want them.
-
-START=80
-APP=node-manage
-SERVICE_WRITE_PID=1
-SERVICE_DAEMONIZE=1
-
+START=99
 start() {
-	#widora_mode router
-        service_start /bin/$APP
+	service_start /bin/node-manage
 }
 
 stop() {
-        service_stop /bin/$APP
+	service_stop /bin/node-manage
 }
 
 restart() {
-	service_stop /bin/$APP
-        service_start /bin/$APP
+	service_stop /bin/node-manage
+	service_start /bin/node-manage
 }
