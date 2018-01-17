@@ -231,6 +231,10 @@ connect:
                     break;
             }
             datadown.fPort = json_object_get_int(obj);
+            if((datadown.fPort == 0) || (datadown.fPort > 223))
+            {
+                break;
+            }
             json_object_object_get_ex(pragma,"AckRequest",&obj);
             if(obj == NULL)
             {

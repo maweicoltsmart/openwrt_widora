@@ -143,6 +143,10 @@ void str_echo(int sockfd)
             }
             datadown.CtrlBits.AckRequest = json_object_get_boolean(obj);
 
+            if((datadown.fPort == 0) || (datadown.fPort > 223))
+            {
+                break;
+            }
             json_object_object_get_ex(pragma,"Ack",&obj);
             if(obj == NULL)
             {

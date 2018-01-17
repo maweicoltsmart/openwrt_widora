@@ -79,20 +79,22 @@ void LoRaMacInit(void)
     st_RadioCfg stRadioCfg;
     //const uint8_t symbpreamble[12] = {0,1,2,3,4,5,6,24,14,9,};
     GetGatewayPragma();
-
+open_dev:
     fd_proc_cfg_rx = open("/proc/lora_procfs/lora_cfg_rx",O_RDWR);
     if (fd_proc_cfg_rx < 0)
     {
-        perror("lora_proc_cfg_rx");
-        printf("open lora_proc_cfg_rx error\r\n");
-        return;
+        //perror("lora_proc_cfg_rx");
+        //printf("open lora_proc_cfg_rx error\r\n");
+        sleep(1);
+        goto open_dev;
     }
     fd_proc_cfg_tx = open("/proc/lora_procfs/lora_cfg_tx",O_RDWR);
     if (fd_proc_cfg_tx < 0)
     {
-        perror("lora_proc_cfg_tx");
-        printf("open lora_proc_cfg_tx error\r\n");
-        return;
+        //perror("lora_proc_cfg_tx");
+        //printf("open lora_proc_cfg_tx error\r\n");
+        sleep(1);
+        goto open_dev;
     }
     LoRaMacParamsDefaults.ChannelsTxPower = CN470_DEFAULT_TX_POWER;
     LoRaMacParamsDefaults.ChannelsDatarate = CN470_DEFAULT_DATARATE;
@@ -188,8 +190,10 @@ void LoRaMacInit(void)
     fd_cdev = open("/dev/lora_radio",O_RDWR | O_NONBLOCK);
     if (fd_cdev < 0)
     {
-        printf("open lora_radio error\r\n");
-        return;
+        //printf("open lora_radio error\r\n");
+        //return;
+        sleep(1);
+        goto open_dev;
     }
 /*
     int ioarg = false;

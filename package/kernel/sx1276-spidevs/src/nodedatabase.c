@@ -312,6 +312,10 @@ void node_prepare_data_package( unsigned long index )
         fCtrl.Bits.Ack = 1;
         newpkg = true;
     }
+    else
+    {
+        fCtrl.Bits.Ack = 0;
+    }
     LoRaMacBuffer[pktHeaderLen++] = macHdr.Value;
 
     LoRaMacBuffer[pktHeaderLen++] = ( index ) & 0xFF;
@@ -324,9 +328,9 @@ void node_prepare_data_package( unsigned long index )
     LoRaMacBuffer[pktHeaderLen++] = nodebase_node_pragma[index].sequenceCounter_Down & 0xFF;
     LoRaMacBuffer[pktHeaderLen++] = ( nodebase_node_pragma[index].sequenceCounter_Down >> 8 ) & 0xFF;
 
-    LoRaMacBuffer[pktHeaderLen++] = get->fPort;
     if(get->size > 0)
     {
+        LoRaMacBuffer[pktHeaderLen++] = get->fPort;
         LoRaMacBufferPktLen = pktHeaderLen + get->size;
         LoRaMacPayloadEncrypt( (uint8_t* ) get->buffer, get->size, nodebase_node_pragma[index].AppSKey, index, DOWN_LINK, nodebase_node_pragma[index].sequenceCounter_Down, &LoRaMacBuffer[pktHeaderLen] );
     }

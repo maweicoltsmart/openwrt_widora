@@ -63,8 +63,8 @@ void serverpkgformat(void)
 	json_object_object_add(pragma,"FrameType",json_object_new_string("DataDown"));
     json_object_object_add(pragma,"DevEUI",json_object_new_string("01234567ABCDEF89"));
     json_object_object_add(pragma,"Port",json_object_new_int(0));
-    json_object_object_add(pragma,"AckRequest",json_object_new_string("true"));
-    json_object_object_add(pragma,"Ack",json_object_new_string("true"));
+    json_object_object_add(pragma,"AckRequest",json_object_new_boolean(1));
+    json_object_object_add(pragma,"Ack",json_object_new_boolean(0));
     json_object_object_add(pragma,"Data",json_object_new_string("1Jr8PdOdN5"));	/* data that encoded into Base64 */
     strcpy(buf,json_object_to_json_string(pragma));
 	write(file,buf,strlen(buf));

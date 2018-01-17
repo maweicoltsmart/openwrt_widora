@@ -38,10 +38,9 @@ void GetGatewayPragma(void)
 	uint8_t *buf = malloc(4096);
 
 	memset(buf,0,4096);
-	file = open(GATEWAY_PRAGMA_FILE_PATH, O_RDWR|O_CREAT);
-	if(file < 0)
+	while((file = open(GATEWAY_PRAGMA_FILE_PATH, O_RDWR|O_CREAT)) < 0)
 	{
-            //printf("%s,%d,%d\r\n",__func__,__LINE__,errno);
+		sleep(1);
 	}
 	lseek(file,0,SEEK_SET);
 	len = read ( file,buf,4096) ;
