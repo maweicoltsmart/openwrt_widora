@@ -3,9 +3,3 @@ START=99
 start(){
 	widora_mode router
 }
-stop(){
-        
-}
-restart(){
-       
-}

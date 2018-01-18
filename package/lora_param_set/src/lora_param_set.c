@@ -39,21 +39,9 @@ const gateway_pragma_t gateway_pragma = {
     .NetID  ={0x78,0x9a,0xbc},
 };
 
-static int file;
-
 char InputBuffer[4096];
 
 int DecodeAndProcessData(char *input);    /*具体译码和处理数据，该函数代码略*/
-void hex2str(uint8_t *byte,uint8_t *str,int len)
-{
-    char *ch = {"0123456789ABCDEF"};
-    int loop;
-    for(loop = 0;loop < len;loop++)
-    {
-        str[loop * 2] = ch[byte[loop] >> 4];
-        str[loop * 2 + 1] = ch[byte[loop] & 0x0f];
-    }
-}
 
 //字节流转换为十六进制字符串的另一种实现方式
 void Hex2Str( const char *sSrc,  char *sDest, int nSrcLen )
@@ -66,6 +54,7 @@ void Hex2Str( const char *sSrc,  char *sDest, int nSrcLen )
         sprintf( szTmp, "%02X", (unsigned char) sSrc[i] );
         memcpy( &sDest[i * 2], szTmp, 2 );
     }
+    //sDest[i * 2] = '\0';
     return ;
 }
 int main(int argc, char*argv[])
@@ -78,18 +67,15 @@ int main(int argc, char*argv[])
     setvbuf(stdin,NULL,_IONBF,0);     /*关闭stdin的缓冲*/
     printf("Content-Type: application/json\n\n");     /*从stdout中输出，告诉Web服务器返回的信息类型*/
     printf("\n");                                           /*插入一个空行，结束头部信息*/
-    //printf("<p>hello test</p>");
     /*   从环境变量REQUEST_METHOD中得到METHOD属性值   */
 
     pRequestMethod = getenv("REQUEST_METHOD");
     if(pRequestMethod==NULL)
     {
-                //printf("<p>request = null</p>");
         return   0;
     }
     if (strcasecmp(pRequestMethod,"POST")==0)
     {
-        //printf("<p>OK the method is POST!\n</p>");
         p = getenv("CONTENT_LENGTH");     //从环境变量CONTENT_LENGTH中得到数据长度
         if (p!=NULL)
         {
@@ -118,12 +104,10 @@ int main(int argc, char*argv[])
     }
     else if (strcasecmp(pRequestMethod,"GET")==0)
     {
-        //printf("<p>OK the method is GET!\n</p>");
         p = getenv("QUERY_STRING");     //从环境变量QUERY_STRING中得到Form数据
         if   (p!=NULL)
         {
             strncpy(InputBuffer,p,sizeof(InputBuffer));
-                        //DecodeAndProcessData(InputBuffer);    //具体译码和处理数据，该函数代码略
         }
         int len;
         int32_t tmp;
@@ -134,67 +118,31 @@ int main(int argc, char*argv[])
         int i = 0;
         int loop = 0;
         uint8_t byte[100];
-        uint8_t *buf = malloc(4096);
-
-        memset(buf,0,4096);
-        file = open(GATEWAY_PRAGMA_FILE_PATH, O_RDWR|O_CREAT);
-        if(file < 0)
-        {
-            //printf("%s,%d,%d\r\n",__func__,__LINE__,errno);
-        }
-        lseek(file,0,SEEK_SET);
-        len = read ( file,buf,4096) ;
-        if(len == 0)
-        {
-            //return 0;
-            //printf("%s,%d,%d\r\n",__func__,__LINE__,errno);
-        }
-        //printf("%s%d%s%d",__func__,__LINE__,buf,len);
-        pragma = json_tokener_parse( (const char *)buf );
-        //pragma = (struct json_object *)buf;
-        //obj = json_object_object_get(pragma,"NetType");
         bool found;
 
-        found = json_object_object_get_ex(pragma, "NetType", &obj);
-        if(!found)
-           //return json_object_get_string(val);
-        //if((!obj))
+        pragma = json_object_from_file(GATEWAY_PRAGMA_FILE_PATH);
+        if(pragma == NULL)
         {
-            lseek(file,0,SEEK_SET);
-            ftruncate(file,0);
-            memset(byte,0,100);
-                    //sprintf(byte, "%d", errno);
-
-        //fwrite("no nettype\r\n",strlen("no nettype\r\n"),1,file);
-                    //fwrite(byte,1,strlen(byte),file);
+            found = false;
+        }
+        else
+        {
+            found = json_object_object_get_ex(pragma, "NetType", &obj);
+        }
+        if(!found)
+        {
             pragma = json_object_new_object();
 
-        //if(gateway_pragma.nettype == 0)
-            {
-
             json_object_object_add(pragma,"NetType",json_object_new_string("Private"));
-            }
-        //else
-        //{
-            //json_object_object_add(pragma,"NetType",json_object_new_string("Public"));
-        //}
-            /*memset(byte,0,100);
-            sprintf(byte,"%032X",gateway_pragma.APPKEY);
+
+            memset(byte,0,100);
+            Hex2Str(gateway_pragma.APPKEY,byte,16);
             json_object_object_add(pragma,"APPKEY",json_object_new_string(byte));
             memset(byte,0,100);
-            sprintf(byte,"%06X",gateway_pragma.AppNonce);
+            Hex2Str(gateway_pragma.AppNonce,byte,3);
             json_object_object_add(pragma,"AppNonce",json_object_new_string(byte));
             memset(byte,0,100);
-            sprintf(byte,"%06X",gateway_pragma.NetID);
-            json_object_object_add(pragma,"NetID",json_object_new_string(byte));*/
-            memset(byte,0,100);
-            hex2str(gateway_pragma.APPKEY,byte,16);
-            json_object_object_add(pragma,"APPKEY",json_object_new_string(byte));
-            memset(byte,0,100);
-            hex2str(gateway_pragma.AppNonce,byte,3);
-            json_object_object_add(pragma,"AppNonce",json_object_new_string(byte));
-            memset(byte,0,100);
-            hex2str(gateway_pragma.NetID,byte,3);
+            Hex2Str(gateway_pragma.NetID,byte,3);
             json_object_object_add(pragma,"NetID",json_object_new_string(byte));
             json_object_object_add(pragma,"serverip",json_object_new_string("192.168.1.100"));
             json_object_object_add(pragma,"serverport",json_object_new_string("32500"));
@@ -217,7 +165,7 @@ int main(int argc, char*argv[])
             json_object_object_add(pragma,"localport",json_object_new_string("32500"));
 
             json_object_object_add(pragma,"radio",array = json_object_new_array());
-            const char* drname[3] = {"DR_0","DR_3","DR_5"};
+            const char* drname[] = {"DR_0","DR_1","DR_2","DR_3","DR_4","DR_5"};
             for(loop = 0;loop < 3;loop++)
             {
                 json_object_array_add(array,chip=json_object_new_object());
@@ -225,27 +173,14 @@ int main(int argc, char*argv[])
                 json_object_object_add(chip,"channel",json_object_new_int(loop));
                 json_object_object_add(chip,"datarate",json_object_new_string(drname[loop]));
             }
-            memset(buf,0,4096);
-            strcpy(buf,json_object_to_json_string(pragma));
-            write(file,buf,strlen(buf));
-            //printf("%s",buf);
-            json_object_put(pragma);
+            json_object_to_file(GATEWAY_PRAGMA_FILE_PATH,pragma);
             system("/etc/init.d/lora restart");
-            //execl("/etc/init.d/lora","lora","restart",NULL);
         }
-    //printf("Content-Type: application/json");
-    //printf("%s\n\n","Content-Type:text/html;charset=utf-8");
-    //printf("Content-type: text/html/n/n");
-    //printf("");
-                //printf("%s\n\n","Content-Type: application/json");
-        printf("%s",buf);
+
+        printf("%s",json_object_to_json_string(pragma));
         fflush(stdout);
-        close(file);
         json_object_put(pragma);
-        free(buf);
     }
-        //printf("<HEAD><TITLE>Submitted OK</TITLE></HEAD>\n");//从stdout中输出返回信息
-        //printf("<BODY>The information you supplied has been accepted.</BODY>\n");
 
     return   0;
 }
@@ -253,16 +188,14 @@ int main(int argc, char*argv[])
 
 int DecodeAndProcessData(char *input)    //具体译码和处理数据
 {
+    struct json_object *pragma = NULL;
     if(strlen(input) < 50)
         return 0;
-    file = open(GATEWAY_PRAGMA_FILE_PATH, O_RDWR|O_CREAT);
-    lseek(file,0,SEEK_SET);
-    ftruncate(file,0);
-    write(file,input,strlen(input));
-    close(file);
+    pragma = json_tokener_parse( (const char *)input );
+    json_object_to_file(GATEWAY_PRAGMA_FILE_PATH,pragma);
+    json_object_put(pragma);
     system("sync");
     system("/etc/init.d/lora restart");
-    //usleep(100000);
-        // 补充具体操作
+
     return 0;
 }
