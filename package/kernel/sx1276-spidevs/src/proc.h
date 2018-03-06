@@ -40,7 +40,14 @@ typedef struct
 	bool isPublic;
 }st_RadioCfg,*pst_RadioCfg;
 
+typedef struct
+{
+	uint8_t APPKEY[16];
+	uint8_t NetID[3];
+}st_MacCfg,*pst_MacCfg;
+
 extern st_RadioCfg stRadioCfg_Rx,stRadioCfg_Tx;
+extern st_MacCfg stMacCfg;
 
 int init_procfs_lora(void);
 void cleanup_procfs_lora(void);

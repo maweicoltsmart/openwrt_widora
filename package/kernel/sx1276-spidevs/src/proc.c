@@ -11,9 +11,10 @@
 #define MODULE_VERS "1.0"
 #define MODULE_NAME "lora_procfs"
 
-static struct proc_dir_entry *lora_dir, *lora_cfg_rx_file,*lora_cfg_tx_file;
+static struct proc_dir_entry *lora_dir, *lora_cfg_rx_file,*lora_cfg_tx_file,*lora_cfg_mac_file;
 
 st_RadioCfg stRadioCfg_Tx,stRadioCfg_Rx;
+st_MacCfg stMacCfg;
 
 static int mytest_flag = 0;//create flag variable
 static int mytest_proc_show(struct seq_file *seq,void *v)
@@ -142,6 +143,34 @@ static const struct file_operations lora_cfg_tx_file_ops ={
     .write = proc_write_lora_cfg_tx,
 };
 
+static int lora_cfg_mac_proc_open(struct inode *inode,struct file *file)
+{
+    return single_open(file,mytest_proc_show,inode->i_private);
+}
+
+static int proc_write_lora_cfg_mac(struct file *file, const char *buffer, size_t len, loff_t *off)
+{
+    int count;
+    printk("%s,%d\r\n",__func__,__LINE__);
+    if(len > sizeof(st_MacCfg))
+        count = sizeof(st_MacCfg);
+    else
+        count = len;
+    //printk("%s,%d\r\n",__func__,__LINE__);
+    memset(&stMacCfg,0,sizeof(st_MacCfg));
+    if(copy_from_user((void*)&stMacCfg, buffer, count))
+        return -EFAULT;
+
+    return len;
+}
+
+static const struct file_operations lora_cfg_mac_file_ops ={
+    .owner = THIS_MODULE,
+    .open = lora_cfg_mac_proc_open,
+    .read = seq_read,
+    .write = proc_write_lora_cfg_mac,
+};
+
 int init_procfs_lora(void)
 {
     int rv = 0;
@@ -162,7 +191,13 @@ int init_procfs_lora(void)
         goto no_foo;
     }
     lora_cfg_tx_file = proc_create("lora_cfg_tx", 0644, lora_dir,&lora_cfg_tx_file_ops);
-    if(lora_cfg_rx_file == NULL) {
+    if(lora_cfg_tx_file == NULL) {
+        rv = -ENOMEM;
+        goto no_foo;
+    }
+	
+    lora_cfg_mac_file = proc_create("lora_cfg_mac", 0644, lora_dir,&lora_cfg_mac_file_ops);
+    if(lora_cfg_mac_file == NULL) {
         rv = -ENOMEM;
         goto no_foo;
     }
@@ -184,6 +219,7 @@ void cleanup_procfs_lora(void)
 {
     remove_proc_entry("lora_cfg_rx", lora_dir);
     remove_proc_entry("lora_cfg_tx", lora_dir);
+	remove_proc_entry("lora_cfg_Mac", lora_dir);
     //remove_proc_entry("lora_chan", lora_chan_file);
     remove_proc_entry(MODULE_NAME, NULL);
     //remove_proc_entry(MODULE_NAME, NULL);

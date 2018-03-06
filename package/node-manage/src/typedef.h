@@ -62,6 +62,11 @@ typedef struct
     bool rxContinuous;
 	bool isPublic;
 }st_RadioCfg,*pst_RadioCfg;
+typedef struct
+{
+	uint8_t APPKEY[16];
+	uint8_t NetID[3];
+}st_MacCfg,*pst_MacCfg;
 
 
 #endif

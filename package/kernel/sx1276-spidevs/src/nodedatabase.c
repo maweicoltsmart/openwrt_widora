@@ -1,6 +1,10 @@
 #include <linux/slab.h>
 #include <linux/timer.h>
 #include <linux/time.h>
+#include <linux/module.h>
+#include <linux/init.h>
+#include <linux/fs.h>
+#include <linux/uaccess.h>
 
 #include "nodedatabase.h"
 #include "LoRaMacCrypto.h"
@@ -19,14 +23,79 @@ const gateway_pragma_t gateway_pragma = {
 node_pragma_t nodebase_node_pragma[MAX_NODE];
 static int16_t node_cnt = 0;
 
+void reloaddatabase(void)
+{
+	int loop = 0;
+	const uint8_t zerodeveui[] = {0,0,0,0,0,0,0,0};
+	int len;
+	struct file *fp;
+    mm_segment_t fs;
+    loff_t pos;
+    printk("reload node database\r\n");
+    fp =filp_open("/usr/nodedatabase",O_RDWR | O_CREAT,0644);
+    if (IS_ERR(fp)){ 
+        printk("open or create nodedatabse file error\r\n");
+    } 
+    fs =get_fs();
+    set_fs(KERNEL_DS);
+    //pos =0; 
+    //vfs_write(fp,buf, sizeof(buf), &pos);
+    pos =0; 
+    len = vfs_read(fp,(char *)nodebase_node_pragma, sizeof(node_pragma_t) * MAX_NODE, &pos);
+	filp_close(fp,NULL);
+    set_fs(fs);
+    if(len < (sizeof(node_pragma_t) * MAX_NODE))
+    {
+    	node_cnt = 0;
+    	memset(nodebase_node_pragma,0,sizeof(node_pragma_t) * MAX_NODE);
+    }
+	else
+	{
+		for(loop = 0;loop < MAX_NODE;loop ++)
+		{
+			if(memcmp(nodebase_node_pragma[loop].DevEUI,zerodeveui,8))
+			{
+				node_cnt ++;
+			}
+		}
+	}
+}
+
+void savedatabase(void)
+{
+	int len;
+	struct file *fp;
+    mm_segment_t fs;
+    loff_t pos;
+    printk("save node database\r\n");
+    fp =filp_open("/usr/nodedatabase",O_RDWR | O_CREAT,0644);
+    if (IS_ERR(fp)){ 
+        printk("open or create nodedatabse file error\r\n");
+    } 
+    fs =get_fs();
+    set_fs(KERNEL_DS);
+    pos =0; 
+    len = vfs_write(fp,(char *)nodebase_node_pragma, sizeof(node_pragma_t) * MAX_NODE, &pos);
+    if(len < (sizeof(node_pragma_t) * MAX_NODE))
+    {
+    	printk("save nodedatabase file error\r\n");
+    }
+    filp_close(fp,NULL);
+    set_fs(fs);
+}
 void database_init(void)
 {
-    int loop = 0;
-    memset(nodebase_node_pragma,0,sizeof(node_pragma_t) * MAX_NODE);
+	int loop;
+	reloaddatabase();
+	memcpy((void*)gateway_pragma.APPKEY,(const void*)stMacCfg.APPKEY,16);
+	memcpy((void*)gateway_pragma.NetID,(const void*)stMacCfg.NetID,3);
+    //memset(nodebase_node_pragma,0,sizeof(node_pragma_t) * MAX_NODE);
     for(loop = 0;loop < MAX_NODE;loop ++)
     {
         INIT_LIST_HEAD(&nodebase_node_pragma[loop].lora_tx_list.list);
         nodebase_node_pragma[loop].state = enStateInit;
+		nodebase_node_pragma[loop].timer1 = NULL;//kmalloc(sizeof(struct timer_list),GFP_KERNEL);
+		nodebase_node_pragma[loop].timer2 = NULL;//kmalloc(sizeof(struct timer_list),GFP_KERNEL);
     }
 }
 int16_t node_database_join(node_join_info_t* node)
@@ -50,7 +119,8 @@ int16_t node_database_join(node_join_info_t* node)
             do_gettimeofday(&(nodebase_node_pragma[loop].LastComunication.time));
 
             *(uint32_t*)nodebase_node_pragma[loop].DevAddr = loop;
-            node_cnt ++;
+            //node_cnt ++;
+			DEBUG_OUTPUT_INFO("loop: 0x%08x\r\n",loop);
             DEBUG_OUTPUT_INFO("APPEUI: 0x");
             DEBUG_OUTPUT_DATA((unsigned char *)node->APPEUI,8);
             DEBUG_OUTPUT_INFO("DevEUI: 0x");
@@ -75,6 +145,7 @@ int16_t node_database_join(node_join_info_t* node)
                 node_prepare_joinaccept_package(loop);
                 node_timer_start(loop);
             }
+			savedatabase();
 
             return loop;
         }
@@ -91,6 +162,7 @@ int16_t node_database_join(node_join_info_t* node)
         memcpy(&tmp[3],gateway_pragma.NetID,3);
         LoRaMacJoinComputeSKeys( gateway_pragma.APPKEY, tmp, node->DevNonce, nodebase_node_pragma[loop].NwkSKey, nodebase_node_pragma[loop].AppSKey );
         *(uint32_t*)nodebase_node_pragma[loop].DevAddr = loop;
+		DEBUG_OUTPUT_INFO("loop: 0x%08x\r\n",loop);
         DEBUG_OUTPUT_INFO("APPEUI: 0x");
         DEBUG_OUTPUT_DATA((unsigned char *)node->APPEUI,8);
         DEBUG_OUTPUT_INFO("DevEUI: 0x");
@@ -121,6 +193,8 @@ int16_t node_database_join(node_join_info_t* node)
                 kfree(pos);
             }*/
     //INIT_LIST_HEAD(&nodebase_node_pragma[loop].lora_tx_list.list);
+    
+	savedatabase();
     return loop;
 }
 

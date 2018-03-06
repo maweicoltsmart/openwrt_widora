@@ -19,10 +19,11 @@
 
 #include "typedef.h"
 #include "LoRaDevOps.h"
+#include "GatewayPragma.h"
 
 #include <errno.h>
 
-#define PORT  8890
+//#define PORT  8890
 uint8_t sendbuf[MSG_Q_BUFFER_SIZE];
 uint8_t recvbuf[MSG_Q_BUFFER_SIZE * 100];
 extern int fd_cdev;
@@ -92,8 +93,8 @@ connect:
     //定义sockaddr_in
     memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
-    servaddr.sin_addr.s_addr = inet_addr("192.168.1.149");
-    servaddr.sin_port = htons(PORT);  //服务器端口
+    servaddr.sin_addr.s_addr = inet_addr(gateway_pragma.server_ip);
+    servaddr.sin_port = htons(gateway_pragma.server_port);  //服务器端口
 	flag |= O_NONBLOCK;
     old_flag = flag = fcntl(sock_cli, F_SETFL, O_NONBLOCK ); //将连接套接字设置为非阻塞。
     //连接服务器，成功返回0，错误返回-1
@@ -168,7 +169,7 @@ connect:
         goto connect;//exit(1);
     }
 #endif
-    printf("connect server(IP:%s).\r\n","192.168.1.149");
+    printf("connect server(IP:%s).\r\n",gateway_pragma.server_ip);
     err = pthread_create(&main_tid, NULL, client_send, &sock_cli); //创建线程
     strcpy(sendbuf,"hello\r\n");
     //客户端将控制台输入的信息发送给服务器端，服务器原样返回信息

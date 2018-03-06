@@ -102,6 +102,24 @@ void GetGatewayPragma(void)
     {
         gateway_pragma.NetType = 1;
     }
+	json_object_object_get_ex(pragma,"APPKEY",&obj);
+	memset(byte,0,100);
+    strcpy(byte,json_object_get_string(obj));
+	Str2Hex(byte,gateway_pragma.APPKEY,2 * 16);
+
+	json_object_object_get_ex(pragma,"NetID",&obj);
+	memset(byte,0,100);
+    strcpy(byte,json_object_get_string(obj));
+	Str2Hex(byte,gateway_pragma.NetID,2 * 3);
+	
+	json_object_object_get_ex(pragma,"serverip",&obj);
+	memset(gateway_pragma.server_ip,0,MAX_IP_STRING_LENTH);
+    strcpy(gateway_pragma.server_ip,json_object_get_string(obj));
+	
+	json_object_object_get_ex(pragma,"serverport",&obj);
+	memset(byte,0,100);
+    strcpy(byte,json_object_get_string(obj));
+	gateway_pragma.server_port = atoi(byte);
 
     json_object_object_get_ex(pragma,"radio",&array);
     char dataratename[10] = {0};

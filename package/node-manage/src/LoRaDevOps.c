@@ -44,7 +44,7 @@
 #include "Region.h"
 #include "GatewayPragma.h"
 
-int fd_proc_cfg_rx,fd_proc_cfg_tx;
+int fd_proc_cfg_rx,fd_proc_cfg_tx,fd_proc_cfg_mac;
 int fd_cdev = 0;
 
 
@@ -77,6 +77,7 @@ void LoRaMacInit(void)
     int chip = 0;
     int i;
     st_RadioCfg stRadioCfg;
+	st_MacCfg stMacCfg;
     //const uint8_t symbpreamble[12] = {0,1,2,3,4,5,6,24,14,9,};
     GetGatewayPragma();
 open_dev:
@@ -96,6 +97,17 @@ open_dev:
         sleep(1);
         goto open_dev;
     }
+
+	
+    fd_proc_cfg_mac = open("/proc/lora_procfs/lora_cfg_mac",O_RDWR);
+    if (fd_proc_cfg_mac < 0)
+    {
+        //perror("lora_proc_cfg_tx");
+        //printf("open lora_proc_cfg_tx error\r\n");
+        sleep(1);
+        goto open_dev;
+    }
+
     LoRaMacParamsDefaults.ChannelsTxPower = CN470_DEFAULT_TX_POWER;
     LoRaMacParamsDefaults.ChannelsDatarate = CN470_DEFAULT_DATARATE;
     LoRaMacParamsDefaults.MaxRxWindow = CN470_MAX_RX_WINDOW;
@@ -185,6 +197,11 @@ open_dev:
     stRadioCfg.isPublic = gateway_pragma.NetType;
 
     write(fd_proc_cfg_tx,&stRadioCfg,sizeof(st_RadioCfg));
+
+    memcpy(stMacCfg.APPKEY,gateway_pragma.APPKEY,16);
+	memcpy(stMacCfg.NetID,gateway_pragma.NetID,3);
+	
+    write(fd_proc_cfg_mac,&stMacCfg,sizeof(st_MacCfg));
 
     sleep(1);
     fd_cdev = open("/dev/lora_radio",O_RDWR | O_NONBLOCK);
