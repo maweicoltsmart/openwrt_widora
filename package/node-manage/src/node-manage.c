@@ -56,6 +56,7 @@ int main(int argc ,char *argv[])
     //struct msg_st data;
     int len;
     serverpkgformat();
+	LoRaMacInit();
     ret = pthread_create(&radio_routin_handle, NULL, Radio_routin, &fd);
     ret = pthread_create(&tcp_client_handle, NULL, tcp_client_routin, &fd);
     ret = pthread_create(&tcp_server_handle, NULL, tcp_server_routin, &fd);

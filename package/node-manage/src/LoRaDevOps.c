@@ -263,7 +263,7 @@ void *Radio_routin(void *param){
     struct json_object *pragma = NULL;
     //struct json_object *jstring;
     lora_server_up_data_type *dataup;
-    LoRaMacInit();
+    //LoRaMacInit();
 
     creat_msg_q:
     //建立消息队列
