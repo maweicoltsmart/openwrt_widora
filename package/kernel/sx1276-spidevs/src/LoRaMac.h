@@ -81,7 +81,11 @@
  */
 #ifndef __LORAMAC_H__
 #define __LORAMAC_H__
-#include "typedef.h"
+#include <linux/stddef.h>
+#include <linux/types.h>
+
+typedef uint32_t TimerTime_t;
+
 #define REGION_CN470
 
 /*!

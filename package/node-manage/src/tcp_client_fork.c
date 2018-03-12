@@ -20,7 +20,7 @@
 #include "typedef.h"
 #include "LoRaDevOps.h"
 #include "GatewayPragma.h"
-
+#include "Server.h"
 #include <errno.h>
 
 //#define PORT  8890
@@ -33,20 +33,16 @@ void *client_send(void *arg)
     int sockfd = *(int*)arg;
     unsigned char buffer[MSG_Q_BUFFER_SIZE];
     int len;
-    //strcpy(buffer,"hello\r\n");
-    //len = strlen(buffer);
     struct msg_st data;
-    long int msgtype = 0; //注意1
+    long int msgtype = 0;
     int msgid = -1;
     memset(data.text,0,MSG_Q_BUFFER_SIZE);
 creat_msg_q:
-    //建立消息队列
     while((msgid = msgget((key_t)1234, 0666 | IPC_CREAT) == -1))
     {
         printf( "msgget failed with error: %d\n", errno);
         sleep(1);
     }
-    //从队列中获取消息，直到遇到end消息为止
     while(1)
     {
         if((len = msgrcv(msgid, (void*)&data, MSG_Q_BUFFER_SIZE, msgtype, 0)) < 0)
@@ -54,7 +50,6 @@ creat_msg_q:
 			printf("recreat msg q %d\r\n",__LINE__);
 			goto creat_msg_q;
         }
-        //hexdump(data.text,len);
         len = send(sockfd, data.text, len, 0);
         if(len < 1)
         {
@@ -63,12 +58,6 @@ creat_msg_q:
         }
         memset(data.text,0,MSG_Q_BUFFER_SIZE);
     }
-    //删除消息队列
-    /*if(msgctl(msgid, IPC_RMID, 0) == -1)
-    {
-        fprintf(stderr, "msgctl(IPC_RMID) failed\n");
-        exit(EXIT_FAILURE);
-    }*/
 }
 
 void *tcp_client_routin(void *data)
@@ -86,26 +75,27 @@ void *tcp_client_routin(void *data)
     uint8_t stringformat[256 * 2];
     uint8_t tx_data_buf[300];
     uint8_t *pstrchr;
+	uint8_t writebuf[256 + sizeof(st_ServerMsgDown)];
+	uint32_t sendlen;
+	pst_ServerMsgDown pstServerMsgDown = (pst_ServerMsgDown)writebuf;
+	uint8_t loraport;
+	uint8_t devEUI[8];
 connect:
-    //定义IPV4的TCP连接的套接字描述符
     sock_cli = socket(AF_INET,SOCK_STREAM, 0);
 
-    //定义sockaddr_in
     memset(&servaddr, 0, sizeof(servaddr));
     servaddr.sin_family = AF_INET;
     servaddr.sin_addr.s_addr = inet_addr(gateway_pragma.server_ip);
-    servaddr.sin_port = htons(gateway_pragma.server_port);  //服务器端口
+    servaddr.sin_port = htons(gateway_pragma.server_port);
 	flag |= O_NONBLOCK;
-    old_flag = flag = fcntl(sock_cli, F_SETFL, O_NONBLOCK ); //将连接套接字设置为非阻塞。
-    //连接服务器，成功返回0，错误返回-1
+    old_flag = flag = fcntl(sock_cli, F_SETFL, O_NONBLOCK );
     ret = connect(sock_cli, (struct sockaddr *)&servaddr, sizeof(servaddr));
 	if(ret != 0)
 	{
-		if(errno != EINPROGRESS) //connect返回错误。
+		if(errno != EINPROGRESS)
 		{
 			//printf("connect failed\n");
 		}
-		//连接正在建立
 		else
 		{
 			struct timeval tm;	//1.定时
@@ -159,7 +149,7 @@ connect:
 
 	}
 
-	fcntl(sock_cli, F_SETFL, old_flag); //最后恢复sock的阻塞属性。
+	fcntl(sock_cli, F_SETFL, old_flag);
 #if 0
 	{
         perror("connect");
@@ -170,27 +160,11 @@ connect:
     }
 #endif
     printf("connect server(IP:%s).\r\n",gateway_pragma.server_ip);
-    err = pthread_create(&main_tid, NULL, client_send, &sock_cli); //创建线程
-    strcpy(sendbuf,"hello\r\n");
-    //客户端将控制台输入的信息发送给服务器端，服务器原样返回信息
-    while(1)// (fgets(sendbuf, sizeof(sendbuf), stdin) != NULL)
+    err = pthread_create(&main_tid, NULL, client_send, &sock_cli);
+    while(1)
     {
-        /*len = send(sock_cli, sendbuf, strlen(sendbuf),0); ///发送
-    	if(len < 1)
-    	{
-        	close(sock_cli);
-            goto connect;
-    	}
-        if(strcmp(sendbuf,"exit\n")==0)
-        {
-        printf("client exited.\n");
-        close(sock_cli);
-            goto connect;
-        }
-        printf("client receive:\n");*/
-        //printf("client receive:\n");
         memset(recvbuf, 0, sizeof(recvbuf));
-        len = recv(sock_cli, recvbuf, sizeof(recvbuf) - 1,0); ///接收
+        len = recv(sock_cli, recvbuf, sizeof(recvbuf) - 1,0);
         if(len < 1)
         {
             close(sock_cli);
@@ -216,6 +190,7 @@ connect:
             {
                 break;
             }
+			
             json_object_object_get_ex(pragma,"DevEUI",&obj);
             if(obj == NULL)
             {
@@ -223,51 +198,70 @@ connect:
             }
             memset(stringformat,0,256 * 2);
             strcpy(stringformat,json_object_get_string(obj));
-            //printf("%s :%s\r\n", __func__,stringformat);
             Str2Hex( &stringformat[0],  datadown.DevEUI, 8 );
-            hexdump(datadown.DevEUI,8);
+            hexdump(devEUI,8);
             json_object_object_get_ex(pragma,"Port",&obj);
             if(obj == NULL)
             {
                     break;
             }
-            datadown.fPort = json_object_get_int(obj);
+            loraport = json_object_get_int(obj);
             if((datadown.fPort == 0) || (datadown.fPort > 223))
             {
                 break;
             }
-            json_object_object_get_ex(pragma,"AckRequest",&obj);
+            json_object_object_get_ex(pragma,"FrameType",&obj);
             if(obj == NULL)
             {
                     break;
             }
-            datadown.CtrlBits.AckRequest = json_object_get_boolean(obj);
-
-            json_object_object_get_ex(pragma,"Ack",&obj);
-            if(obj == NULL)
-            {
-                    break;
-            }
-            datadown.CtrlBits.Ack = json_object_get_boolean(obj);
-            //printf("AckRequest = %d\r\nAck = %d\r\n", datadown.CtrlBits.AckRequest,datadown.CtrlBits.Ack);
-            json_object_object_get_ex(pragma,"Data",&obj);
-            if(obj == NULL)
-            {
-                    break;
-            }
-            memset(stringformat,0,256 * 2);
+			memset(stringformat,0,256 * 2);
             strcpy(stringformat,json_object_get_string(obj));
-            datadown.size = strlen(stringformat) / 2;
-            //printf("%s\r\n", stringformat);
-            Str2Hex( &stringformat[0],  &tx_data_buf[sizeof(lora_server_down_data_type)], datadown.size );
-            hexdump(&tx_data_buf[sizeof(lora_server_down_data_type)],datadown.size);
-            memcpy(tx_data_buf,&datadown,sizeof(lora_server_down_data_type));
+			if(strcmp(stringformat,"DownData") == 0)
+			{
+				pstServerMsgDown->enMsgDownFramType = en_MsgDownFramDataSend;
+				memcpy(pstServerMsgDown->Msg.stData2Node.DevEUI,devEUI,8);
+				pstServerMsgDown->Msg.stData2Node.payload = writebuf + sizeof(st_ServerMsgDown);
+				pstServerMsgDown->Msg.stData2Node.fPort = loraport;
+				json_object_object_get_ex(pragma,"AckRequest",&obj);
+	            if(obj == NULL)
+	            {
+	                    break;
+	            }
+	            pstServerMsgDown->Msg.stData2Node.CtrlBits.AckRequest = json_object_get_boolean(obj);
+				json_object_object_get_ex(pragma,"Data",&obj);
+            	if(obj == NULL)
+            	{
+                    break;
+            	}
+            	memset(stringformat,0,256 * 2);
+            	strcpy(stringformat,json_object_get_string(obj));
+            	pstServerMsgDown->Msg.stData2Node.size = strlen(stringformat) / 2;
+				sendlen = pstServerMsgDown->Msg.stData2Node.size + sizeof(st_ServerMsgDown);
+            	Str2Hex( &stringformat[0],  pstServerMsgDown->Msg.stData2Node.payload, pstServerMsgDown->Msg.stData2Node.size );
+			}
+			else if(strcmp(stringformat,"DownConfirm") == 0)
+			{
+				pstServerMsgDown->enMsgDownFramType = en_MsgDownFramDataSend;
+				memcpy(pstServerMsgDown->Msg.stConfirm2Node.DevEUI,devEUI,8);
+				pstServerMsgDown->Msg.stConfirm2Node.fPort = loraport;
+				json_object_object_get_ex(pragma,"Ack",&obj);
+				sendlen = sizeof(st_ServerMsgDown);
+	            if(obj == NULL)
+	            {
+	                    break;
+	            }
+	            pstServerMsgDown->Msg.stConfirm2Node.CtrlBits.Ack = json_object_get_boolean(obj);
+			}
+			else
+			{
+				break;
+			}
+
             json_object_put(pragma);
 
-            write(fd_cdev,tx_data_buf,sizeof(lora_server_down_data_type) + datadown.size);
+            write(fd_cdev,writebuf,sendlen);
         }
-        //memset(sendbuf, 0, sizeof(sendbuf));
-    //sleep(1);
     }
 
     close(sock_cli);

@@ -14,7 +14,13 @@ Maintainer: Miguel Luis and Gregory Cristian
 */
 #ifndef __RADIO_H__
 #define __RADIO_H__
-#include "typedef.h"
+
+#include <linux/stddef.h>
+#include <linux/types.h>
+#include <linux/poll.h>
+#include <linux/fcntl.h>
+#include <linux/kthread.h>
+#include <linux/err.h>
 /*!
  * Radio driver supported modems
  */
@@ -330,6 +336,30 @@ struct Radio_s
  * \remark This variable is defined and initialized in the specific radio
  *         board implementation
  */
+ 
+typedef struct
+{
+    int chip;
+    uint8_t *payload;
+    uint16_t size;
+    int16_t rssi;
+    int8_t snr;
+}st_RadioRx,*pst_RadioRx;
+
+typedef struct
+{
+    uint32_t jiffies;
+    st_RadioRx stRadioRx;
+    struct list_head list;
+}st_RadioRxList,*pst_RadioRxList;
+
 extern const struct Radio_s Radio;
+extern bool rx_done;
+extern wait_queue_head_t lora_wait;
+
+void RadioInit(void);
+void RadioRemove(void);
+int RadioRxListAdd(int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr);
+int RadioRxListGet(const pst_RadioRxList pstRadioRxList);
 
 #endif // __RADIO_H__

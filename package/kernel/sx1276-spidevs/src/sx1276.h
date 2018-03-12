@@ -14,12 +14,13 @@ Maintainer: Miguel Luis and Gregory Cristian
 */
 #ifndef __SX1276_H__
 #define __SX1276_H__
-
-#include "sx1276Regs-Fsk.h"
-#include "sx1276Regs-LoRa.h"
-#include "typedef.h"
+#include <linux/stddef.h>
+#include <linux/types.h>
 #include <linux/time.h>
 #include <linux/timer.h>
+#include "sx1276Regs-Fsk.h"
+#include "sx1276Regs-LoRa.h"
+#include "Radio.h"
 
 /*!
  * Radio wake-up time from sleep

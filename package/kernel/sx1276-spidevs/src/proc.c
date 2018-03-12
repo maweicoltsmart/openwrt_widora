@@ -1,4 +1,3 @@
-#include "proc.h"
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
@@ -6,7 +5,8 @@
 #include <linux/proc_fs.h>
 #include <linux/jiffies.h>
 #include <asm/uaccess.h>
-
+#include "proc.h"
+#include "debug.h"
 
 #define MODULE_VERS "1.0"
 #define MODULE_NAME "lora_procfs"
@@ -31,12 +31,10 @@ static int lora_cfg_rx_proc_open(struct inode *inode,struct file *file)
 static int proc_write_lora_cfg_rx(struct file *file, const char *buffer, size_t len, loff_t *off)
 {
     int count;
-    //printk("%s,%d\r\n",__func__,__LINE__);
     if(len > sizeof(st_RadioCfg))
         count = sizeof(st_RadioCfg);
     else
         count = len;
-    //printk("%s,%d\r\n",__func__,__LINE__);
     memset(&stRadioCfg_Rx,0,sizeof(st_RadioCfg));
     if(copy_from_user((void*)&stRadioCfg_Rx, buffer, count))
         return -EFAULT;
@@ -92,12 +90,10 @@ static int lora_cfg_tx_proc_open(struct inode *inode,struct file *file)
 static int proc_write_lora_cfg_tx(struct file *file, const char *buffer, size_t len, loff_t *off)
 {
     int count;
-    //printk("%s,%d\r\n",__func__,__LINE__);
     if(len > sizeof(st_RadioCfg))
         count = sizeof(st_RadioCfg);
     else
         count = len;
-    //printk("%s,%d\r\n",__func__,__LINE__);
     memset(&stRadioCfg_Tx,0,sizeof(st_RadioCfg));
     if(copy_from_user((void*)&stRadioCfg_Tx, buffer, count))
         return -EFAULT;
@@ -151,16 +147,14 @@ static int lora_cfg_mac_proc_open(struct inode *inode,struct file *file)
 static int proc_write_lora_cfg_mac(struct file *file, const char *buffer, size_t len, loff_t *off)
 {
     int count;
-    printk("%s,%d\r\n",__func__,__LINE__);
     if(len > sizeof(st_MacCfg))
         count = sizeof(st_MacCfg);
     else
         count = len;
-    //printk("%s,%d\r\n",__func__,__LINE__);
     memset(&stMacCfg,0,sizeof(st_MacCfg));
     if(copy_from_user((void*)&stMacCfg, buffer, count))
         return -EFAULT;
-
+	DEBUG_OUTPUT_DATA((unsigned char *)stMacCfg.APPKEY,16);
     return len;
 }
 
@@ -201,7 +195,6 @@ int init_procfs_lora(void)
         rv = -ENOMEM;
         goto no_foo;
     }
-    //strcpy(lora_data.name, "lora");
 
     return 0;
 
@@ -219,7 +212,7 @@ void cleanup_procfs_lora(void)
 {
     remove_proc_entry("lora_cfg_rx", lora_dir);
     remove_proc_entry("lora_cfg_tx", lora_dir);
-	remove_proc_entry("lora_cfg_Mac", lora_dir);
+	remove_proc_entry("lora_cfg_mac", lora_dir);
     //remove_proc_entry("lora_chan", lora_chan_file);
     remove_proc_entry(MODULE_NAME, NULL);
     //remove_proc_entry(MODULE_NAME, NULL);

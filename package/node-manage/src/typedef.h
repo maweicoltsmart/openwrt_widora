@@ -66,6 +66,7 @@ typedef struct
 {
 	uint8_t APPKEY[16];
 	uint8_t NetID[3];
+	uint8_t AppNonce[3];
 }st_MacCfg,*pst_MacCfg;
 
 

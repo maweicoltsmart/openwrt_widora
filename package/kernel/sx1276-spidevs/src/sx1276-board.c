@@ -12,17 +12,16 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 
 Maintainer: Miguel Luis and Gregory Cristian
 */
-#include "radio.h"
-#include "sx1276.h"
-#include "sx1276-board.h"
-#include "typedef.h"
-#include <asm/irq.h> //---disable_irq, enable_irq()
-#include <linux/interrupt.h> //---request_irq()
-#include "pinmap.h"
+#include <asm/irq.h>
+#include <linux/interrupt.h>
 #include <linux/gpio.h>
 #include <linux/spi/spi.h>
 #include <linux/spi/spi_gpio.h>
 #include "utilities.h"
+#include "Radio.h"
+#include "sx1276.h"
+#include "sx1276-board.h"
+#include "pinmap.h"
 
 /*!
  * Flag used to set the RF switch control pins in low power mode when the radio is not active.

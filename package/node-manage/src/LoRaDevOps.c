@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <unistd.h>   //sleep
+#include <unistd.h>
 #include <poll.h>
 #include <signal.h>
 #include <fcntl.h>
@@ -33,9 +33,7 @@
 #include <sys/stat.h>
 #include <sys/msg.h>
 #include <json-c/json.h>
-
 #include "typedef.h"
-//#include "nodedatabase.h"
 #include "nodedatabase.h"
 #include "LoRaDevOps.h"
 #include "RegionCN470.h"
@@ -43,6 +41,7 @@
 #include "sx1276.h"
 #include "Region.h"
 #include "GatewayPragma.h"
+#include "Server.h"
 
 int fd_proc_cfg_rx,fd_proc_cfg_tx,fd_proc_cfg_mac;
 int fd_cdev = 0;
@@ -51,26 +50,6 @@ int fd_cdev = 0;
 static uint8_t *LoRaMacAppKey;
 LoRaMacParams_t LoRaMacParams;
 LoRaMacParams_t LoRaMacParamsDefaults;
-
-#define LORADEV_IOC_MAGIC  'r'
-
-#define LORADEV_IOCPRINT   _IO(LORADEV_IOC_MAGIC, 0)  //没参数
-#define LORADEV_IOCGETDATA _IOR(LORADEV_IOC_MAGIC, 1, int)  //读
-#define LORADEV_IOCSETDATA _IOW(LORADEV_IOC_MAGIC, 2, int)  //写
-#define LORADEV_RADIO_INIT   _IOW(LORADEV_IOC_MAGIC, 3, int)  //没参数
-#define LORADEV_RADIO_STATE _IOW(LORADEV_IOC_MAGIC, 4, int)  //读
-#define LORADEV_RADIO_CHANNEL _IOW(LORADEV_IOC_MAGIC, 5, int)  //写
-#define LORADEV_RADIO_SET_PUBLIC _IOW(LORADEV_IOC_MAGIC, 6, int)  //写
-#define LORADEV_RADIO_SET_MODEM _IOW(LORADEV_IOC_MAGIC, 7, int)  //写
-#define LORADEV_RADIO_READ_REG _IOWR(LORADEV_IOC_MAGIC, 8, int)  //写
-#define LORADEV_RADIO_SET_TXCFG _IOW(LORADEV_IOC_MAGIC, 9, int)
-#define LORADEV_RADIO_SET_RXCFG _IOW(LORADEV_IOC_MAGIC, 10, int)
-#define LORADEV_RADIO_SET_RX _IOW(LORADEV_IOC_MAGIC, 11, int)
-#define LORADEV_RADIO_SET_TX _IOW(LORADEV_IOC_MAGIC, 12, int)
-#define LORADEV_RADIO_SET_SLEEP _IOW(LORADEV_IOC_MAGIC, 13, int)
-#define LORADEV_RADIO_SET_STDBY _IOW(LORADEV_IOC_MAGIC, 14, int)
-
-#define LORADEV_IOC_MAXNR 15
 
 void LoRaMacInit(void)
 {
@@ -207,64 +186,21 @@ open_dev:
     fd_cdev = open("/dev/lora_radio",O_RDWR | O_NONBLOCK);
     if (fd_cdev < 0)
     {
-        //printf("open lora_radio error\r\n");
-        //return;
         sleep(1);
         goto open_dev;
     }
-/*
-    int ioarg = false;
-    ioarg = ioarg | (chip << 31);
-    ioctl(fd_cdev, LORADEV_RADIO_SET_PUBLIC, &ioarg);
-
-    //uint32_t channel,datarate;
-    uint32_t datarate;
-    for(i = 0;i < 2;i ++)
-    {
-        chip = i;
-        ioarg = 0;
-        ioarg = ioarg | (chip << 8);    // channel
-        datarate = DataratesCN470[5];
-        ioarg = ioarg | (datarate & 0x000000ff);    // datarate
-        ioarg = ioarg | (chip << 31);
-        ioctl(fd_cdev, LORADEV_RADIO_CHANNEL, &ioarg);
-
-        ioarg = 0;
-        ioarg = ioarg | (chip << 31);
-        ioctl(fd_cdev, LORADEV_RADIO_SET_RX, &ioarg);
-    }
-    */
 }
 
 void *Radio_routin(void *param){
-    //LoRaMacPrimitives_t LoRaMacPrimitives;
-    //LoRaMacCallback_t LoRaMacCallbacks;
-    //MibRequestConfirm_t mibReq;
-    uint8_t radiorxbuffer[300];
-    //uint8_t radiotxbuffer[2][300];
     uint8_t stringformat[256 * 2];
     int msgid = -1;
-    //struct msg_st data;
     struct msg_st data;
-    long int msgtype = 0; //注意1
-
-    int len;
-    //int fd = *(int *)data;
-    //int chip = 0;
-    //int index;
-    //pst_lora_rx_data_type p1;
-    //pst_lora_tx_data_type p2,p3;
-    LoRaMacHeader_t macHdr;
-    LoRaMacFrameCtrl_t fCtrl;
-    //uint32_t mic = 0;
-    //node_join_info_t node_join_info;
-    //uint8_t *pkg,*pkg1,*pkg2;
-    //printf("%s,%d\r\n",__func__,__LINE__);
+    long int msgtype = 0;
+	int len;
     struct json_object *pragma = NULL;
-    //struct json_object *jstring;
-    lora_server_up_data_type *dataup;
-    //LoRaMacInit();
-
+    //lora_server_up_data_type *dataup;
+    uint8_t readbuffer[256 + sizeof(st_ServerMsgUp)];
+	pst_ServerMsgUp pstServerMsgUp = (pst_ServerMsgUp)readbuffer;
     creat_msg_q:
     //建立消息队列
     while((msgid = msgget((key_t)1234, 0666 | IPC_CREAT) == -1))
@@ -274,42 +210,60 @@ void *Radio_routin(void *param){
     }
     while(1)
     {
-        //sleep(1);
-        //printf("fd_cdev = %d\r\n", fd_cdev);
-        if((len = read(fd_cdev,radiorxbuffer,300)) > 0)
+        if((len = read(fd_cdev,readbuffer,sizeof(readbuffer))) > 0)
         {
-            dataup = (lora_server_up_data_type *)radiorxbuffer;
-            data.msg_type = 1;    //注意2
-            pragma = json_object_new_object();
-
-            json_object_object_add(pragma,"FrameType",json_object_new_string("DataUp"));
-            memset(stringformat,0,256 * 2);
-            Hex2Str(dataup->DevEUI,stringformat,8);
-            //printf("%s\r\n", stringformat);
-            //hexdump(dataup->DevEUI,8);
-            //jstring = json_object_new_string(stringformat);
-            json_object_object_add(pragma,"DevEUI",json_object_new_string(stringformat));
-            memset(stringformat,0,256 * 2);
-            Hex2Str(dataup->APPEUI,stringformat,8);
-            json_object_object_add(pragma,"AppEUI",json_object_new_string(stringformat));
-            //memset(stringformat,0,256 * 2);
-            //Hex2Str(dataup->DevAddr,stringformat,4);
-            json_object_object_add(pragma,"NetAddr",json_object_new_int(dataup->DevAddr));
-            json_object_object_add(pragma,"Port",json_object_new_int(dataup->fPort));
-            json_object_object_add(pragma,"AckRequest",json_object_new_boolean(dataup->CtrlBits.AckRequest));
-            json_object_object_add(pragma,"Ack",json_object_new_boolean(dataup->CtrlBits.Ack));
-            json_object_object_add(pragma,"Battery",json_object_new_int(dataup->Battery));
-            json_object_object_add(pragma,"Rssi",json_object_new_int(dataup->rssi));
-            json_object_object_add(pragma,"Snr",json_object_new_double(dataup->snr));
-            memset(stringformat,0,256 * 2);
-            Hex2Str(&radiorxbuffer[sizeof(lora_server_up_data_type)],stringformat,dataup->size);
-            json_object_object_add(pragma,"Data",json_object_new_string(stringformat)); /* data that encoded into Base64 */
+        	pstServerMsgUp->Msg.stData2Server.payload = &readbuffer[sizeof(st_ServerMsgUp)];
+        	pragma = json_object_new_object();
+        	if(pstServerMsgUp->enMsgUpFramType == en_MsgUpFramDataReceive)
+        	{
+        		json_object_object_add(pragma,"FrameType",json_object_new_string("UpData"));
+				memset(stringformat,0,256 * 2);
+            	Hex2Str(pstServerMsgUp->Msg.stData2Server.DevEUI,stringformat,8);
+            	json_object_object_add(pragma,"DevEUI",json_object_new_string(stringformat));
+            	memset(stringformat,0,256 * 2);
+            	Hex2Str(pstServerMsgUp->Msg.stData2Server.AppEUI,stringformat,8);
+            	json_object_object_add(pragma,"AppEUI",json_object_new_string(stringformat));
+	            json_object_object_add(pragma,"NetAddr",json_object_new_int(pstServerMsgUp->Msg.stData2Server.DevAddr));
+	            json_object_object_add(pragma,"Port",json_object_new_int(pstServerMsgUp->Msg.stData2Server.fPort));
+	            json_object_object_add(pragma,"AckRequest",json_object_new_boolean(pstServerMsgUp->Msg.stData2Server.CtrlBits.AckRequest));
+	            json_object_object_add(pragma,"Battery",json_object_new_int(pstServerMsgUp->Msg.stData2Server.Battery));
+	            json_object_object_add(pragma,"Rssi",json_object_new_int(pstServerMsgUp->Msg.stData2Server.rssi));
+	            json_object_object_add(pragma,"Snr",json_object_new_double(pstServerMsgUp->Msg.stData2Server.snr));
+	            memset(stringformat,0,256 * 2);
+	            Hex2Str(pstServerMsgUp->Msg.stData2Server.payload,stringformat,pstServerMsgUp->Msg.stData2Server.size);
+	            json_object_object_add(pragma,"Data",json_object_new_string(stringformat)); /* data that encoded into Base64 */
+        	}
+			else if(pstServerMsgUp->enMsgUpFramType == en_MsgUpFramConfirm)
+			{
+				json_object_object_add(pragma,"FrameType",json_object_new_string("UpConfirm"));
+				switch(pstServerMsgUp->Msg.stConfirm2Server.enConfirm2Server)
+				{
+					case en_Confirm2ServerSuccess:
+						json_object_object_add(pragma,"Result",json_object_new_string("Success"));
+						break;
+					case en_Confirm2ServerRadioBusy:
+						json_object_object_add(pragma,"Result",json_object_new_string("Busy"));
+						break;
+					case en_Confirm2ServerOffline:
+						json_object_object_add(pragma,"Result",json_object_new_string("Not Active"));
+						break;
+					case en_Confirm2ServerTooLong:
+						json_object_object_add(pragma,"Result",json_object_new_string("Too Long"));
+						break;
+					case en_Confirm2ServerPortNotAllow:
+						json_object_object_add(pragma,"Result",json_object_new_string("Port Error"));
+						break;
+					default:
+						json_object_object_add(pragma,"Result",json_object_new_string("Unkown Fault"));
+						break;
+				}
+			}
+			else
+			{
+			}
             memset(data.text,0,MSG_Q_BUFFER_SIZE);
             strcpy(data.text,json_object_to_json_string(pragma));
-            //printf("%s\r\n", data.text);
             json_object_put(pragma);
-            //向队列发送数据
-            //printf("send msg\r\n");
             if(msgsnd(msgid, (void*)&data, strlen(data.text), 0) == -1)
             {
                 printf("msgsnd failed\r\n");

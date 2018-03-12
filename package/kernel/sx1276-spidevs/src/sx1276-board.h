@@ -14,7 +14,10 @@ Maintainer: Miguel Luis and Gregory Cristian
 */
 #ifndef __SX1276_ARCH_H__
 #define __SX1276_ARCH_H__
-#include "typedef.h"
+
+#include <linux/stddef.h>
+#include <linux/types.h>
+
 /*!
  * \brief Radio hardware registers initialization definition
  *

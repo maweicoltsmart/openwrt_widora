@@ -13,20 +13,21 @@ License: Revised BSD License, see LICENSE.TXT file include in the project
 Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
 */
 #include <linux/string.h>
-#include "radio.h"
-#include "sx1276.h"
-#include "sx1276-board.h"
 #include <linux/time.h>
 #include <linux/timer.h>
 #include <linux/delay.h>
 #include <linux/slab.h>
 #include <linux/gpio.h>
-#include "pinmap.h"
 #include <linux/spinlock.h>
 #include <linux/spi/spi.h>
 #include <linux/spi/spi_gpio.h>
-#include "utilities.h"
 #include <asm/ptrace.h>
+#include "Radio.h"
+#include "sx1276.h"
+#include "sx1276-board.h"
+#include "utilities.h"
+#include "pinmap.h"
+
 /*
  * Local types definition
  */
@@ -288,8 +289,8 @@ void SX1276SetChannel( int chip,uint32_t freq )
 bool SX1276IsChannelFree( int chip,RadioModems_t modem, uint32_t freq, int16_t rssiThresh, uint32_t maxCarrierSenseTime )
 {
     bool status = true;
-    int16_t rssi = 0;
-    uint32_t carrierSenseTime = 0;
+    //int16_t rssi = 0;
+    //uint32_t carrierSenseTime = 0;
 
     SX1276SetModem(chip, modem );
 
@@ -302,7 +303,7 @@ bool SX1276IsChannelFree( int chip,RadioModems_t modem, uint32_t freq, int16_t r
     //carrierSenseTime = TimerGetCurrentTime( );
 
     // Perform carrier sense for maxCarrierSenseTime
-    while( TimerGetElapsedTime( carrierSenseTime ) < maxCarrierSenseTime )
+    /*while( TimerGetElapsedTime( carrierSenseTime ) < maxCarrierSenseTime )
     {
         rssi = SX1276ReadRssi(chip, modem );
 
@@ -311,7 +312,7 @@ bool SX1276IsChannelFree( int chip,RadioModems_t modem, uint32_t freq, int16_t r
             status = false;
             break;
         }
-    }
+    }*/
     SX1276SetSleep(chip );
     return status;
 }

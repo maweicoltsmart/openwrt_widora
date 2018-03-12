@@ -2,17 +2,17 @@
 #define __LORA_PROC_H__
 
 #include <linux/string.h>
-#include "radio.h"
-#include "sx1276.h"
-#include "sx1276-board.h"
 #include <linux/time.h>
 #include <linux/timer.h>
 #include <linux/delay.h>
 #include <linux/slab.h>
 #include <linux/gpio.h>
-#include "pinmap.h"
 #include <linux/spinlock.h>
 #include "utilities.h"
+#include "Radio.h"
+#include "sx1276.h"
+#include "sx1276-board.h"
+#include "pinmap.h"
 
 typedef struct
 {
@@ -44,6 +44,7 @@ typedef struct
 {
 	uint8_t APPKEY[16];
 	uint8_t NetID[3];
+	uint8_t AppNonce[3];
 }st_MacCfg,*pst_MacCfg;
 
 extern st_RadioCfg stRadioCfg_Rx,stRadioCfg_Tx;

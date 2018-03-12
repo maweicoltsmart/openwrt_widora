@@ -15,21 +15,21 @@ Maintainer: Miguel Luis and Gregory Cristian
 //#include <stdlib.h>
 //#include <stdio.h>
 //#include "board.h"
-#include "typedef.h"
-#include "utilities.h"
 #include <linux/kernel.h>
 #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/platform_device.h>
-#include <linux/device.h>         //class_create
-#include <linux/poll.h>   //poll
+#include <linux/device.h>
+#include <linux/poll.h>
 #include <linux/fcntl.h>
 #include <linux/gpio.h>
 #include <linux/spi/spi.h>
 #include <linux/spi/spi_gpio.h>
-#include <linux/interrupt.h> //---request_irq()
-#include <asm/irq.h> //---disable_irq, enable_irq()
+#include <linux/interrupt.h>
+#include <asm/irq.h>
 #include <linux/workqueue.h>
+#include "utilities.h"
+
 /*!
  * Redefinition of rand() and srand() standard C functions.
  * These functions are redefined in order to get the same behavior across
@@ -97,11 +97,6 @@ int8_t Nibble2HexChar( uint8_t a )
     }
 }
 
-TimerTime_t TimerGetElapsedTime( TimerTime_t savedTime )
-{
-    return 1;//RtcComputeElapsedTime( savedTime );
-}
-
 void hexdump(const unsigned char *buf, const int num)
 {
     int i;
@@ -114,3 +109,21 @@ void hexdump(const unsigned char *buf, const int num)
     printk("\r\n");
     return;
 }
+
+uint16_t Crc16 (uint8_t* data, uint16_t len) {
+    uint16_t remainder = 0;
+    uint16_t polynomial = 0x1021;
+	uint16_t i;
+	uint8_t bit;
+    for( i = 0; i < len; i++ ) {
+        remainder ^= data[i] << 8;
+        for( bit = 8; bit > 0; bit--) {
+            if( (remainder & 0x8000) )
+                remainder = (remainder << 1) ^ polynomial;
+            else 
+                remainder <<= 1;
+        }
+    }
+    return remainder;
+}
+

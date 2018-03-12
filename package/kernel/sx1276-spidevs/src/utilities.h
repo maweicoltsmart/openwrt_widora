@@ -14,7 +14,9 @@ Maintainer: Miguel Luis and Gregory Cristian
 */
 #ifndef __UTILITIES_H__
 #define __UTILITIES_H__
-#include "typedef.h"
+
+#include <linux/stddef.h>
+#include <linux/types.h>
 
 /*!
  * \brief Returns the minimum value between a and b
@@ -97,7 +99,6 @@ void memset1( uint8_t *dst, uint8_t value, uint16_t size );
  */
 int8_t Nibble2HexChar( uint8_t a );
 
-TimerTime_t TimerGetElapsedTime( TimerTime_t savedTime );
 void hexdump(const unsigned char *buf, const int num);
-
+uint16_t Crc16 (uint8_t* data, uint16_t len);
 #endif // __UTILITIES_H__
