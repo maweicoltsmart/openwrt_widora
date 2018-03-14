@@ -167,7 +167,7 @@ int LoRaWANRxDataProcess(void *data){
 							stServerMsgUp.Msg.stData2Server.DevAddr = stFrameDataUp.frameHdr.DevAddr;
 							stServerMsgUp.Msg.stData2Server.Battery = stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].Battery;
 							stServerMsgUp.Msg.stData2Server.CtrlBits.AckRequest = (macHdr.Bits.MType == FRAME_TYPE_DATA_CONFIRMED_UP)?true:false;
-							stServerMsgUp.Msg.stData2Server.CtrlBits.ClassType = macHdr.Bits.RFU;
+							stServerMsgUp.Msg.stData2Server.ClassType = macHdr.Bits.RFU;
 							stServerMsgUp.Msg.stData2Server.fPort = port;
 							stServerMsgUp.Msg.stData2Server.rssi = stRadioRxList.stRadioRx.rssi;
 							stServerMsgUp.Msg.stData2Server.snr = stRadioRxList.stRadioRx.snr;

@@ -26,7 +26,7 @@ void serverpkgformat(void)
 	int file;
 
 	memset(buf,0,4096);
-	file = open("/usr/server_data_up", O_RDWR|O_CREAT);
+	file = open("/usr/UpData", O_RDWR|O_CREAT);
 	if(file < 0)
 	{
             //printf("%s,%d,%d\r\n",__func__,__LINE__,errno);
@@ -34,17 +34,17 @@ void serverpkgformat(void)
 	lseek(file,0,SEEK_SET);
 	ftruncate(file,0);
 	pragma = json_object_new_object();
-	json_object_object_add(pragma,"FrameType",json_object_new_string("DataUp"));
+	json_object_object_add(pragma,"FrameType",json_object_new_string("UpData"));
+	json_object_object_add(pragma,"NodeType",json_object_new_string("Class A"));
     json_object_object_add(pragma,"DevEUI",json_object_new_string("01234567ABCDEF89"));
-    json_object_object_add(pragma,"AppEUI",json_object_new_string("01234567ABCDEF89"));
     json_object_object_add(pragma,"NetAddr",json_object_new_int(0));
+    json_object_object_add(pragma,"AppEUI",json_object_new_string("01234567ABCDEF89"));
     json_object_object_add(pragma,"Port",json_object_new_int(0));
-    json_object_object_add(pragma,"AckRequest",json_object_new_boolean(1));
-    json_object_object_add(pragma,"Ack",json_object_new_boolean(1));
+    json_object_object_add(pragma,"ConfirmRequest",json_object_new_boolean(1));
     json_object_object_add(pragma,"Battery",json_object_new_int(0));
     json_object_object_add(pragma,"Rssi",json_object_new_int(-12));
-    json_object_object_add(pragma,"Snr",json_object_new_double(5.6));
-    json_object_object_add(pragma,"Data",json_object_new_string("1Jr8PdOdN5"));	/* data that encoded into Base64 */
+    json_object_object_add(pragma,"Snr",json_object_new_int(-13));
+    json_object_object_add(pragma,"Data",json_object_new_string("01234567ABCDEF89"));	/* data that encoded into Base64 */
     strcpy(buf,json_object_to_json_string(pragma));
 	write(file,buf,strlen(buf));
     //printf("%s",buf);
@@ -52,7 +52,29 @@ void serverpkgformat(void)
 	close(file);
 
 	memset(buf,0,4096);
-	file = open("/usr/server_data_down", O_RDWR|O_CREAT);
+	file = open("/usr/UpConfirm", O_RDWR|O_CREAT);
+	if(file < 0)
+	{
+            //printf("%s,%d,%d\r\n",__func__,__LINE__,errno);
+	}
+	lseek(file,0,SEEK_SET);
+	ftruncate(file,0);
+	pragma = json_object_new_object();
+	json_object_object_add(pragma,"FrameType",json_object_new_string("UpConfirm"));
+	json_object_object_add(pragma,"NodeType",json_object_new_string("Class A"));
+    json_object_object_add(pragma,"DevEUI",json_object_new_string("01234567ABCDEF89"));
+    json_object_object_add(pragma,"NetAddr",json_object_new_int(0));
+	json_object_object_add(pragma,"Result",json_object_new_string("Success"));
+    json_object_object_add(pragma,"Rssi",json_object_new_int(-12));
+    json_object_object_add(pragma,"Snr",json_object_new_int(-13));
+    strcpy(buf,json_object_to_json_string(pragma));
+	write(file,buf,strlen(buf));
+    //printf("%s",buf);
+	json_object_put(pragma);
+	close(file);
+
+	memset(buf,0,4096);
+	file = open("/usr/DownData", O_RDWR|O_CREAT);
 	if(file < 0)
 	{
             //printf("%s,%d,%d\r\n",__func__,__LINE__,errno);
@@ -61,11 +83,10 @@ void serverpkgformat(void)
 	ftruncate(file,0);
 	pragma = json_object_new_object();
 	json_object_object_add(pragma,"FrameType",json_object_new_string("DataDown"));
-    json_object_object_add(pragma,"DevEUI",json_object_new_string("01234567ABCDEF89"));
+	json_object_object_add(pragma,"NetAddr",json_object_new_int(0));
     json_object_object_add(pragma,"Port",json_object_new_int(0));
-    json_object_object_add(pragma,"AckRequest",json_object_new_boolean(1));
-    json_object_object_add(pragma,"Ack",json_object_new_boolean(0));
-    json_object_object_add(pragma,"Data",json_object_new_string("1Jr8PdOdN5"));	/* data that encoded into Base64 */
+    json_object_object_add(pragma,"ConfirmRequest",json_object_new_boolean(1));
+    json_object_object_add(pragma,"Data",json_object_new_string("01234567ABCDEF89"));	/* data that encoded into Base64 */
     strcpy(buf,json_object_to_json_string(pragma));
 	write(file,buf,strlen(buf));
     //printf("%s",buf);
@@ -73,7 +94,7 @@ void serverpkgformat(void)
 	close(file);
 
 	memset(buf,0,4096);
-	file = open("/usr/server_up_ack", O_RDWR|O_CREAT);
+	file = open("/usr/DownConfirm", O_RDWR|O_CREAT);
 	if(file < 0)
 	{
             //printf("%s,%d,%d\r\n",__func__,__LINE__,errno);
@@ -81,12 +102,8 @@ void serverpkgformat(void)
 	lseek(file,0,SEEK_SET);
 	ftruncate(file,0);
 	pragma = json_object_new_object();
-	json_object_object_add(pragma,"FrameType",json_object_new_string("ResponsUp"));
-    json_object_object_add(pragma,"DevEUI",json_object_new_string("01234567ABCDEF89"));
-    json_object_object_add(pragma,"AppEUI",json_object_new_string("01234567ABCDEF89"));
+	json_object_object_add(pragma,"FrameType",json_object_new_string("DownConfirm"));
     json_object_object_add(pragma,"NetAddr",json_object_new_int(0));
-    json_object_object_add(pragma,"Battery",json_object_new_int(0));
-    json_object_object_add(pragma,"Result",json_object_new_string("Success"));	/* data that encoded into Base64 */
     strcpy(buf,json_object_to_json_string(pragma));
 	write(file,buf,strlen(buf));
     //printf("%s",buf);

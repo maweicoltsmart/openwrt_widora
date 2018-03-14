@@ -60,9 +60,9 @@ int ServerMsgUpListGet(const pst_ServerMsgUp pstServerMsgUp){
     get = list_entry(pos, st_ServerMsgUpQueue, list);
 	if(get->stServerMsgUp.enMsgUpFramType == en_MsgUpFramDataReceive)
 	{
-		payload = get->stServerMsgUp.Msg.stData2Server.payload;
+		payload = pstServerMsgUp->Msg.stData2Server.payload;
 		memcpy(pstServerMsgUp,&get->stServerMsgUp,sizeof(st_ServerMsgUp));
-		get->stServerMsgUp.Msg.stData2Server.payload = payload;
+		pstServerMsgUp->Msg.stData2Server.payload = payload;
 		memcpy(pstServerMsgUp->Msg.stData2Server.payload,get->stServerMsgUp.Msg.stData2Server.payload,get->stServerMsgUp.Msg.stData2Server.size);
 	}
 	else
@@ -101,14 +101,14 @@ int ServerMsgDownListGet(pst_ServerMsgDown pstServerMsgDown){
 	return 0;
 }
 void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
-	uint32_t address;
+	//uint32_t address;
 	st_ServerMsgUp stServerMsgUp;
 	if(pstServerMsgDown->enMsgDownFramType == en_MsgDownFramDataSend)
 	{
-		if(!NodeGetNetAddr(&address,pstServerMsgDown->Msg.stData2Node.DevEUI))
+		if(!NodeDatabaseVerifyNetAddr(pstServerMsgDown->Msg.stData2Node.DevAddr))
 		{
 			stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
-			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,pstServerMsgDown->Msg.stData2Node.DevEUI,8);
+			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
 			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerOffline;
 			ServerMsgUpListAdd(&stServerMsgUp);
 			return;
@@ -116,10 +116,10 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 	}
 	else if(pstServerMsgDown->enMsgDownFramType == en_MsgDownFramConfirm)
 	{
-		if(!NodeGetNetAddr(&address,pstServerMsgDown->Msg.stData2Node.DevEUI))
+		if(!NodeDatabaseVerifyNetAddr(pstServerMsgDown->Msg.stData2Node.DevAddr))
 		{
 			stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
-			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,pstServerMsgDown->Msg.stData2Node.DevEUI,8);
+			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
 			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerOffline;
 			ServerMsgUpListAdd(&stServerMsgUp);
 			return;

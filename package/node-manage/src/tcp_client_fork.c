@@ -37,6 +37,7 @@ void *client_send(void *arg)
     long int msgtype = 0;
     int msgid = -1;
     memset(data.text,0,MSG_Q_BUFFER_SIZE);
+	printf("%s %d\r\n",__func__,__LINE__);
 creat_msg_q:
     while((msgid = msgget((key_t)1234, 0666 | IPC_CREAT) == -1))
     {
@@ -69,7 +70,7 @@ void *tcp_client_routin(void *data)
 	int flag,old_flag;
 	int ret;
     pthread_t main_tid;
-    lora_server_down_data_type datadown;
+    //lora_server_down_data_type datadown;
     struct json_object *pragma = NULL;
     struct json_object *obj = NULL;
     uint8_t stringformat[256 * 2];
@@ -78,7 +79,7 @@ void *tcp_client_routin(void *data)
 	uint8_t writebuf[256 + sizeof(st_ServerMsgDown)];
 	uint32_t sendlen;
 	pst_ServerMsgDown pstServerMsgDown = (pst_ServerMsgDown)writebuf;
-	uint8_t loraport;
+	//uint8_t loraport;
 	uint8_t devEUI[8];
 connect:
     sock_cli = socket(AF_INET,SOCK_STREAM, 0);
@@ -190,26 +191,7 @@ connect:
             {
                 break;
             }
-			
-            json_object_object_get_ex(pragma,"DevEUI",&obj);
-            if(obj == NULL)
-            {
-                    break;
-            }
-            memset(stringformat,0,256 * 2);
-            strcpy(stringformat,json_object_get_string(obj));
-            Str2Hex( &stringformat[0],  datadown.DevEUI, 8 );
-            hexdump(devEUI,8);
-            json_object_object_get_ex(pragma,"Port",&obj);
-            if(obj == NULL)
-            {
-                    break;
-            }
-            loraport = json_object_get_int(obj);
-            if((datadown.fPort == 0) || (datadown.fPort > 223))
-            {
-                break;
-            }
+
             json_object_object_get_ex(pragma,"FrameType",&obj);
             if(obj == NULL)
             {
@@ -220,9 +202,23 @@ connect:
 			if(strcmp(stringformat,"DownData") == 0)
 			{
 				pstServerMsgDown->enMsgDownFramType = en_MsgDownFramDataSend;
-				memcpy(pstServerMsgDown->Msg.stData2Node.DevEUI,devEUI,8);
 				pstServerMsgDown->Msg.stData2Node.payload = writebuf + sizeof(st_ServerMsgDown);
-				pstServerMsgDown->Msg.stData2Node.fPort = loraport;
+				json_object_object_get_ex(pragma,"NetAddr",&obj);
+            	if(obj == NULL)
+            	{
+                    break;
+            	}
+            	pstServerMsgDown->Msg.stData2Node.DevAddr = json_object_get_int(obj);
+				json_object_object_get_ex(pragma,"Port",&obj);
+            	if(obj == NULL)
+            	{
+                    break;
+            	}
+            	pstServerMsgDown->Msg.stData2Node.fPort = json_object_get_int(obj);
+            	if((pstServerMsgDown->Msg.stData2Node.fPort == 0) || (pstServerMsgDown->Msg.stData2Node.fPort > 223))
+            	{
+                	break;
+            	}
 				json_object_object_get_ex(pragma,"AckRequest",&obj);
 	            if(obj == NULL)
 	            {
@@ -243,15 +239,13 @@ connect:
 			else if(strcmp(stringformat,"DownConfirm") == 0)
 			{
 				pstServerMsgDown->enMsgDownFramType = en_MsgDownFramDataSend;
-				memcpy(pstServerMsgDown->Msg.stConfirm2Node.DevEUI,devEUI,8);
-				pstServerMsgDown->Msg.stConfirm2Node.fPort = loraport;
-				json_object_object_get_ex(pragma,"Ack",&obj);
+				json_object_object_get_ex(pragma,"NetAddr",&obj);
+            	if(obj == NULL)
+            	{
+                    break;
+            	}
+            	pstServerMsgDown->Msg.stConfirm2Node.DevAddr = json_object_get_int(obj);
 				sendlen = sizeof(st_ServerMsgDown);
-	            if(obj == NULL)
-	            {
-	                    break;
-	            }
-	            pstServerMsgDown->Msg.stConfirm2Node.CtrlBits.Ack = json_object_get_boolean(obj);
 			}
 			else
 			{

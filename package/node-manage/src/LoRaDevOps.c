@@ -201,6 +201,7 @@ void *Radio_routin(void *param){
     //lora_server_up_data_type *dataup;
     uint8_t readbuffer[256 + sizeof(st_ServerMsgUp)];
 	pst_ServerMsgUp pstServerMsgUp = (pst_ServerMsgUp)readbuffer;
+	data.msg_type = 1;
     creat_msg_q:
     //建立消息队列
     while((msgid = msgget((key_t)1234, 0666 | IPC_CREAT) == -1))
@@ -217,15 +218,27 @@ void *Radio_routin(void *param){
         	if(pstServerMsgUp->enMsgUpFramType == en_MsgUpFramDataReceive)
         	{
         		json_object_object_add(pragma,"FrameType",json_object_new_string("UpData"));
+				switch(pstServerMsgUp->Msg.stData2Server.ClassType)
+				{
+					case 0:
+						json_object_object_add(pragma,"NodeType",json_object_new_string("Class A"));
+						break;
+					case 1:
+						json_object_object_add(pragma,"NodeType",json_object_new_string("Class B"));
+						break;
+					case 2:
+						json_object_object_add(pragma,"NodeType",json_object_new_string("Class C"));
+						break;
+				}
 				memset(stringformat,0,256 * 2);
             	Hex2Str(pstServerMsgUp->Msg.stData2Server.DevEUI,stringformat,8);
             	json_object_object_add(pragma,"DevEUI",json_object_new_string(stringformat));
             	memset(stringformat,0,256 * 2);
             	Hex2Str(pstServerMsgUp->Msg.stData2Server.AppEUI,stringformat,8);
-            	json_object_object_add(pragma,"AppEUI",json_object_new_string(stringformat));
 	            json_object_object_add(pragma,"NetAddr",json_object_new_int(pstServerMsgUp->Msg.stData2Server.DevAddr));
+				json_object_object_add(pragma,"AppEUI",json_object_new_string(stringformat));
 	            json_object_object_add(pragma,"Port",json_object_new_int(pstServerMsgUp->Msg.stData2Server.fPort));
-	            json_object_object_add(pragma,"AckRequest",json_object_new_boolean(pstServerMsgUp->Msg.stData2Server.CtrlBits.AckRequest));
+	            json_object_object_add(pragma,"ConfirmRequest",json_object_new_boolean(pstServerMsgUp->Msg.stData2Server.CtrlBits.AckRequest));
 	            json_object_object_add(pragma,"Battery",json_object_new_int(pstServerMsgUp->Msg.stData2Server.Battery));
 	            json_object_object_add(pragma,"Rssi",json_object_new_int(pstServerMsgUp->Msg.stData2Server.rssi));
 	            json_object_object_add(pragma,"Snr",json_object_new_double(pstServerMsgUp->Msg.stData2Server.snr));
@@ -236,6 +249,22 @@ void *Radio_routin(void *param){
 			else if(pstServerMsgUp->enMsgUpFramType == en_MsgUpFramConfirm)
 			{
 				json_object_object_add(pragma,"FrameType",json_object_new_string("UpConfirm"));
+				switch(pstServerMsgUp->Msg.stConfirm2Server.ClassType)
+				{
+					case 0:
+						json_object_object_add(pragma,"NodeType",json_object_new_string("Class A"));
+						break;
+					case 1:
+						json_object_object_add(pragma,"NodeType",json_object_new_string("Class B"));
+						break;
+					case 2:
+						json_object_object_add(pragma,"NodeType",json_object_new_string("Class C"));
+						break;
+				}
+            	memset(stringformat,0,256 * 2);
+            	Hex2Str(pstServerMsgUp->Msg.stConfirm2Server.DevEUI,stringformat,8);
+				json_object_object_add(pragma,"DevEUI",json_object_new_string(stringformat));
+	            json_object_object_add(pragma,"NetAddr",json_object_new_int(pstServerMsgUp->Msg.stConfirm2Server.DevAddr));
 				switch(pstServerMsgUp->Msg.stConfirm2Server.enConfirm2Server)
 				{
 					case en_Confirm2ServerSuccess:
@@ -257,6 +286,8 @@ void *Radio_routin(void *param){
 						json_object_object_add(pragma,"Result",json_object_new_string("Unkown Fault"));
 						break;
 				}
+	            json_object_object_add(pragma,"Rssi",json_object_new_int(pstServerMsgUp->Msg.stConfirm2Server.rssi));
+	            json_object_object_add(pragma,"Snr",json_object_new_double(pstServerMsgUp->Msg.stConfirm2Server.snr));
 			}
 			else
 			{

@@ -2,9 +2,10 @@
 #define __SERVER_H__
 
 typedef struct{
-    uint8_t AppEUI[8];
+	uint8_t ClassType;
     uint8_t DevEUI[8];
     uint32_t DevAddr;
+    uint8_t AppEUI[8];
     uint8_t fPort;
     uint8_t Battery;
     int16_t rssi;
@@ -14,8 +15,7 @@ typedef struct{
     struct
     {
         uint8_t AckRequest      : 1;
-		uint8_t ClassType		: 3;
-        uint8_t Reserve         : 4;
+        uint8_t Reserve         : 7;
     }CtrlBits;
 }st_Data2Server;
 
@@ -32,7 +32,11 @@ typedef enum{
 	en_MsgUpFramConfirm
 }en_MsgUpFramType,*pen_MsgUpFramType;
 typedef struct{
+	uint8_t ClassType;
     uint8_t DevEUI[8];
+	uint32_t DevAddr;
+    int16_t rssi;
+    int8_t snr;
 	en_Confirm2Server enConfirm2Server;
 }st_Confirm2Server;
 
@@ -50,7 +54,7 @@ typedef enum{
 }en_MsgDownFramType,*pen_MsgDownFramType;
 
 typedef struct{
-    uint8_t DevEUI[8];
+    uint32_t DevAddr;
     uint8_t fPort;
     uint8_t size;
 	uint8_t *payload;
@@ -62,13 +66,7 @@ typedef struct{
 }st_Data2Node;
 
 typedef struct{
-    uint8_t DevEUI[8];
-    uint8_t fPort;
-    struct
-    {
-        uint8_t Ack             : 1;
-        uint8_t Reserve         : 7;
-    }CtrlBits;
+    uint32_t DevAddr;
 }st_Confirm2Node;
 
 typedef struct{
