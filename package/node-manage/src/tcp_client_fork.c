@@ -219,12 +219,18 @@ connect:
             	{
                 	break;
             	}
-				json_object_object_get_ex(pragma,"AckRequest",&obj);
+				json_object_object_get_ex(pragma,"ConfirmRequest",&obj);
 	            if(obj == NULL)
 	            {
 	                    break;
 	            }
 	            pstServerMsgDown->Msg.stData2Node.CtrlBits.AckRequest = json_object_get_boolean(obj);
+				json_object_object_get_ex(pragma,"Confirm",&obj);
+	            if(obj == NULL)
+	            {
+	                    break;
+	            }
+	            pstServerMsgDown->Msg.stData2Node.CtrlBits.Ack = json_object_get_boolean(obj);
 				json_object_object_get_ex(pragma,"Data",&obj);
             	if(obj == NULL)
             	{
@@ -234,7 +240,7 @@ connect:
             	strcpy(stringformat,json_object_get_string(obj));
             	pstServerMsgDown->Msg.stData2Node.size = strlen(stringformat) / 2;
 				sendlen = pstServerMsgDown->Msg.stData2Node.size + sizeof(st_ServerMsgDown);
-            	Str2Hex( &stringformat[0],  pstServerMsgDown->Msg.stData2Node.payload, pstServerMsgDown->Msg.stData2Node.size );
+            	Str2Hex( &stringformat[0],  pstServerMsgDown->Msg.stData2Node.payload, strlen(stringformat) );
 			}
 			else if(strcmp(stringformat,"DownConfirm") == 0)
 			{

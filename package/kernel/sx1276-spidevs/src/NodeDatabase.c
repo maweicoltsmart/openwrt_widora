@@ -35,7 +35,7 @@ void NodeDatabaseRemove(void)
     {
 		del_timer(&stNodeDatabase[loop].timer1);
 		del_timer(&stNodeDatabase[loop].timer2);
-		stNodeDatabase[loop].stTxData.buf = NULL;
+		//stNodeDatabase[loop].stTxData.buf = NULL;
 		stNodeDatabase[loop].stTxData.len = 0;
 		//NodeDatabaseRestore(loop);
     }

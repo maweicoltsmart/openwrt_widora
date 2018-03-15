@@ -132,9 +132,11 @@ static ssize_t lora_dev_write(struct file *filp, const char __user *buf, size_t 
 	if(pstServerMsgDown->enMsgDownFramType == en_MsgDownFramDataSend)
 	{
 		pstServerMsgDown->Msg.stData2Node.payload = buffer + sizeof(st_ServerMsgDown);
+		ServerMsgDownListAdd(pstServerMsgDown);
 	}
 	else if(pstServerMsgDown->enMsgDownFramType == en_MsgDownFramConfirm)
 	{
+		ServerMsgDownListAdd(pstServerMsgDown);
 	}
 	else
 	{

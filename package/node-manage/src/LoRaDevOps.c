@@ -239,6 +239,7 @@ void *Radio_routin(void *param){
 				json_object_object_add(pragma,"AppEUI",json_object_new_string(stringformat));
 	            json_object_object_add(pragma,"Port",json_object_new_int(pstServerMsgUp->Msg.stData2Server.fPort));
 	            json_object_object_add(pragma,"ConfirmRequest",json_object_new_boolean(pstServerMsgUp->Msg.stData2Server.CtrlBits.AckRequest));
+				json_object_object_add(pragma,"Confirm",json_object_new_boolean(pstServerMsgUp->Msg.stData2Server.CtrlBits.Ack));
 	            json_object_object_add(pragma,"Battery",json_object_new_int(pstServerMsgUp->Msg.stData2Server.Battery));
 	            json_object_object_add(pragma,"Rssi",json_object_new_int(pstServerMsgUp->Msg.stData2Server.rssi));
 	            json_object_object_add(pragma,"Snr",json_object_new_double(pstServerMsgUp->Msg.stData2Server.snr));

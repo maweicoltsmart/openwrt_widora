@@ -31,8 +31,9 @@ typedef struct
 
 typedef struct
 {
-    uint8_t *buf;
+    uint8_t buf[128];
     uint8_t len;
+	//uint8_t fPort;
 }st_TxData;
 
 typedef enum
@@ -57,8 +58,10 @@ typedef struct
     en_NodeState state;
     int16_t rssi;
     int8_t snr;
-    bool is_ack_req;    // node reqest ack
-    bool have_ack;  // node have receiv
+    //bool is_ack_req;    // node reqest ack
+    //bool have_ack;  // node have receiv
+    uint16_t sequence_up;
+	uint16_t sequence_down;
     uint8_t Battery;
 }st_NodeDatabase,*pst_NodeDatabase;
 

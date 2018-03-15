@@ -12,6 +12,8 @@
 #include "debug.h"
 #include "NodeDatabase.h"
 #include "sx1276-cdev.h"
+#include "LoRaMac.h"
+#include "LoRaMacCrypto.h"
 
 st_ServerMsgUpQueue stServerMsgUpQueueListHead;
 st_ServerMsgDownQueue stServerMsgDownQueueListHead;
@@ -103,6 +105,11 @@ int ServerMsgDownListGet(pst_ServerMsgDown pstServerMsgDown){
 void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 	//uint32_t address;
 	st_ServerMsgUp stServerMsgUp;
+	LoRaMacHeader_t macHdr;
+	LoRaMacFrameCtrl_t fCtrl;
+	uint8_t LoRaMacBufferPktLen;
+	uint32_t mic;
+	
 	if(pstServerMsgDown->enMsgDownFramType == en_MsgDownFramDataSend)
 	{
 		if(!NodeDatabaseVerifyNetAddr(pstServerMsgDown->Msg.stData2Node.DevAddr))
@@ -113,18 +120,73 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 			ServerMsgUpListAdd(&stServerMsgUp);
 			return;
 		}
-	}
-	else if(pstServerMsgDown->enMsgDownFramType == en_MsgDownFramConfirm)
-	{
-		if(!NodeDatabaseVerifyNetAddr(pstServerMsgDown->Msg.stData2Node.DevAddr))
+		if((stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf != NULL) && (stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len > 0))
 		{
 			stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
+			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerRadioBusy;
+			ServerMsgUpListAdd(&stServerMsgUp);
+			return;
+		}
+		//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len = pstServerMsgDown->Msg.stData2Node.size;
+		//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf = (uint8_t *)kmalloc(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len,GFP_KERNEL);
+		//memcpy(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf,pstServerMsgDown->Msg.stData2Node.payload,pstServerMsgDown->Msg.stData2Node.size);
+		//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len = pstServerMsgDown->Msg.stData2Node.size;
+		//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.fPort = pstServerMsgDown->Msg.stData2Node.fPort;
+		//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].is_ack_req = pstServerMsgDown->Msg.stData2Node.CtrlBits.AckRequest;
+		//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].have_ack = pstServerMsgDown->Msg.stData2Node.CtrlBits.Ack;
+		
+		if(pstServerMsgDown->Msg.stData2Node.CtrlBits.AckRequest)
+    	{
+        	macHdr.Bits.MType = FRAME_TYPE_DATA_CONFIRMED_DOWN;
+    	}
+
+    	else
+    	{
+        	macHdr.Bits.MType = FRAME_TYPE_DATA_UNCONFIRMED_DOWN;
+    	}
+		fCtrl.Value = 0;
+		fCtrl.Bits.FPending = false;
+		fCtrl.Bits.Ack = pstServerMsgDown->Msg.stData2Node.CtrlBits.Ack;
+	
+		stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf[0] = macHdr.Value;
+		*(uint32_t *)(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf + 1) = pstServerMsgDown->Msg.stData2Node.DevAddr;
+		*(uint8_t *)(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf + 1 + 4) = fCtrl.Value;
+		*(uint16_t *)(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf + 1 + 4 + 1) = stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].sequence_down;
+		if(pstServerMsgDown->Msg.stData2Node.size > 0)
+		{
+			*(uint8_t *)(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf + 1 + 4 + 1 + 2) = pstServerMsgDown->Msg.stData2Node.fPort;
+			LoRaMacBufferPktLen = 1 + 4 + 1 + 2 + 1;
+			LoRaMacPayloadEncrypt( pstServerMsgDown->Msg.stData2Node.payload, pstServerMsgDown->Msg.stData2Node.size, stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.AppSKey, pstServerMsgDown->Msg.stData2Node.DevAddr, DOWN_LINK, stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].sequence_down,&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf[LoRaMacBufferPktLen]);
+			LoRaMacBufferPktLen += pstServerMsgDown->Msg.stData2Node.size;
+		}
+		else
+		{
+			LoRaMacBufferPktLen = 1 + 4 + 1 + 2;
+		}
+		LoRaMacComputeMic( stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf, LoRaMacBufferPktLen, stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.NwkSKey, pstServerMsgDown->Msg.stData2Node.DevAddr, DOWN_LINK, stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].sequence_down, &mic );
+	    stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf[LoRaMacBufferPktLen + 0] = mic & 0xFF;
+	    stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf[LoRaMacBufferPktLen + 1] = ( mic >> 8 ) & 0xFF;
+	    stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf[LoRaMacBufferPktLen + 2] = ( mic >> 16 ) & 0xFF;
+	    stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf[LoRaMacBufferPktLen + 3] = ( mic >> 24 ) & 0xFF;
+	    LoRaMacBufferPktLen += LORAMAC_MFR_LEN;
+		stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len = LoRaMacBufferPktLen;
+		stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].sequence_down ++;
+
+		stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].state = enStateRxWindow1;
+	}
+	else if(pstServerMsgDown->enMsgDownFramType == en_MsgDownFramConfirm)
+	{
+		if(!NodeDatabaseVerifyNetAddr(pstServerMsgDown->Msg.stConfirm2Node.DevAddr))
+		{
+			stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stConfirm2Node.DevAddr].stDevNetParameter.DevEUI,8);
 			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerOffline;
 			ServerMsgUpListAdd(&stServerMsgUp);
 			return;
 		}
-		
+		printk("%s %d\r\n",__func__,__LINE__);
+		//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].have_ack = true;
 	}
 	else
 	{

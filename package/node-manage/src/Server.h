@@ -15,7 +15,8 @@ typedef struct{
     struct
     {
         uint8_t AckRequest      : 1;
-        uint8_t Reserve         : 7;
+		uint8_t Ack             : 1;
+        uint8_t Reserve         : 6;
     }CtrlBits;
 }st_Data2Server;
 
@@ -61,7 +62,8 @@ typedef struct{
     struct
     {
         uint8_t AckRequest      : 1;
-        uint8_t Reserve         : 7;
+		uint8_t Ack             : 1;
+        uint8_t Reserve         : 6;
     }CtrlBits;
 }st_Data2Node;
 

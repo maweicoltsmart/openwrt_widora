@@ -41,6 +41,7 @@ void serverpkgformat(void)
     json_object_object_add(pragma,"AppEUI",json_object_new_string("01234567ABCDEF89"));
     json_object_object_add(pragma,"Port",json_object_new_int(0));
     json_object_object_add(pragma,"ConfirmRequest",json_object_new_boolean(1));
+	json_object_object_add(pragma,"Confirm",json_object_new_boolean(1));
     json_object_object_add(pragma,"Battery",json_object_new_int(0));
     json_object_object_add(pragma,"Rssi",json_object_new_int(-12));
     json_object_object_add(pragma,"Snr",json_object_new_int(-13));
@@ -50,7 +51,7 @@ void serverpkgformat(void)
     //printf("%s",buf);
 	json_object_put(pragma);
 	close(file);
-
+/*
 	memset(buf,0,4096);
 	file = open("/usr/UpConfirm", O_RDWR|O_CREAT);
 	if(file < 0)
@@ -72,7 +73,7 @@ void serverpkgformat(void)
     //printf("%s",buf);
 	json_object_put(pragma);
 	close(file);
-
+*/
 	memset(buf,0,4096);
 	file = open("/usr/DownData", O_RDWR|O_CREAT);
 	if(file < 0)
@@ -86,13 +87,14 @@ void serverpkgformat(void)
 	json_object_object_add(pragma,"NetAddr",json_object_new_int(0));
     json_object_object_add(pragma,"Port",json_object_new_int(0));
     json_object_object_add(pragma,"ConfirmRequest",json_object_new_boolean(1));
+	json_object_object_add(pragma,"Confirm",json_object_new_boolean(1));
     json_object_object_add(pragma,"Data",json_object_new_string("01234567ABCDEF89"));	/* data that encoded into Base64 */
     strcpy(buf,json_object_to_json_string(pragma));
 	write(file,buf,strlen(buf));
     //printf("%s",buf);
 	json_object_put(pragma);
 	close(file);
-
+/*
 	memset(buf,0,4096);
 	file = open("/usr/DownConfirm", O_RDWR|O_CREAT);
 	if(file < 0)
@@ -109,4 +111,5 @@ void serverpkgformat(void)
     //printf("%s",buf);
 	json_object_put(pragma);
 	close(file);
+	*/
 }
