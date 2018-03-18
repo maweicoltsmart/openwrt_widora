@@ -2,6 +2,8 @@
 #include <linux/init.h>
 #include <linux/fs.h>
 #include <linux/uaccess.h>
+#include <asm/irq.h>
+#include <linux/interrupt.h>
 #include "NodeDatabase.h"
 #include "debug.h"
 #include "utilities.h"
@@ -35,8 +37,9 @@ void NodeDatabaseRemove(void)
     {
 		del_timer(&stNodeDatabase[loop].timer1);
 		del_timer(&stNodeDatabase[loop].timer2);
-		//stNodeDatabase[loop].stTxData.buf = NULL;
 		stNodeDatabase[loop].stTxData.len = 0;
+		tasklet_kill(&stNodeDatabase[loop].tasklet);
+		//if(loop < node_cnt)
 		//NodeDatabaseRestore(loop);
     }
 }
@@ -64,23 +67,27 @@ void NodeDatabaseReload(void)
 		printk("%s ,%d error\r\n",__func__,__LINE__);
 		goto resetdatabase;
 	}
+	//printk("%s ,%d ,%04X\r\n",__func__,__LINE__,crc);
 	pos += sizeof(crc);
-	
 	len = vfs_read(fp,(char *)&node_cnt, sizeof(node_cnt), &pos);
 	if(len < sizeof(node_cnt))
 	{
 		printk("%s ,%d error\r\n",__func__,__LINE__);
 		goto resetdatabase;
 	}
+	//printk("%s ,%d ,%08X\r\n",__func__,__LINE__,node_cnt);
 	pos += sizeof(node_cnt);
     len = vfs_read(fp,(char *)stNodeInfoToSave, sizeof(st_NodeInfoToSave) * node_cnt, &pos);
 	filp_close(fp,NULL);
     set_fs(fs);
     if((len < sizeof(st_NodeInfoToSave) * node_cnt) || (crc != Crc16((uint8_t *)stNodeInfoToSave,sizeof(st_NodeInfoToSave) * node_cnt)))
     {
+    	printk("%s ,%d ,%d\r\n",__func__,len,sizeof(st_NodeInfoToSave) * node_cnt);
+		printk("%s ,%d ,%d\r\n",__func__,crc,Crc16((uint8_t *)stNodeInfoToSave,sizeof(st_NodeInfoToSave) * node_cnt));
 resetdatabase:
     	node_cnt = 0;
     	memset(stNodeInfoToSave,0,sizeof(stNodeInfoToSave));
+		printk("The node database verify error, all node must be rejoin again\r\n");
     }
 }
 
@@ -107,13 +114,16 @@ void NodeDatabaseRestore(uint32_t addr)
     {
     	printk("%s ,%d error\r\n",__func__,__LINE__);
     }
+	//printk("%s ,%d ,%04X\r\n",__func__,__LINE__,crc);
     pos += sizeof(crc); 
     len = vfs_write(fp,(char *)&node_cnt, sizeof(node_cnt), &pos);
     if(len < sizeof(node_cnt))
     {
     	printk("%s ,%d error\r\n",__func__,__LINE__);
     }
+	//printk("%s ,%d ,%08X\r\n",__func__,__LINE__,node_cnt);
     pos += sizeof(node_cnt); 
+	pos += sizeof(st_NodeInfoToSave) * addr; 
     len = vfs_write(fp,(char *)&stNodeInfoToSave[addr], sizeof(st_NodeInfoToSave), &pos);
     if(len < sizeof(st_NodeInfoToSave))
     {

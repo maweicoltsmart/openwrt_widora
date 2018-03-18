@@ -1,9 +1,17 @@
+#include <linux/kernel.h>
+#include <linux/workqueue.h>
+#include <linux/module.h>
+#include <linux/init.h>
+#include <asm/irq.h>
+#include <linux/interrupt.h>
 #include "LoRaWAN.h"
 #include "proc.h"
 
 LoRaMacParams_t LoRaMacParams;
 st_GatewayParameter stGatewayParameter;
 static struct task_struct *radio_routin;
+
+typedef void (*pdotasklet)(unsigned long);
 
 extern void LoRaWANInit(void);
 extern int LoRaWANRxDataProcess(void *data);
@@ -33,7 +41,6 @@ void LoRaWANInit(void)
 void LoRaWANRemove(void)
 {
 	kthread_stop(radio_routin);
-	//mdelay(300);
 	RadioRemove();
 	ServerMsgRemove();
 	NodeDatabaseRemove();
@@ -111,11 +118,12 @@ int LoRaWANRxDataProcess(void *data){
 					LoRaMacComputeMic( stRadioRxList.stRadioRx.payload, stRadioRxList.stRadioRx.size - LORAMAC_MFR_LEN, stNodeInfoToSave[stFrameDataUp.frameHdr.DevAddr].stDevNetParameter.NwkSKey, stFrameDataUp.frameHdr.DevAddr, UP_LINK, stFrameDataUp.frameHdr.Fcnt, &micRx );
 					if(stFrameDataUp.mic != micRx)
 					{
-						DEBUG_OUTPUT_INFO("error: mic! 0x%08X, 0x%08X\r\n",stFrameDataUp.mic,micRx);
+						printk("error: mic! 0x%08X, 0x%08X\r\n",stFrameDataUp.mic,micRx);
 						break;
 					}
 					NodeDatabaseUpdateParameters(stFrameDataUp.frameHdr.DevAddr,&stRadioRxList);
-					
+					del_timer(&stNodeDatabase[addr].timer1);
+					del_timer(&stNodeDatabase[addr].timer2);
 					stNodeDatabase[addr].timer1.function = LoRaWANDataDownTimer1Callback;
 					stNodeDatabase[addr].timer1.data = addr;
 					stNodeDatabase[addr].timer1.expires = stNodeDatabase[addr].jiffies + LoRaMacParams.ReceiveDelay1;
@@ -195,11 +203,11 @@ int LoRaWANRxDataProcess(void *data){
     return 0;
 }
 
-void LoRaWANJoinTimer1Callback( unsigned long index )
+void LoRaWANJoinTimer1Tasklet(unsigned long index)
 {
+	del_timer(&stNodeDatabase[index].timer1);
 	if(Radio.GetStatus(stNodeInfoToSave[index].chip) == RF_TX_RUNNING)
 	{
-		del_timer(&stNodeDatabase[index].timer1);
 		stNodeDatabase[index].timer2.function = LoRaWANJoinTimer2Callback;
 		stNodeDatabase[index].timer2.data = index;
 		stNodeDatabase[index].timer2.expires = stNodeDatabase[index].jiffies + LoRaMacParams.JoinAcceptDelay2;
@@ -208,7 +216,6 @@ void LoRaWANJoinTimer1Callback( unsigned long index )
 	}
 	if(time_before((unsigned long)stNodeDatabase[index].jiffies + LoRaMacParams.JoinAcceptDelay1 + HZ/100,(unsigned long)jiffies))
 	{
-		del_timer(&stNodeDatabase[index].timer1);
 		stNodeDatabase[index].timer2.function = LoRaWANJoinTimer2Callback;
 		stNodeDatabase[index].timer2.data = index;
 		stNodeDatabase[index].timer2.expires = stNodeDatabase[index].jiffies + LoRaMacParams.JoinAcceptDelay2;
@@ -232,26 +239,21 @@ void LoRaWANJoinTimer1Callback( unsigned long index )
 		stRadioCfg_Tx.timeout);
 	Radio.SetChannel(stNodeInfoToSave[index].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeInfoToSave[index].chip]]);
 	Radio.Send(stNodeInfoToSave[index].chip,stNodeDatabase[index].stTxData.buf,stNodeDatabase[index].stTxData.len);
-	//kfree(stNodeDatabase[index].stTxData.buf);
-	//stNodeDatabase[index].stTxData.buf = NULL;
 	stNodeDatabase[index].stTxData.len = 0;
 	stNodeDatabase[index].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
 }
 
-void LoRaWANJoinTimer2Callback( unsigned long index )
+void LoRaWANJoinTimer2Tasklet(unsigned long index)
 {
+	del_timer(&stNodeDatabase[index].timer2);
 	if(Radio.GetStatus(stNodeInfoToSave[index].chip) == RF_TX_RUNNING)
 	{
-		del_timer(&stNodeDatabase[index].timer2);
-		//stNodeDatabase[index].stTxData.buf = NULL;
 		stNodeDatabase[index].stTxData.len = 0;
 		return;
 	}
 	if(time_before((unsigned long)stNodeDatabase[index].jiffies + LoRaMacParams.JoinAcceptDelay2 + HZ/100,(unsigned long)jiffies))
 	{
-		del_timer(&stNodeDatabase[index].timer2);
-		//stNodeDatabase[index].stTxData.buf = NULL;
 		stNodeDatabase[index].stTxData.len = 0;
 		return;
 	}
@@ -272,16 +274,104 @@ void LoRaWANJoinTimer2Callback( unsigned long index )
 		stRadioCfg_Tx.timeout);
 	Radio.SetChannel(stNodeInfoToSave[index].chip,stRadioCfg_Tx.freq_tx[25]);
 	Radio.Send(stNodeInfoToSave[index].chip,stNodeDatabase[index].stTxData.buf,stNodeDatabase[index].stTxData.len);
-	//kfree(stNodeDatabase[index].stTxData.buf);
-	//stNodeDatabase[index].stTxData.buf = NULL;
 	stNodeDatabase[index].stTxData.len = 0;
 	stNodeDatabase[index].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
 }
 
+void LoRaWANDataDownTimer1Tasklet(unsigned long index)
+{
+	del_timer(&stNodeDatabase[index].timer1);
+	if(Radio.GetStatus(stNodeInfoToSave[index].chip) == RF_TX_RUNNING)
+	{
+		stNodeDatabase[index].timer2.function = LoRaWANJoinTimer2Callback;
+		stNodeDatabase[index].timer2.data = index;
+		stNodeDatabase[index].timer2.expires = stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay2;
+		add_timer(&stNodeDatabase[index].timer2);
+		return;
+	}
+	if(time_before((unsigned long)stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay1 + HZ/100,(unsigned long)jiffies))
+	{
+		stNodeDatabase[index].timer2.function = LoRaWANJoinTimer2Callback;
+		stNodeDatabase[index].timer2.data = index;
+		stNodeDatabase[index].timer2.expires = stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay2;
+		add_timer(&stNodeDatabase[index].timer2);
+		return;
+	}
+	
+	Radio.Sleep(stNodeInfoToSave[index].chip);
+	Radio.SetTxConfig(stNodeInfoToSave[index].chip,
+		stRadioCfg_Tx.modem,
+		stRadioCfg_Tx.power,
+		stRadioCfg_Tx.fdev,
+		stRadioCfg_Tx.bandwidth,
+		stRadioCfg_Tx.datarate[stNodeInfoToSave[index].chip],
+		stRadioCfg_Tx.coderate,
+		stRadioCfg_Tx.preambleLen,
+		stRadioCfg_Tx.fixLen,
+		stRadioCfg_Tx.crcOn,
+		stRadioCfg_Tx.freqHopOn,
+		stRadioCfg_Tx.hopPeriod,
+		stRadioCfg_Tx.iqInverted,
+		stRadioCfg_Tx.timeout);
+	Radio.SetChannel(stNodeInfoToSave[index].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeInfoToSave[index].chip]]);
+	Radio.Send(stNodeInfoToSave[index].chip,stNodeDatabase[index].stTxData.buf,stNodeDatabase[index].stTxData.len);
+	stNodeDatabase[index].stTxData.len = 0;
+	stNodeDatabase[index].state = enStateJoined;
+	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
+}
+
+void LoRaWANDataDownTimer2Tasklet(unsigned long index)
+{
+	del_timer(&stNodeDatabase[index].timer2);
+	if(Radio.GetStatus(stNodeInfoToSave[index].chip) == RF_TX_RUNNING)
+	{
+		stNodeDatabase[index].stTxData.len = 0;
+		return;
+	}
+	if(time_before((unsigned long)stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay2 + HZ/100,(unsigned long)jiffies))
+	{
+		stNodeDatabase[index].stTxData.len = 0;
+		return;
+	}
+	Radio.Sleep(stNodeInfoToSave[index].chip);
+	Radio.SetTxConfig(stNodeInfoToSave[index].chip,
+		stRadioCfg_Tx.modem,
+		stRadioCfg_Tx.power,
+		stRadioCfg_Tx.fdev,
+		stRadioCfg_Tx.bandwidth,
+		12,
+		stRadioCfg_Tx.coderate,
+		stRadioCfg_Tx.preambleLen,
+		stRadioCfg_Tx.fixLen,
+		stRadioCfg_Tx.crcOn,
+		stRadioCfg_Tx.freqHopOn,
+		stRadioCfg_Tx.hopPeriod,
+		stRadioCfg_Tx.iqInverted,
+		stRadioCfg_Tx.timeout);
+	Radio.SetChannel(stNodeInfoToSave[index].chip,stRadioCfg_Tx.freq_tx[25]);
+	Radio.Send(stNodeInfoToSave[index].chip,stNodeDatabase[index].stTxData.buf,stNodeDatabase[index].stTxData.len);
+	stNodeDatabase[index].stTxData.len = 0;
+	stNodeDatabase[index].state = enStateJoined;
+	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
+}
+void LoRaWANAddTaskLet(unsigned long addr,pdotasklet dotasklet)
+{
+	tasklet_init(&stNodeDatabase[addr].tasklet,  dotasklet, addr);  
+	tasklet_schedule(&stNodeDatabase[addr].tasklet);
+}
+void LoRaWANJoinTimer1Callback( unsigned long index )
+{
+	LoRaWANAddTaskLet(index,LoRaWANJoinTimer1Tasklet);
+}
+
+void LoRaWANJoinTimer2Callback( unsigned long index )
+{
+	LoRaWANAddTaskLet(index,LoRaWANJoinTimer2Tasklet);
+}
+
 void LoRaWANJoinAccept(uint32_t addr)
 {
-	//st_FrameJoinAccept stFrameJoinAccept;
 	uint8_t acceptbuf[128] = {0};
 	LoRaMacHeader_t macHdr;
 	
@@ -309,143 +399,11 @@ void LoRaWANJoinAccept(uint32_t addr)
 
 void LoRaWANDataDownTimer1Callback( unsigned long index )
 {
-	//uint8_t databuf[256] = {0};
-	//LoRaMacHeader_t macHdr;
-	//LoRaMacFrameCtrl_t fCtrl;
-	//uint8_t LoRaMacBufferPktLen;
-	//uint32_t mic;
-	
-	if(Radio.GetStatus(stNodeInfoToSave[index].chip) == RF_TX_RUNNING)
-	{
-		del_timer(&stNodeDatabase[index].timer1);
-		stNodeDatabase[index].timer2.function = LoRaWANJoinTimer2Callback;
-		stNodeDatabase[index].timer2.data = index;
-		stNodeDatabase[index].timer2.expires = stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay2;
-		add_timer(&stNodeDatabase[index].timer2);
-		return;
-	}
-	if(time_before((unsigned long)stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay1 + HZ/100,(unsigned long)jiffies))
-	{
-		del_timer(&stNodeDatabase[index].timer1);
-		stNodeDatabase[index].timer2.function = LoRaWANJoinTimer2Callback;
-		stNodeDatabase[index].timer2.data = index;
-		stNodeDatabase[index].timer2.expires = stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay2;
-		add_timer(&stNodeDatabase[index].timer2);
-		return;
-	}
-	
-	del_timer(&stNodeDatabase[index].timer1);
-	del_timer(&stNodeDatabase[index].timer2);
-	/*
-	macHdr.Value = 0;
-	if((stNodeDatabase[index].have_ack) && (stNodeDatabase[index].stTxData.buf == NULL) && (stNodeDatabase[index].stTxData.len == 0))
-	{
-		stNodeDatabase[index].timer2.function = LoRaWANDataDownTimer2Callback;
-		stNodeDatabase[index].timer2.data = index;
-		stNodeDatabase[index].timer2.expires = stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay2;
-		add_timer(&stNodeDatabase[index].timer2);
-		stNodeDatabase[index].state = enStateRxWindow2;
-		return;
-	}
-	
-	if(stNodeDatabase[index].is_ack_req)
-    {
-        macHdr.Bits.MType = FRAME_TYPE_DATA_CONFIRMED_DOWN;
-    }
-
-    else
-    {
-        macHdr.Bits.MType = FRAME_TYPE_DATA_UNCONFIRMED_DOWN;
-    }
-	fCtrl.Value = 0;
-	fCtrl.Bits.FPending = false;
-	fCtrl.Bits.Ack = stNodeDatabase[index].have_ack;
-	
-	databuf[0] = macHdr.Value;
-	*(uint32_t *)(databuf + 1) = stNodeInfoToSave[index].stDevNetParameter.DevAddr;
-	*(uint8_t *)(databuf + 1 + 4) = fCtrl.Value;
-	*(uint16_t *)(databuf + 1 + 4 + 1) = stNodeDatabase[index].sequence_down;
-	if((stNodeDatabase[index].stTxData.buf != NULL) && (stNodeDatabase[index].stTxData.len > 0))
-	{
-		*(uint8_t *)(databuf + 1 + 4 + 1 + 2) = stNodeDatabase[index].stTxData.fPort;
-		LoRaMacBufferPktLen = 1 + 4 + 1 + 2 + 1;
-		LoRaMacPayloadEncrypt( stNodeDatabase[index].stTxData.buf, stNodeDatabase[index].stTxData.len, stNodeInfoToSave[index].stDevNetParameter.AppSKey, index, DOWN_LINK, stNodeDatabase[index].sequence_down,&databuf[LoRaMacBufferPktLen]);
-	}
-	else
-	{
-		LoRaMacBufferPktLen = 1 + 4 + 1 + 2;
-	}
-	LoRaMacComputeMic( databuf, LoRaMacBufferPktLen, stNodeInfoToSave[index].stDevNetParameter.NwkSKey, index, DOWN_LINK, stNodeDatabase[index].sequence_down, &mic );
-    databuf[LoRaMacBufferPktLen + 0] = mic & 0xFF;
-    databuf[LoRaMacBufferPktLen + 1] = ( mic >> 8 ) & 0xFF;
-    databuf[LoRaMacBufferPktLen + 2] = ( mic >> 16 ) & 0xFF;
-    databuf[LoRaMacBufferPktLen + 3] = ( mic >> 24 ) & 0xFF;
-    LoRaMacBufferPktLen += LORAMAC_MFR_LEN;
-	stNodeDatabase[index].sequence_down ++;
-
-	stNodeDatabase[index].state = enStateRxWindow1;
-	*/
-	Radio.Sleep(stNodeInfoToSave[index].chip);
-	Radio.SetTxConfig(stNodeInfoToSave[index].chip,
-		stRadioCfg_Tx.modem,
-		stRadioCfg_Tx.power,
-		stRadioCfg_Tx.fdev,
-		stRadioCfg_Tx.bandwidth,
-		stRadioCfg_Tx.datarate[stNodeInfoToSave[index].chip],
-		stRadioCfg_Tx.coderate,
-		stRadioCfg_Tx.preambleLen,
-		stRadioCfg_Tx.fixLen,
-		stRadioCfg_Tx.crcOn,
-		stRadioCfg_Tx.freqHopOn,
-		stRadioCfg_Tx.hopPeriod,
-		stRadioCfg_Tx.iqInverted,
-		stRadioCfg_Tx.timeout);
-	Radio.SetChannel(stNodeInfoToSave[index].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeInfoToSave[index].chip]]);
-	Radio.Send(stNodeInfoToSave[index].chip,stNodeDatabase[index].stTxData.buf,stNodeDatabase[index].stTxData.len);
-	//kfree(stNodeDatabase[index].stTxData.buf);
-	//stNodeDatabase[index].stTxData.buf = NULL;
-	stNodeDatabase[index].stTxData.len = 0;
-	stNodeDatabase[index].state = enStateJoined;
-	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
+	LoRaWANAddTaskLet(index,LoRaWANDataDownTimer1Tasklet);
 }
 
 void LoRaWANDataDownTimer2Callback( unsigned long index )
 {
-	if(Radio.GetStatus(stNodeInfoToSave[index].chip) == RF_TX_RUNNING)
-	{
-		del_timer(&stNodeDatabase[index].timer2);
-		//stNodeDatabase[index].stTxData.buf = NULL;
-		stNodeDatabase[index].stTxData.len = 0;
-		return;
-	}
-	if(time_before((unsigned long)stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay2 + HZ/100,(unsigned long)jiffies))
-	{
-		del_timer(&stNodeDatabase[index].timer2);
-		//stNodeDatabase[index].stTxData.buf = NULL;
-		stNodeDatabase[index].stTxData.len = 0;
-		return;
-	}
-	Radio.Sleep(stNodeInfoToSave[index].chip);
-	Radio.SetTxConfig(stNodeInfoToSave[index].chip,
-		stRadioCfg_Tx.modem,
-		stRadioCfg_Tx.power,
-		stRadioCfg_Tx.fdev,
-		stRadioCfg_Tx.bandwidth,
-		12,
-		stRadioCfg_Tx.coderate,
-		stRadioCfg_Tx.preambleLen,
-		stRadioCfg_Tx.fixLen,
-		stRadioCfg_Tx.crcOn,
-		stRadioCfg_Tx.freqHopOn,
-		stRadioCfg_Tx.hopPeriod,
-		stRadioCfg_Tx.iqInverted,
-		stRadioCfg_Tx.timeout);
-	Radio.SetChannel(stNodeInfoToSave[index].chip,stRadioCfg_Tx.freq_tx[25]);
-	Radio.Send(stNodeInfoToSave[index].chip,stNodeDatabase[index].stTxData.buf,stNodeDatabase[index].stTxData.len);
-	//kfree(stNodeDatabase[index].stTxData.buf);
-	//stNodeDatabase[index].stTxData.buf = NULL;
-	stNodeDatabase[index].stTxData.len = 0;
-	stNodeDatabase[index].state = enStateJoined;
-	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
+	LoRaWANAddTaskLet(index,LoRaWANDataDownTimer2Tasklet);
 }
 

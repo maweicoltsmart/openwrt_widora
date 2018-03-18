@@ -6,6 +6,9 @@
 #include <linux/list.h>
 #include <linux/time.h>
 #include <linux/timer.h>
+#include <asm/irq.h>
+#include <linux/interrupt.h>
+
 #include "Radio.h"
 
 #define MAX_NODE    100
@@ -63,6 +66,7 @@ typedef struct
     uint16_t sequence_up;
 	uint16_t sequence_down;
     uint8_t Battery;
+	struct tasklet_struct tasklet;
 }st_NodeDatabase,*pst_NodeDatabase;
 
 typedef struct

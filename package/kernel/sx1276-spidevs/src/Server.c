@@ -66,13 +66,13 @@ int ServerMsgUpListGet(const pst_ServerMsgUp pstServerMsgUp){
 		memcpy(pstServerMsgUp,&get->stServerMsgUp,sizeof(st_ServerMsgUp));
 		pstServerMsgUp->Msg.stData2Server.payload = payload;
 		memcpy(pstServerMsgUp->Msg.stData2Server.payload,get->stServerMsgUp.Msg.stData2Server.payload,get->stServerMsgUp.Msg.stData2Server.size);
+		kfree(get->stServerMsgUp.Msg.stData2Server.payload);
 	}
 	else
 	{
 		memcpy(pstServerMsgUp,&get->stServerMsgUp.Msg.stData2Server,sizeof(st_ServerMsgUp));
 	}
     list_del(&get->list);
-    kfree(get->stServerMsgUp.Msg.stData2Server.payload);
     kfree(get);
     return 0;
 }
