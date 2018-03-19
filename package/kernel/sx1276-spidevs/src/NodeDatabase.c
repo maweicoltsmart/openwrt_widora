@@ -213,6 +213,7 @@ void NodeDatabaseUpdateParameters(uint32_t addr, pst_RadioRxList pstRadioRxList)
     stNodeDatabase[addr].rssi = pstRadioRxList->stRadioRx.rssi;
 	stNodeDatabase[addr].jiffies = pstRadioRxList->jiffies;
 	stNodeInfoToSave[addr].classtype = macHdr.Bits.RFU;
+	stNodeDatabase[addr].stTxData.len = 0;
 }
 bool NodeDatabaseVerifyNetAddr(uint32_t addr)
 {

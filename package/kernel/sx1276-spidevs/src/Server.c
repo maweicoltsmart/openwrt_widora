@@ -109,7 +109,6 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 	LoRaMacFrameCtrl_t fCtrl;
 	uint8_t LoRaMacBufferPktLen;
 	uint32_t mic;
-	
 	if(pstServerMsgDown->enMsgDownFramType == en_MsgDownFramDataSend)
 	{
 		if(!NodeDatabaseVerifyNetAddr(pstServerMsgDown->Msg.stData2Node.DevAddr))
@@ -185,8 +184,6 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 			ServerMsgUpListAdd(&stServerMsgUp);
 			return;
 		}
-		printk("%s %d\r\n",__func__,__LINE__);
-		//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].have_ack = true;
 	}
 	else
 	{
