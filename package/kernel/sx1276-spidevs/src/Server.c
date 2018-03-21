@@ -173,6 +173,7 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 		stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].sequence_down ++;
 
 		stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].state = enStateRxWindow1;
+		printk("server down ,%d , %d\r\n",pstServerMsgDown->Msg.stData2Node.DevAddr,stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len);
 	}
 	else if(pstServerMsgDown->enMsgDownFramType == en_MsgDownFramConfirm)
 	{

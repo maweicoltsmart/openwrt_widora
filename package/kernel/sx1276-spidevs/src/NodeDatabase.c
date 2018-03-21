@@ -159,7 +159,7 @@ uint32_t NodeDatabaseJoin(const pst_NodeJoinInfo node)
             }else{
                 stNodeDatabase[loop].state = enStateJoinning;
                 stNodeDatabase[loop].snr = node->snr;
-                stNodeInfoToSave[loop].chip = node->chip;
+                stNodeDatabase[loop].chip = node->chip;
                 stNodeDatabase[loop].rssi = node->rssi;
                 stNodeDatabase[loop].jiffies = node->jiffies;
 				stNodeInfoToSave[loop].classtype = node->classtype;
@@ -188,7 +188,7 @@ uint32_t NodeDatabaseJoin(const pst_NodeJoinInfo node)
         DEBUG_OUTPUT_DATA((unsigned char *)stNodeInfoToSave[loop].stDevNetParameter.NwkSKey,16);
         stNodeDatabase[loop].state = enStateJoinning;
         stNodeDatabase[loop].snr = node->snr;
-        stNodeInfoToSave[loop].chip = node->chip;
+        stNodeDatabase[loop].chip = node->chip;
         stNodeDatabase[loop].rssi = node->rssi;
         stNodeDatabase[loop].jiffies = node->jiffies;
 		stNodeInfoToSave[loop].classtype = node->classtype;
@@ -209,7 +209,7 @@ void NodeDatabaseUpdateParameters(uint32_t addr, pst_RadioRxList pstRadioRxList)
 	
 	macHdr.Value = pstRadioRxList->stRadioRx.payload[0];
 	stNodeDatabase[addr].snr = pstRadioRxList->stRadioRx.snr;
-	stNodeInfoToSave[addr].chip = pstRadioRxList->stRadioRx.chip;
+	stNodeDatabase[addr].chip = pstRadioRxList->stRadioRx.chip;
     stNodeDatabase[addr].rssi = pstRadioRxList->stRadioRx.rssi;
 	stNodeDatabase[addr].jiffies = pstRadioRxList->jiffies;
 	stNodeInfoToSave[addr].classtype = macHdr.Bits.RFU;

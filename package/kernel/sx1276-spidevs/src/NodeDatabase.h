@@ -26,7 +26,6 @@ typedef struct
 typedef struct
 {
     st_DevNetParameter stDevNetParameter;
-    uint8_t chip;
     uint32_t sequenceCounter_Down;
     uint32_t sequenceCounter_Up;
     uint8_t classtype;
@@ -67,6 +66,7 @@ typedef struct
 	uint16_t sequence_down;
     uint8_t Battery;
 	struct tasklet_struct tasklet;
+	uint8_t chip;
 }st_NodeDatabase,*pst_NodeDatabase;
 
 typedef struct
