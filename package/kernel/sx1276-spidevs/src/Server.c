@@ -68,9 +68,13 @@ int ServerMsgUpListGet(const pst_ServerMsgUp pstServerMsgUp){
 		memcpy(pstServerMsgUp->Msg.stData2Server.payload,get->stServerMsgUp.Msg.stData2Server.payload,get->stServerMsgUp.Msg.stData2Server.size);
 		kfree(get->stServerMsgUp.Msg.stData2Server.payload);
 	}
+	else if(get->stServerMsgUp.enMsgUpFramType == en_MsgUpFramConfirm)
+	{
+		memcpy(pstServerMsgUp,&get->stServerMsgUp,sizeof(st_ServerMsgUp));
+	}
 	else
 	{
-		memcpy(pstServerMsgUp,&get->stServerMsgUp.Msg.stData2Server,sizeof(st_ServerMsgUp));
+		printk("%s ,%d\r\n",__func__,__LINE__);
 	}
     list_del(&get->list);
     kfree(get);
@@ -93,6 +97,13 @@ int ServerMsgUpListAdd(const pst_ServerMsgUp pstServerMsgUp){
 	        return -1;
 	    }
 		memcpy(new->stServerMsgUp.Msg.stData2Server.payload,pstServerMsgUp->Msg.stData2Server.payload,pstServerMsgUp->Msg.stData2Server.size);
+	}
+	else if(pstServerMsgUp->enMsgUpFramType == en_MsgUpFramConfirm)
+	{
+	}
+	else
+	{
+		printk("%s ,%d\r\n",__func__,__LINE__);
 	}
     list_add_tail(&(new->list), &stServerMsgUpQueueListHead.list);
 	have_data = true;
@@ -123,7 +134,23 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 		{
 			stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
-			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerRadioBusy;
+			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerInLastDutyCycle;
+			ServerMsgUpListAdd(&stServerMsgUp);
+			return;
+		}
+		if(pstServerMsgDown->Msg.stData2Node.size > 51)
+		{
+			stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
+			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerTooLong;
+			ServerMsgUpListAdd(&stServerMsgUp);
+			return;
+		}
+		if((pstServerMsgDown->Msg.stData2Node.fPort > 233) || (pstServerMsgDown->Msg.stData2Node.fPort < 2))
+		{
+			stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
+			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerPortNotAllow;
 			ServerMsgUpListAdd(&stServerMsgUp);
 			return;
 		}
@@ -138,11 +165,13 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 		if(pstServerMsgDown->Msg.stData2Node.CtrlBits.AckRequest)
     	{
         	macHdr.Bits.MType = FRAME_TYPE_DATA_CONFIRMED_DOWN;
+			stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.needack = true;
     	}
 
     	else
     	{
         	macHdr.Bits.MType = FRAME_TYPE_DATA_UNCONFIRMED_DOWN;
+			stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.needack = false;
     	}
 		fCtrl.Value = 0;
 		fCtrl.Bits.FPending = false;
@@ -173,7 +202,6 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 		stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].sequence_down ++;
 
 		stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].state = enStateRxWindow1;
-		printk("server down ,%d , %d\r\n",pstServerMsgDown->Msg.stData2Node.DevAddr,stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len);
 	}
 	else if(pstServerMsgDown->enMsgDownFramType == en_MsgDownFramConfirm)
 	{

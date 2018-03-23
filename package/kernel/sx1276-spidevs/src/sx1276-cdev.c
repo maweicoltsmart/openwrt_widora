@@ -106,9 +106,15 @@ static ssize_t lora_dev_read(struct file *filp, char __user *user, size_t size,l
 		len = pstServerMsgUp->Msg.stData2Server.size + sizeof(st_ServerMsgUp);
 		ret = len;
 	}
-	else
+	else if(pstServerMsgUp->enMsgUpFramType == en_MsgUpFramConfirm)
 	{
 		len = sizeof(st_ServerMsgUp);
+		ret = len;
+	}
+	else
+	{
+		printk("%s ,%d\r\n",__func__,__LINE__);
+		len = 0;
 		ret = len;
 	}
     if (copy_to_user(user, (void*)buffer, len))

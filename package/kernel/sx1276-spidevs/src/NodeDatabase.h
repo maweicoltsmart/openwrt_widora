@@ -35,6 +35,7 @@ typedef struct
 {
     uint8_t buf[128];
     uint8_t len;
+	bool needack;
 	//uint8_t fPort;
 }st_TxData;
 

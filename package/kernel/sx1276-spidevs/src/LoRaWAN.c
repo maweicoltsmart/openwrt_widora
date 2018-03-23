@@ -19,6 +19,7 @@ extern void LoRaWANJoinTimer1Callback( unsigned long index );
 extern void LoRaWANJoinTimer2Callback( unsigned long index );
 void LoRaWANDataDownTimer1Callback( unsigned long index );
 void LoRaWANDataDownTimer2Callback( unsigned long index );
+void LoRaWANDataDownWaitAckTimer2Callback( unsigned long index );
 extern void LoRaWANJoinAccept(uint32_t addr);
 
 void LoRaWANInit(void)
@@ -130,8 +131,12 @@ int LoRaWANRxDataProcess(void *data){
 					add_timer(&stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer1);
 					stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].state = enStateRxWindow1;
 					
-					//if(stFrameDataUp.frameHdr.Fctrl.Bits.Ack)
+					if(stFrameDataUp.frameHdr.Fctrl.Bits.Ack)
 					{
+						stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+						memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[stFrameDataUp.frameHdr.DevAddr].stDevNetParameter.DevEUI,8);
+						stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerSuccess;
+						ServerMsgUpListAdd(&stServerMsgUp);
 					}
 					if( ( ( stRadioRxList.stRadioRx.size - 4 ) - appPayloadStartIndex ) > 0 )
 					{
@@ -358,10 +363,18 @@ void LoRaWANDataDownTimer1Tasklet(unsigned long index)
 	stNodeDatabase[index].stTxData.len = 0;
 	stNodeDatabase[index].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
+	if(stNodeDatabase[index].stTxData.needack)
+	{
+		stNodeDatabase[index].timer2.function = LoRaWANDataDownWaitAckTimer2Callback;
+		stNodeDatabase[index].timer2.data = index;
+		stNodeDatabase[index].timer2.expires = jiffies + HZ;
+		add_timer(&stNodeDatabase[index].timer2);
+	}
 }
 
 void LoRaWANDataDownTimer2Tasklet(unsigned long index)
 {
+	st_ServerMsgUp stServerMsgUp;
 	//tasklet_kill(&stNodeDatabase[index].tasklet);
 	del_timer_sync(&stNodeDatabase[index].timer2);
 	//if(Radio.GetStatus(stNodeInfoToSave[index].chip) == RF_TX_RUNNING)
@@ -373,13 +386,21 @@ void LoRaWANDataDownTimer2Tasklet(unsigned long index)
 	if(Radio.GetStatus(0) == RF_TX_RUNNING)
 	{
 		stNodeDatabase[index].stTxData.len = 0;
-		printk("data busy ,2 ,%d\r\n",index);
+		printk("data busy ,2 ,%d\r\n",index);		
+		stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+		memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[index].stDevNetParameter.DevEUI,8);
+		stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerRadioBusy;
+		ServerMsgUpListAdd(&stServerMsgUp);
 		return;
 	}
 	if(time_before((unsigned long)stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay2 + 25,(unsigned long)jiffies))
 	{
 		stNodeDatabase[index].stTxData.len = 0;
 		printk("data delay ,2 ,%d\r\n",index);
+		stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+		memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[index].stDevNetParameter.DevEUI,8);
+		stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerRadioBusy;
+		ServerMsgUpListAdd(&stServerMsgUp);
 		return;
 	}
 	Radio.Sleep(0);
@@ -402,7 +423,28 @@ void LoRaWANDataDownTimer2Tasklet(unsigned long index)
 	stNodeDatabase[index].stTxData.len = 0;
 	stNodeDatabase[index].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
+	
+	if(stNodeDatabase[index].stTxData.needack)
+	{
+		stNodeDatabase[index].timer2.function = LoRaWANDataDownWaitAckTimer2Callback;
+		stNodeDatabase[index].timer2.data = index;
+		stNodeDatabase[index].timer2.expires = jiffies + HZ;
+		add_timer(&stNodeDatabase[index].timer2);
+	}
 }
+
+void LoRaWANDataDownWaitAckTimer2Tasklet(unsigned long index)
+{
+	st_ServerMsgUp stServerMsgUp;
+	del_timer_sync(&stNodeDatabase[index].timer2);
+	
+	printk("Nack ,%d\r\n",index);
+	stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+	memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[index].stDevNetParameter.DevEUI,8);
+	stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerNodeNoAck;
+	ServerMsgUpListAdd(&stServerMsgUp);
+}
+
 void LoRaWANAddTaskLet(unsigned long addr,pdotasklet dotasklet)
 {
 	//tasklet_kill(&stNodeDatabase[addr].tasklet);
@@ -411,13 +453,11 @@ void LoRaWANAddTaskLet(unsigned long addr,pdotasklet dotasklet)
 }
 void LoRaWANJoinTimer1Callback( unsigned long index )
 {
-	printk("J1,%d,%d\r\n",stNodeDatabase[index].chip,index);
 	LoRaWANAddTaskLet(index,LoRaWANJoinTimer1Tasklet);
 }
 
 void LoRaWANJoinTimer2Callback( unsigned long index )
 {
-	printk("J2,%d\r\n",index);
 	LoRaWANAddTaskLet(index,LoRaWANJoinTimer2Tasklet);
 }
 
@@ -450,13 +490,17 @@ void LoRaWANJoinAccept(uint32_t addr)
 
 void LoRaWANDataDownTimer1Callback( unsigned long index )
 {
-	printk("D1,%d,%d\r\n",stNodeDatabase[index].chip,index);
 	LoRaWANAddTaskLet(index,LoRaWANDataDownTimer1Tasklet);
 }
 
 void LoRaWANDataDownTimer2Callback( unsigned long index )
 {
-	printk("D2,%d\r\n",index);
 	LoRaWANAddTaskLet(index,LoRaWANDataDownTimer2Tasklet);
 }
+
+void LoRaWANDataDownWaitAckTimer2Callback( unsigned long index )
+{
+	LoRaWANAddTaskLet(index,LoRaWANDataDownWaitAckTimer2Tasklet);
+}
+
 

@@ -213,10 +213,10 @@ void *Radio_routin(void *param){
     {
         if((len = read(fd_cdev,readbuffer,sizeof(readbuffer))) > 0)
         {
-        	pstServerMsgUp->Msg.stData2Server.payload = &readbuffer[sizeof(st_ServerMsgUp)];
         	pragma = json_object_new_object();
         	if(pstServerMsgUp->enMsgUpFramType == en_MsgUpFramDataReceive)
         	{
+        		pstServerMsgUp->Msg.stData2Server.payload = &readbuffer[sizeof(st_ServerMsgUp)];
         		json_object_object_add(pragma,"FrameType",json_object_new_string("UpData"));
 				switch(pstServerMsgUp->Msg.stData2Server.ClassType)
 				{
@@ -269,29 +269,36 @@ void *Radio_routin(void *param){
 				switch(pstServerMsgUp->Msg.stConfirm2Server.enConfirm2Server)
 				{
 					case en_Confirm2ServerSuccess:
-						json_object_object_add(pragma,"Result",json_object_new_string("Success"));
+						json_object_object_add(pragma,"Result",json_object_new_string("Trasmit Success"));
 						break;
 					case en_Confirm2ServerRadioBusy:
-						json_object_object_add(pragma,"Result",json_object_new_string("Busy"));
+						json_object_object_add(pragma,"Result",json_object_new_string("Radio Busy"));
 						break;
 					case en_Confirm2ServerOffline:
 						json_object_object_add(pragma,"Result",json_object_new_string("Not Active"));
 						break;
 					case en_Confirm2ServerTooLong:
-						json_object_object_add(pragma,"Result",json_object_new_string("Too Long"));
+						json_object_object_add(pragma,"Result",json_object_new_string("Data Too Long"));
 						break;
 					case en_Confirm2ServerPortNotAllow:
 						json_object_object_add(pragma,"Result",json_object_new_string("Port Error"));
+						break;
+					case en_Confirm2ServerInLastDutyCycle:
+						json_object_object_add(pragma,"Result",json_object_new_string("Last Pkg Is Sending"));
+						break;
+					case en_Confirm2ServerNodeNoAck:
+						json_object_object_add(pragma,"Result",json_object_new_string("Node Have No Ack"));
 						break;
 					default:
 						json_object_object_add(pragma,"Result",json_object_new_string("Unkown Fault"));
 						break;
 				}
-	            json_object_object_add(pragma,"Rssi",json_object_new_int(pstServerMsgUp->Msg.stConfirm2Server.rssi));
-	            json_object_object_add(pragma,"Snr",json_object_new_double(pstServerMsgUp->Msg.stConfirm2Server.snr));
+	            //json_object_object_add(pragma,"Rssi",json_object_new_int(pstServerMsgUp->Msg.stConfirm2Server.rssi));
+	            //json_object_object_add(pragma,"Snr",json_object_new_double(pstServerMsgUp->Msg.stConfirm2Server.snr));
 			}
 			else
 			{
+				printf("%s ,%d\r\n",__func__,__LINE__);
 			}
             memset(data.text,0,MSG_Q_BUFFER_SIZE);
             strcpy(data.text,json_object_to_json_string(pragma));
