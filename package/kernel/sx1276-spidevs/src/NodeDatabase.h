@@ -10,6 +10,7 @@
 #include <linux/interrupt.h>
 
 #include "Radio.h"
+#include "LoRaMac.h"
 
 #define MAX_NODE    100
 
@@ -36,6 +37,7 @@ typedef struct
     uint8_t buf[128];
     uint8_t len;
 	bool needack;
+	uint32_t classcjiffies;
 	//uint8_t fPort;
 }st_TxData;
 
@@ -79,7 +81,7 @@ typedef struct
     int16_t rssi;
     int8_t snr;
     uint32_t jiffies;
-	uint8_t classtype;
+	DeviceClass_t classtype;
 }st_NodeJoinInfo,*pst_NodeJoinInfo;
 
 extern st_NodeInfoToSave stNodeInfoToSave[];

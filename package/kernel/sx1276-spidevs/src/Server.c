@@ -113,6 +113,7 @@ int ServerMsgUpListAdd(const pst_ServerMsgUp pstServerMsgUp){
 int ServerMsgDownListGet(pst_ServerMsgDown pstServerMsgDown){
 	return 0;
 }
+extern void LoRaWANRadomDataDownClassCTimer2Callback( unsigned long index );
 void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 	//uint32_t address;
 	st_ServerMsgUp stServerMsgUp;
@@ -154,14 +155,40 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 			ServerMsgUpListAdd(&stServerMsgUp);
 			return;
 		}
-		//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len = pstServerMsgDown->Msg.stData2Node.size;
-		//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf = (uint8_t *)kmalloc(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len,GFP_KERNEL);
-		//memcpy(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf,pstServerMsgDown->Msg.stData2Node.payload,pstServerMsgDown->Msg.stData2Node.size);
-		//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len = pstServerMsgDown->Msg.stData2Node.size;
-		//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.fPort = pstServerMsgDown->Msg.stData2Node.fPort;
-		//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].is_ack_req = pstServerMsgDown->Msg.stData2Node.CtrlBits.AckRequest;
-		//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].have_ack = pstServerMsgDown->Msg.stData2Node.CtrlBits.Ack;
-		
+		if(stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].classtype == CLASS_A)
+		{
+			if(time_before((unsigned long)stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].jiffies + LoRaMacParams.ReceiveDelay2 + 25,(unsigned long)jiffies))
+			{
+				printk("%d rx off\r\n",pstServerMsgDown->Msg.stData2Node.DevAddr);
+				stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+				memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
+				stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerNodeNotOnRxWindow;
+				ServerMsgUpListAdd(&stServerMsgUp);
+				return;
+			}
+			else
+			{
+				printk("%d rx on\r\n",pstServerMsgDown->Msg.stData2Node.DevAddr);
+			}
+		}
+		else if(stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].classtype == CLASS_C)
+		{
+			stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.classcjiffies = jiffies;
+			if(time_before((unsigned long)stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].jiffies + LoRaMacParams.ReceiveDelay2 - 1,(unsigned long)jiffies))
+			{
+				del_timer_sync(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer1);
+				del_timer_sync(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2);
+				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len = 0;
+				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2.function = LoRaWANRadomDataDownClassCTimer2Callback;
+				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2.data = pstServerMsgDown->Msg.stData2Node.DevAddr;
+				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2.expires = jiffies + 100;
+				add_timer(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2);
+				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].state = enStateRxWindow1;
+			}
+		}
+		else
+		{
+		}
 		if(pstServerMsgDown->Msg.stData2Node.CtrlBits.AckRequest)
     	{
         	macHdr.Bits.MType = FRAME_TYPE_DATA_CONFIRMED_DOWN;

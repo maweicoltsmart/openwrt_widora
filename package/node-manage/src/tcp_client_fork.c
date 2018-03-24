@@ -52,7 +52,7 @@ creat_msg_q:
 			goto creat_msg_q;
         }
         len = send(sockfd, data.text, len, 0);
-		printf("%s\r\n",data.text);
+		//printf("%s\r\n",data.text);
         if(len < 1)
         {
         	printf("reconnect %d\r\n",__LINE__);
@@ -186,7 +186,7 @@ connect:
             {
                 pstrchr ++;
             }
-            printf("%s\r\n",recvbuf);
+            //printf("%s\r\n",recvbuf);
             pragma = json_tokener_parse((const char *)(pstrchr - 1));
             if(pragma == NULL)
             {

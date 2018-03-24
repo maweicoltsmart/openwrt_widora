@@ -289,6 +289,9 @@ void *Radio_routin(void *param){
 					case en_Confirm2ServerNodeNoAck:
 						json_object_object_add(pragma,"Result",json_object_new_string("Node Have No Ack"));
 						break;
+					case en_Confirm2ServerNodeNotOnRxWindow:
+						json_object_object_add(pragma,"Result",json_object_new_string("Rx Windows off"));
+						break;
 					default:
 						json_object_object_add(pragma,"Result",json_object_new_string("Unkown Fault"));
 						break;

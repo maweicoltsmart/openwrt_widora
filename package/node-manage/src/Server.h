@@ -27,7 +27,8 @@ typedef enum{
 	en_Confirm2ServerTooLong,	//	包太大
 	en_Confirm2ServerPortNotAllow,
 	en_Confirm2ServerInLastDutyCycle,	// 发送缓冲区非空
-	en_Confirm2ServerNodeNoAck	// 节点未应答
+	en_Confirm2ServerNodeNoAck,	// 节点未应答
+	en_Confirm2ServerNodeNotOnRxWindow	// Class A节点不在接收窗口
 }en_Confirm2Server,*pen_Confirm2Server;
 
 typedef enum{
