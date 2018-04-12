@@ -120,16 +120,17 @@ int LoRaWANRxDataProcess(void *data){
 						//printk("%s,%d,%d\r\n",__func__,__LINE__,stFrameDataUp.frameHdr.DevAddr);
 						break;
 					}
-                        
+                    printk("%s,%d,%d,%d\r\n",__func__,__LINE__,stFrameDataUp.frameHdr.DevAddr,stRadioRxList.stRadioRx.chip);
 					LoRaMacComputeMic( stRadioRxList.stRadioRx.payload, stRadioRxList.stRadioRx.size - LORAMAC_MFR_LEN, stNodeInfoToSave[stFrameDataUp.frameHdr.DevAddr].stDevNetParameter.NwkSKey, stFrameDataUp.frameHdr.DevAddr, UP_LINK, stFrameDataUp.frameHdr.Fcnt, &micRx );
 					if(stFrameDataUp.mic != micRx)
 					{
-						//printk("error: mic! 0x%08X, 0x%08X\r\n",stFrameDataUp.mic,micRx);
+						printk("error: mic! 0x%08X, 0x%08X\r\n",stFrameDataUp.mic,micRx);
 						break;
 					}
+					printk("%s,%d,%d,%d\r\n",__func__,__LINE__,stFrameDataUp.frameHdr.DevAddr,stRadioRxList.stRadioRx.chip);
 					NodeDatabaseUpdateParameters(stFrameDataUp.frameHdr.DevAddr,&stRadioRxList);
-					del_timer_sync(&stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer1);
-					del_timer_sync(&stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer2);
+					del_timer(&stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer1);
+					del_timer(&stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer2);
 					stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].stTxData.len = 0;
 					if(stNodeInfoToSave[stFrameDataUp.frameHdr.DevAddr].classtype == CLASS_A)
 					{
@@ -231,8 +232,8 @@ int LoRaWANRxDataProcess(void *data){
 void LoRaWANJoinTimer1Tasklet(unsigned long index)
 {
 	//tasklet_kill(&stNodeDatabase[index].tasklet);
-	del_timer_sync(&stNodeDatabase[index].timer1);
-	del_timer_sync(&stNodeDatabase[index].timer2);
+	del_timer(&stNodeDatabase[index].timer1);
+	del_timer(&stNodeDatabase[index].timer2);
 	
 	if(stNodeDatabase[index].stTxData.len == 0)
 	{
@@ -286,7 +287,7 @@ void LoRaWANJoinTimer1Tasklet(unsigned long index)
 void LoRaWANJoinTimer2Tasklet(unsigned long index)
 {
 	//tasklet_kill(&stNodeDatabase[index].tasklet);
-	del_timer_sync(&stNodeDatabase[index].timer2);
+	del_timer(&stNodeDatabase[index].timer2);
 	//if(Radio.GetStatus(stNodeInfoToSave[index].chip) == RF_TX_RUNNING)
 
 	if(stNodeDatabase[index].stTxData.len == 0)
@@ -332,8 +333,8 @@ void LoRaWANJoinTimer2Tasklet(unsigned long index)
 void LoRaWANDataDownTimer1Tasklet(unsigned long index)
 {
 	//tasklet_kill(&stNodeDatabase[index].tasklet);
-	del_timer_sync(&stNodeDatabase[index].timer1);
-	del_timer_sync(&stNodeDatabase[index].timer2);
+	del_timer(&stNodeDatabase[index].timer1);
+	del_timer(&stNodeDatabase[index].timer2);
 
 	if(stNodeDatabase[index].stTxData.len == 0)
 	{
@@ -396,7 +397,7 @@ void LoRaWANDataDownTimer2Tasklet(unsigned long index)
 {
 	st_ServerMsgUp stServerMsgUp;
 	//tasklet_kill(&stNodeDatabase[index].tasklet);
-	del_timer_sync(&stNodeDatabase[index].timer2);
+	del_timer(&stNodeDatabase[index].timer2);
 	//if(Radio.GetStatus(stNodeInfoToSave[index].chip) == RF_TX_RUNNING)
 	if(stNodeDatabase[index].stTxData.len == 0)
 	{
@@ -456,7 +457,7 @@ void LoRaWANDataDownTimer2Tasklet(unsigned long index)
 void LoRaWANDataDownWaitAckTimer2Tasklet(unsigned long index)
 {
 	st_ServerMsgUp stServerMsgUp;
-	del_timer_sync(&stNodeDatabase[index].timer2);
+	del_timer(&stNodeDatabase[index].timer2);
 	
 	printk("Nack ,%d\r\n",index);
 	stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
@@ -468,8 +469,8 @@ void LoRaWANDataDownWaitAckTimer2Tasklet(unsigned long index)
 void LoRaWANDataDownClassCTimer1Tasklet(unsigned long index)
 {
 	//tasklet_kill(&stNodeDatabase[index].tasklet);
-	del_timer_sync(&stNodeDatabase[index].timer1);
-	del_timer_sync(&stNodeDatabase[index].timer2);
+	del_timer(&stNodeDatabase[index].timer1);
+	del_timer(&stNodeDatabase[index].timer2);
 
 	if(stNodeDatabase[index].stTxData.len == 0)
 	{
@@ -532,7 +533,7 @@ void LoRaWANDataDownClassCTimer2Tasklet(unsigned long index)
 {
 	st_ServerMsgUp stServerMsgUp;
 	//tasklet_kill(&stNodeDatabase[index].tasklet);
-	del_timer_sync(&stNodeDatabase[index].timer2);
+	del_timer(&stNodeDatabase[index].timer2);
 	//if(Radio.GetStatus(stNodeInfoToSave[index].chip) == RF_TX_RUNNING)
 	if(stNodeDatabase[index].stTxData.len == 0)
 	{
@@ -592,7 +593,7 @@ void LoRaWANRadomDataDownClassCTimer2Tasklet(unsigned long index)
 {
 	st_ServerMsgUp stServerMsgUp;
 	//tasklet_kill(&stNodeDatabase[index].tasklet);
-	del_timer_sync(&stNodeDatabase[index].timer2);
+	del_timer(&stNodeDatabase[index].timer2);
 	//if(Radio.GetStatus(stNodeInfoToSave[index].chip) == RF_TX_RUNNING)
 	if(stNodeDatabase[index].stTxData.len == 0)
 	{
@@ -659,7 +660,7 @@ void LoRaWANRadomDataDownClassCTimer2Tasklet(unsigned long index)
 void LoRaWANDataDownClassCWaitAckTimer2Tasklet(unsigned long index)
 {
 	st_ServerMsgUp stServerMsgUp;
-	del_timer_sync(&stNodeDatabase[index].timer2);
+	del_timer(&stNodeDatabase[index].timer2);
 	
 	printk("Nack ,%d\r\n",index);
 	stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
@@ -676,12 +677,14 @@ void LoRaWANAddTaskLet(unsigned long addr,pdotasklet dotasklet)
 }
 void LoRaWANJoinTimer1Callback( unsigned long index )
 {
-	LoRaWANAddTaskLet(index,LoRaWANJoinTimer1Tasklet);
+	//LoRaWANAddTaskLet(index,LoRaWANJoinTimer1Tasklet);
+	LoRaWANJoinTimer1Tasklet(index);
 }
 
 void LoRaWANJoinTimer2Callback( unsigned long index )
 {
-	LoRaWANAddTaskLet(index,LoRaWANJoinTimer2Tasklet);
+	//LoRaWANAddTaskLet(index,LoRaWANJoinTimer2Tasklet);
+	LoRaWANJoinTimer2Tasklet(index);
 }
 
 void LoRaWANJoinAccept(uint32_t addr)
@@ -689,8 +692,9 @@ void LoRaWANJoinAccept(uint32_t addr)
 	uint8_t acceptbuf[128] = {0};
 	LoRaMacHeader_t macHdr;
 
-	del_timer_sync(&stNodeDatabase[addr].timer1);
-	del_timer_sync(&stNodeDatabase[addr].timer2);
+	printk("%s,%d,%d\r\n",__func__,addr,stNodeDatabase[addr].chip);
+	del_timer(&stNodeDatabase[addr].timer1);
+	del_timer(&stNodeDatabase[addr].timer2);
 	macHdr.Value = 0;
 	macHdr.Bits.MType = FRAME_TYPE_JOIN_ACCEPT;
 	acceptbuf[0] = macHdr.Value;
@@ -703,46 +707,55 @@ void LoRaWANJoinAccept(uint32_t addr)
 	//stNodeDatabase[addr].stTxData.buf = (uint8_t *)kmalloc(1 + 3 + 3 + 4 + 1 + 1 + 4,GFP_KERNEL);
 	stNodeDatabase[addr].stTxData.buf[0] = macHdr.Value;
 	LoRaMacJoinComputeMic(acceptbuf,13,stGatewayParameter.AppKey,(uint32_t *)(acceptbuf + 1 + 3 + 3 + 4 + 1 + 1));
+	*(uint32_t *)(acceptbuf + 1 + 3 + 3 + 4 + 1 + 1) += stNodeInfoToSave[addr].stDevNetParameter.DevNonce;
     LoRaMacJoinDecrypt(acceptbuf + 1,1 + 3 + 3 + 4 + 1 + 1 + 4 - 1,stGatewayParameter.AppKey,stNodeDatabase[addr].stTxData.buf + 1);
 	stNodeDatabase[addr].timer1.function = LoRaWANJoinTimer1Callback;
 	stNodeDatabase[addr].timer1.data = addr;
 	stNodeDatabase[addr].timer1.expires = stNodeDatabase[addr].jiffies + LoRaMacParams.JoinAcceptDelay1;
 	add_timer(&stNodeDatabase[addr].timer1);
+	stNodeDatabase[addr].sequence_down = 0;
 	stNodeDatabase[addr].state = enStateRxWindow1;
 }
 
 void LoRaWANDataDownTimer1Callback( unsigned long index )
 {
-	LoRaWANAddTaskLet(index,LoRaWANDataDownTimer1Tasklet);
+	//LoRaWANAddTaskLet(index,LoRaWANDataDownTimer1Tasklet);
+	LoRaWANDataDownTimer1Tasklet(index);
 }
 
 void LoRaWANDataDownTimer2Callback( unsigned long index )
 {
-	LoRaWANAddTaskLet(index,LoRaWANDataDownTimer2Tasklet);
+	//LoRaWANAddTaskLet(index,LoRaWANDataDownTimer2Tasklet);
+	LoRaWANDataDownTimer2Tasklet(index);
 }
 
 void LoRaWANDataDownWaitAckTimer2Callback( unsigned long index )
 {
-	LoRaWANAddTaskLet(index,LoRaWANDataDownWaitAckTimer2Tasklet);
+	//LoRaWANAddTaskLet(index,LoRaWANDataDownWaitAckTimer2Tasklet);
+	LoRaWANDataDownWaitAckTimer2Tasklet(index);
 }
 
 void LoRaWANDataDownClassCTimer1Callback( unsigned long index )
 {
-	LoRaWANAddTaskLet(index,LoRaWANDataDownClassCTimer1Tasklet);
+	//LoRaWANAddTaskLet(index,LoRaWANDataDownClassCTimer1Tasklet);
+	LoRaWANDataDownClassCTimer1Tasklet(index);
 }
 
 void LoRaWANDataDownClassCTimer2Callback( unsigned long index )
 {
-	LoRaWANAddTaskLet(index,LoRaWANDataDownClassCTimer2Tasklet);
+	//LoRaWANAddTaskLet(index,LoRaWANDataDownClassCTimer2Tasklet);
+	LoRaWANDataDownClassCTimer2Tasklet(index);
 }
 
 void LoRaWANDataDownClassCWaitAckTimer2Callback( unsigned long index )
 {
-	LoRaWANAddTaskLet(index,LoRaWANDataDownClassCWaitAckTimer2Tasklet);
+	//LoRaWANAddTaskLet(index,LoRaWANDataDownClassCWaitAckTimer2Tasklet);
+	LoRaWANDataDownClassCWaitAckTimer2Tasklet(index);
 }
 
 void LoRaWANRadomDataDownClassCTimer2Callback( unsigned long index )
 {
-	LoRaWANAddTaskLet(index,LoRaWANRadomDataDownClassCTimer2Tasklet);
+	//LoRaWANAddTaskLet(index,LoRaWANRadomDataDownClassCTimer2Tasklet);
+	LoRaWANRadomDataDownClassCTimer2Tasklet(index);
 }
 

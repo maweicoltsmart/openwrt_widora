@@ -147,7 +147,7 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 			ServerMsgUpListAdd(&stServerMsgUp);
 			return;
 		}
-		if((pstServerMsgDown->Msg.stData2Node.fPort > 233) || (pstServerMsgDown->Msg.stData2Node.fPort < 2))
+		if((pstServerMsgDown->Msg.stData2Node.fPort > 233) || (pstServerMsgDown->Msg.stData2Node.fPort < 1))
 		{
 			stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
@@ -176,8 +176,8 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 			stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.classcjiffies = jiffies;
 			if(time_before((unsigned long)stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].jiffies + LoRaMacParams.ReceiveDelay2 - 1,(unsigned long)jiffies))
 			{
-				del_timer_sync(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer1);
-				del_timer_sync(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2);
+				del_timer(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer1);
+				del_timer(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2);
 				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len = 0;
 				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2.function = LoRaWANRadomDataDownClassCTimer2Callback;
 				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2.data = pstServerMsgDown->Msg.stData2Node.DevAddr;
