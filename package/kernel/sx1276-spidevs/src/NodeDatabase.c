@@ -203,7 +203,7 @@ uint32_t NodeDatabaseJoin(const pst_NodeJoinInfo node)
     return loop;
 }
 
-void NodeDatabaseUpdateParameters(uint32_t addr, pst_RadioRxList pstRadioRxList)
+void NodeDatabaseUpdateParameters(uint32_t addr, uint16_t fcnt, pst_RadioRxList pstRadioRxList)
 {
 	LoRaMacHeader_t macHdr;
 	
@@ -214,6 +214,10 @@ void NodeDatabaseUpdateParameters(uint32_t addr, pst_RadioRxList pstRadioRxList)
 	stNodeDatabase[addr].jiffies = pstRadioRxList->jiffies;
 	stNodeInfoToSave[addr].classtype = macHdr.Bits.RFU;
 	stNodeDatabase[addr].stTxData.len = 0;
+	if(fcnt == 0)
+	{
+		stNodeDatabase[addr].sequence_down = 0;
+	}
 }
 bool NodeDatabaseVerifyNetAddr(uint32_t addr)
 {

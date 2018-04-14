@@ -60,7 +60,7 @@ void GetGatewayPragma(void)
         Hex2Str(gateway_pragma.NetID,byte,3);
         json_object_object_add(pragma,"NetID",json_object_new_string(byte));
         json_object_object_add(pragma,"serverip",json_object_new_string("101.132.97.241"));
-        json_object_object_add(pragma,"serverport",json_object_new_string("32500"));
+        json_object_object_add(pragma,"serverport",json_object_new_string("1883"));
         char hname[128];
         struct hostent *hent;
         int i;

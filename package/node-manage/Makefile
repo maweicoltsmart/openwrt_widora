@@ -16,7 +16,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/node-manage
 	SECTION:=utils
 	CATEGORY:=Utilities
-	DEPENDS:=+libpthread +librt +libjson-c
+	DEPENDS:=+libpthread +librt +libjson-c +libmosquitto
 	TITLE:=node-manage  manage lora node from webui
 endef
 

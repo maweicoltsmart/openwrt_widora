@@ -223,24 +223,68 @@ void RadioTxDone( int chip )
 
 void RadioTxTimeout( int chip )
 {
-    Radio.Sleep( chip);
+	Radio.Sleep( chip);
+    SX1276SetRxConfig(chip,
+            stRadioCfg_Rx.modem,
+            stRadioCfg_Rx.bandwidth,
+            stRadioCfg_Rx.datarate[chip],
+            stRadioCfg_Rx.coderate,
+            stRadioCfg_Rx.bandwidthAfc,
+            stRadioCfg_Rx.preambleLen,
+            stRadioCfg_Rx.symbTimeout,
+            stRadioCfg_Rx.fixLen,
+            stRadioCfg_Rx.payloadLen,
+            stRadioCfg_Rx.crcOn,
+            stRadioCfg_Rx.freqHopOn,
+            stRadioCfg_Rx.hopPeriod,
+            stRadioCfg_Rx.iqInverted,
+            stRadioCfg_Rx.rxContinuous);
+    Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
     Radio.Rx( chip,0 );
-    //State = TX_TIMEOUT;
 }
 
 void RadioRxTimeout( int chip )
 {
     Radio.Sleep( chip);
+    SX1276SetRxConfig(chip,
+            stRadioCfg_Rx.modem,
+            stRadioCfg_Rx.bandwidth,
+            stRadioCfg_Rx.datarate[chip],
+            stRadioCfg_Rx.coderate,
+            stRadioCfg_Rx.bandwidthAfc,
+            stRadioCfg_Rx.preambleLen,
+            stRadioCfg_Rx.symbTimeout,
+            stRadioCfg_Rx.fixLen,
+            stRadioCfg_Rx.payloadLen,
+            stRadioCfg_Rx.crcOn,
+            stRadioCfg_Rx.freqHopOn,
+            stRadioCfg_Rx.hopPeriod,
+            stRadioCfg_Rx.iqInverted,
+            stRadioCfg_Rx.rxContinuous);
+    Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
     Radio.Rx( chip,0 );
-    //State = RX_TIMEOUT;
-    printk("%s, %d\r\n",__func__,__LINE__);
 }
 
 void RadioRxError( int chip )
 {
     Radio.Sleep( chip);
+    SX1276SetRxConfig(chip,
+            stRadioCfg_Rx.modem,
+            stRadioCfg_Rx.bandwidth,
+            stRadioCfg_Rx.datarate[chip],
+            stRadioCfg_Rx.coderate,
+            stRadioCfg_Rx.bandwidthAfc,
+            stRadioCfg_Rx.preambleLen,
+            stRadioCfg_Rx.symbTimeout,
+            stRadioCfg_Rx.fixLen,
+            stRadioCfg_Rx.payloadLen,
+            stRadioCfg_Rx.crcOn,
+            stRadioCfg_Rx.freqHopOn,
+            stRadioCfg_Rx.hopPeriod,
+            stRadioCfg_Rx.iqInverted,
+            stRadioCfg_Rx.rxContinuous);
+    Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
     Radio.Rx( chip,0 );
-    //State = RX_ERROR;
 }
 
 int RadioRxListAdd(int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr){

@@ -90,7 +90,7 @@ extern st_NodeDatabase stNodeDatabase[];
 void NodeDatabaseInit(void);
 void NodeDatabaseRemove(void);
 uint32_t NodeDatabaseJoin(const pst_NodeJoinInfo node);
-void NodeDatabaseUpdateParameters(uint32_t addr, pst_RadioRxList pstRadioRxList);
+void NodeDatabaseUpdateParameters(uint32_t addr, uint16_t fcnt, pst_RadioRxList pstRadioRxList);
 bool NodeDatabaseVerifyNetAddr(uint32_t addr);
 bool NodeGetNetAddr(uint32_t *addr,uint8_t *deveui);
 bool NodeDatabaseGetDevEUI(uint32_t addr,uint8_t *deveui);

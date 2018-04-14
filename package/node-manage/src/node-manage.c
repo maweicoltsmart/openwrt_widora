@@ -35,6 +35,7 @@
 #include "typedef.h"
 #include "LoRaDevOps.h"
 //#include "routin.h"
+#include "mqtt.h"
 
 extern void serverpkgformat(void);
 void *tcp_client_routin(void *data);
@@ -51,15 +52,16 @@ int main(int argc ,char *argv[])
     int flag;
     int ret;
     int fd;
-    pthread_t tcp_client_handle,tcp_server_handle,radio_routin_handle;
+    pthread_t tcp_client_handle,tcp_server_handle,radio_routin_handle,mqtt_client_handle;
     int msgid = -1;
     //struct msg_st data;
     int len;
     serverpkgformat();
 	LoRaMacInit();
-    ret = pthread_create(&radio_routin_handle, NULL, Radio_routin, &fd);
-    ret = pthread_create(&tcp_client_handle, NULL, tcp_client_routin, &fd);
+    //ret = pthread_create(&radio_routin_handle, NULL, Radio_routin, &fd);
+    //ret = pthread_create(&tcp_client_handle, NULL, tcp_client_routin, &fd);
     //ret = pthread_create(&tcp_server_handle, NULL, tcp_server_routin, &fd);
+    ret = pthread_create(&mqtt_client_handle, NULL, mjmqtt_client_routin, &fd);
 #define RF_FREQUENCY                                470000000 // Hz
     //SX1276SetChannel(0,fd,RF_FREQUENCY);
     //SX1276SetChannel(1,fd,RF_FREQUENCY + FREQ_STEP * 10);

@@ -128,7 +128,7 @@ int LoRaWANRxDataProcess(void *data){
 						break;
 					}
 					printk("%s,%d,%d,%d\r\n",__func__,__LINE__,stFrameDataUp.frameHdr.DevAddr,stRadioRxList.stRadioRx.chip);
-					NodeDatabaseUpdateParameters(stFrameDataUp.frameHdr.DevAddr,&stRadioRxList);
+					NodeDatabaseUpdateParameters(stFrameDataUp.frameHdr.DevAddr,stFrameDataUp.frameHdr.Fcnt,&stRadioRxList);
 					del_timer(&stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer1);
 					del_timer(&stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer2);
 					stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].stTxData.len = 0;
@@ -677,14 +677,14 @@ void LoRaWANAddTaskLet(unsigned long addr,pdotasklet dotasklet)
 }
 void LoRaWANJoinTimer1Callback( unsigned long index )
 {
-	//LoRaWANAddTaskLet(index,LoRaWANJoinTimer1Tasklet);
-	LoRaWANJoinTimer1Tasklet(index);
+	LoRaWANAddTaskLet(index,LoRaWANJoinTimer1Tasklet);
+	//LoRaWANJoinTimer1Tasklet(index);
 }
 
 void LoRaWANJoinTimer2Callback( unsigned long index )
 {
-	//LoRaWANAddTaskLet(index,LoRaWANJoinTimer2Tasklet);
-	LoRaWANJoinTimer2Tasklet(index);
+	LoRaWANAddTaskLet(index,LoRaWANJoinTimer2Tasklet);
+	//LoRaWANJoinTimer2Tasklet(index);
 }
 
 void LoRaWANJoinAccept(uint32_t addr)
@@ -719,43 +719,43 @@ void LoRaWANJoinAccept(uint32_t addr)
 
 void LoRaWANDataDownTimer1Callback( unsigned long index )
 {
-	//LoRaWANAddTaskLet(index,LoRaWANDataDownTimer1Tasklet);
-	LoRaWANDataDownTimer1Tasklet(index);
+	LoRaWANAddTaskLet(index,LoRaWANDataDownTimer1Tasklet);
+	//LoRaWANDataDownTimer1Tasklet(index);
 }
 
 void LoRaWANDataDownTimer2Callback( unsigned long index )
 {
-	//LoRaWANAddTaskLet(index,LoRaWANDataDownTimer2Tasklet);
-	LoRaWANDataDownTimer2Tasklet(index);
+	LoRaWANAddTaskLet(index,LoRaWANDataDownTimer2Tasklet);
+	//LoRaWANDataDownTimer2Tasklet(index);
 }
 
 void LoRaWANDataDownWaitAckTimer2Callback( unsigned long index )
 {
-	//LoRaWANAddTaskLet(index,LoRaWANDataDownWaitAckTimer2Tasklet);
-	LoRaWANDataDownWaitAckTimer2Tasklet(index);
+	LoRaWANAddTaskLet(index,LoRaWANDataDownWaitAckTimer2Tasklet);
+	//LoRaWANDataDownWaitAckTimer2Tasklet(index);
 }
 
 void LoRaWANDataDownClassCTimer1Callback( unsigned long index )
 {
-	//LoRaWANAddTaskLet(index,LoRaWANDataDownClassCTimer1Tasklet);
-	LoRaWANDataDownClassCTimer1Tasklet(index);
+	LoRaWANAddTaskLet(index,LoRaWANDataDownClassCTimer1Tasklet);
+	//LoRaWANDataDownClassCTimer1Tasklet(index);
 }
 
 void LoRaWANDataDownClassCTimer2Callback( unsigned long index )
 {
-	//LoRaWANAddTaskLet(index,LoRaWANDataDownClassCTimer2Tasklet);
-	LoRaWANDataDownClassCTimer2Tasklet(index);
+	LoRaWANAddTaskLet(index,LoRaWANDataDownClassCTimer2Tasklet);
+	//LoRaWANDataDownClassCTimer2Tasklet(index);
 }
 
 void LoRaWANDataDownClassCWaitAckTimer2Callback( unsigned long index )
 {
-	//LoRaWANAddTaskLet(index,LoRaWANDataDownClassCWaitAckTimer2Tasklet);
-	LoRaWANDataDownClassCWaitAckTimer2Tasklet(index);
+	LoRaWANAddTaskLet(index,LoRaWANDataDownClassCWaitAckTimer2Tasklet);
+	//LoRaWANDataDownClassCWaitAckTimer2Tasklet(index);
 }
 
 void LoRaWANRadomDataDownClassCTimer2Callback( unsigned long index )
 {
-	//LoRaWANAddTaskLet(index,LoRaWANRadomDataDownClassCTimer2Tasklet);
-	LoRaWANRadomDataDownClassCTimer2Tasklet(index);
+	LoRaWANAddTaskLet(index,LoRaWANRadomDataDownClassCTimer2Tasklet);
+	//LoRaWANRadomDataDownClassCTimer2Tasklet(index);
 }
 
