@@ -27,6 +27,8 @@ Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
 #include "sx1276-board.h"
 #include "utilities.h"
 #include "pinmap.h"
+#include <asm/irq.h>
+#include <linux/interrupt.h>
 
 /*
  * Local types definition
@@ -194,7 +196,9 @@ static RadioEvents_t *RadioEvents;
 /*!
  * Reception buffer
  */
-static uint8_t RxTxBuffer[RX_BUFFER_SIZE];
+static uint8_t TxBuffer[3][RX_BUFFER_SIZE];
+static uint8_t RxBuffer[3][RX_BUFFER_SIZE];
+
 
 /*
  * Public global variables
@@ -217,7 +221,7 @@ SX1276_t SX1276[3];
  */
 struct timer_list TxTimeoutTimer[3];
 struct timer_list RxTimeoutTimer[3];
-//struct timer_list RxTimeoutSyncWord[3];
+struct timer_list RxTimeoutSyncWord[3];
 struct timeval oldtv;
 
 
@@ -237,14 +241,14 @@ void SX1276Init( int chip,RadioEvents_t *events )
     // Initialize driver timeout timers
     init_timer(&TxTimeoutTimer[chip]);
     init_timer(&RxTimeoutTimer[chip]);
-    //init_timer(&RxTimeoutSyncWord[chip]);
+    init_timer(&RxTimeoutSyncWord[chip]);
     do_gettimeofday(&oldtv);
     TxTimeoutTimer[chip].function = SX1276OnTimeoutIrq;
     TxTimeoutTimer[chip].data = chip;
     RxTimeoutTimer[chip].function = SX1276OnTimeoutIrq;
     RxTimeoutTimer[chip].data = chip;
-    //RxTimeoutSyncWord[chip].function = SX1276OnTimeoutIrq;
-    //RxTimeoutSyncWord[chip].data = chip;
+    RxTimeoutSyncWord[chip].function = SX1276OnTimeoutIrq;
+    RxTimeoutSyncWord[chip].data = chip;
     SX1276IoInit(chip);
     SX1276Reset(chip );
 
@@ -888,7 +892,7 @@ void SX1276Send( int chip,uint8_t *buffer, uint8_t size )
             }
             else
             {
-                memcpy1( RxTxBuffer, buffer, size );
+                memcpy1( TxBuffer[chip], buffer, size );
                 SX1276[chip].Settings.FskPacketHandler.ChunkSize = 32;
             }
 
@@ -1087,7 +1091,7 @@ void SX1276SetRx( int chip,uint32_t timeout )
         break;
     }
 
-    memset( RxTxBuffer, 0, ( size_t )RX_BUFFER_SIZE );
+    memset( RxBuffer[chip], 0, ( size_t )RX_BUFFER_SIZE );
 
     SX1276[chip].Settings.State = RF_RX_RUNNING;
     if( timeout != 0 )
@@ -1102,8 +1106,8 @@ void SX1276SetRx( int chip,uint32_t timeout )
 
         if( rxContinuous == false )
         {
-            //RxTimeoutSyncWord[chip].expires = jiffies + SX1276[chip].Settings.Fsk.RxSingleTimeout;
-            //add_timer( &RxTimeoutSyncWord[chip] );
+            RxTimeoutSyncWord[chip].expires = jiffies + SX1276[chip].Settings.Fsk.RxSingleTimeout;
+            add_timer( &RxTimeoutSyncWord[chip] );
         }
     }
     else
@@ -1445,12 +1449,12 @@ void SX1276OnTimeoutIrq( unsigned long chip )
             {
                 // Continuous mode restart Rx chain
                 SX1276Write(chip, REG_RXCONFIG, SX1276Read(chip, REG_RXCONFIG ) | RF_RXCONFIG_RESTARTRXWITHOUTPLLLOCK );
-                //add_timer( &RxTimeoutSyncWord[chip] );
+                add_timer( &RxTimeoutSyncWord[chip] );
             }
             else
             {
                 SX1276[chip].Settings.State = RF_IDLE;
-                //del_timer( &RxTimeoutSyncWord[chip] );
+                del_timer( &RxTimeoutSyncWord[chip] );
             }
         }
         if( ( RadioEvents != NULL ) && ( RadioEvents->RxTimeout != NULL ) )
@@ -1526,14 +1530,14 @@ void SX1276OnDio0Irq( int chip )
 
                         if( SX1276[chip].Settings.Fsk.RxContinuous == false )
                         {
-                            //del_timer( &RxTimeoutSyncWord[chip] );
+                            del_timer( &RxTimeoutSyncWord[chip] );
                             SX1276[chip].Settings.State = RF_IDLE;
                         }
                         else
                         {
                             // Continuous mode restart Rx chain
                             SX1276Write(chip, REG_RXCONFIG, SX1276Read(chip, REG_RXCONFIG ) | RF_RXCONFIG_RESTARTRXWITHOUTPLLLOCK );
-                            //add_timer( &RxTimeoutSyncWord[chip] );
+                            add_timer( &RxTimeoutSyncWord[chip] );
                         }
 
                         if( ( RadioEvents != NULL ) && ( RadioEvents->RxError != NULL ) )
@@ -1559,12 +1563,12 @@ void SX1276OnDio0Irq( int chip )
                     {
                         SX1276[chip].Settings.FskPacketHandler.Size = SX1276Read(chip, REG_PAYLOADLENGTH );
                     }
-                    SX1276ReadFifo(chip, RxTxBuffer + SX1276[chip].Settings.FskPacketHandler.NbBytes, SX1276[chip].Settings.FskPacketHandler.Size - SX1276[chip].Settings.FskPacketHandler.NbBytes );
+                    SX1276ReadFifo(chip, RxBuffer[chip] + SX1276[chip].Settings.FskPacketHandler.NbBytes, SX1276[chip].Settings.FskPacketHandler.Size - SX1276[chip].Settings.FskPacketHandler.NbBytes );
                     SX1276[chip].Settings.FskPacketHandler.NbBytes += ( SX1276[chip].Settings.FskPacketHandler.Size - SX1276[chip].Settings.FskPacketHandler.NbBytes );
                 }
                 else
                 {
-                    SX1276ReadFifo(chip, RxTxBuffer + SX1276[chip].Settings.FskPacketHandler.NbBytes, SX1276[chip].Settings.FskPacketHandler.Size - SX1276[chip].Settings.FskPacketHandler.NbBytes );
+                    SX1276ReadFifo(chip, RxBuffer[chip] + SX1276[chip].Settings.FskPacketHandler.NbBytes, SX1276[chip].Settings.FskPacketHandler.Size - SX1276[chip].Settings.FskPacketHandler.NbBytes );
                     SX1276[chip].Settings.FskPacketHandler.NbBytes += ( SX1276[chip].Settings.FskPacketHandler.Size - SX1276[chip].Settings.FskPacketHandler.NbBytes );
                 }
 
@@ -1573,18 +1577,18 @@ void SX1276OnDio0Irq( int chip )
                 if( SX1276[chip].Settings.Fsk.RxContinuous == false )
                 {
                     SX1276[chip].Settings.State = RF_IDLE;
-                    //del_timer( &RxTimeoutSyncWord[chip] );
+                    del_timer( &RxTimeoutSyncWord[chip] );
                 }
                 else
                 {
                     // Continuous mode restart Rx chain
                     SX1276Write(chip, REG_RXCONFIG, SX1276Read(chip, REG_RXCONFIG ) | RF_RXCONFIG_RESTARTRXWITHOUTPLLLOCK );
-                    //add_timer( &RxTimeoutSyncWord[chip] );
+                    add_timer( &RxTimeoutSyncWord[chip] );
                 }
 
                 if( ( RadioEvents != NULL ) && ( RadioEvents->RxDone != NULL ) )
                 {
-                    RadioEvents->RxDone(chip, RxTxBuffer, SX1276[chip].Settings.FskPacketHandler.Size, SX1276[chip].Settings.FskPacketHandler.RssiValue, 0 );
+                    RadioEvents->RxDone(chip, RxBuffer[chip], SX1276[chip].Settings.FskPacketHandler.Size, SX1276[chip].Settings.FskPacketHandler.RssiValue, 0 );
                 }
                 SX1276[chip].Settings.FskPacketHandler.PreambleDetected = false;
                 SX1276[chip].Settings.FskPacketHandler.SyncWordDetected = false;
@@ -1658,7 +1662,7 @@ void SX1276OnDio0Irq( int chip )
 
                     SX1276[chip].Settings.LoRaPacketHandler.Size = SX1276Read(chip, REG_LR_RXNBBYTES );
                     SX1276Write(chip, REG_LR_FIFOADDRPTR, SX1276Read(chip, REG_LR_FIFORXCURRENTADDR ) );
-                    SX1276ReadFifo(chip, RxTxBuffer, SX1276[chip].Settings.LoRaPacketHandler.Size );
+                    SX1276ReadFifo(chip, RxBuffer[chip], SX1276[chip].Settings.LoRaPacketHandler.Size );
 
                     if( SX1276[chip].Settings.LoRa.RxContinuous == false )
                     {
@@ -1668,7 +1672,7 @@ void SX1276OnDio0Irq( int chip )
 
                     if( ( RadioEvents != NULL ) && ( RadioEvents->RxDone != NULL ) )
                     {
-                        RadioEvents->RxDone(chip, RxTxBuffer, SX1276[chip].Settings.LoRaPacketHandler.Size, SX1276[chip].Settings.LoRaPacketHandler.RssiValue, SX1276[chip].Settings.LoRaPacketHandler.SnrValue );
+                        RadioEvents->RxDone(chip, RxBuffer[chip], SX1276[chip].Settings.LoRaPacketHandler.Size, SX1276[chip].Settings.LoRaPacketHandler.RssiValue, SX1276[chip].Settings.LoRaPacketHandler.SnrValue );
                     }
                 }
                 break;
@@ -1725,12 +1729,12 @@ void SX1276OnDio1Irq( int chip )
 
                 if( ( SX1276[chip].Settings.FskPacketHandler.Size - SX1276[chip].Settings.FskPacketHandler.NbBytes ) > SX1276[chip].Settings.FskPacketHandler.FifoThresh )
                 {
-                    SX1276ReadFifo(chip, ( RxTxBuffer + SX1276[chip].Settings.FskPacketHandler.NbBytes ), SX1276[chip].Settings.FskPacketHandler.FifoThresh );
+                    SX1276ReadFifo(chip, ( RxBuffer[chip] + SX1276[chip].Settings.FskPacketHandler.NbBytes ), SX1276[chip].Settings.FskPacketHandler.FifoThresh );
                     SX1276[chip].Settings.FskPacketHandler.NbBytes += SX1276[chip].Settings.FskPacketHandler.FifoThresh;
                 }
                 else
                 {
-                    SX1276ReadFifo(chip, ( RxTxBuffer + SX1276[chip].Settings.FskPacketHandler.NbBytes ), SX1276[chip].Settings.FskPacketHandler.Size - SX1276[chip].Settings.FskPacketHandler.NbBytes );
+                    SX1276ReadFifo(chip, ( RxBuffer[chip] + SX1276[chip].Settings.FskPacketHandler.NbBytes ), SX1276[chip].Settings.FskPacketHandler.Size - SX1276[chip].Settings.FskPacketHandler.NbBytes );
                     SX1276[chip].Settings.FskPacketHandler.NbBytes += ( SX1276[chip].Settings.FskPacketHandler.Size - SX1276[chip].Settings.FskPacketHandler.NbBytes );
                 }
                 break;
@@ -1757,13 +1761,13 @@ void SX1276OnDio1Irq( int chip )
                 // FifoEmpty interrupt
                 if( ( SX1276[chip].Settings.FskPacketHandler.Size - SX1276[chip].Settings.FskPacketHandler.NbBytes ) > SX1276[chip].Settings.FskPacketHandler.ChunkSize )
                 {
-                    SX1276WriteFifo(chip, ( RxTxBuffer + SX1276[chip].Settings.FskPacketHandler.NbBytes ), SX1276[chip].Settings.FskPacketHandler.ChunkSize );
+                    SX1276WriteFifo(chip, ( TxBuffer[chip] + SX1276[chip].Settings.FskPacketHandler.NbBytes ), SX1276[chip].Settings.FskPacketHandler.ChunkSize );
                     SX1276[chip].Settings.FskPacketHandler.NbBytes += SX1276[chip].Settings.FskPacketHandler.ChunkSize;
                 }
                 else
                 {
                     // Write the last chunk of data
-                    SX1276WriteFifo(chip, RxTxBuffer + SX1276[chip].Settings.FskPacketHandler.NbBytes, SX1276[chip].Settings.FskPacketHandler.Size - SX1276[chip].Settings.FskPacketHandler.NbBytes );
+                    SX1276WriteFifo(chip, TxBuffer[chip] + SX1276[chip].Settings.FskPacketHandler.NbBytes, SX1276[chip].Settings.FskPacketHandler.Size - SX1276[chip].Settings.FskPacketHandler.NbBytes );
                     SX1276[chip].Settings.FskPacketHandler.NbBytes += SX1276[chip].Settings.FskPacketHandler.Size - SX1276[chip].Settings.FskPacketHandler.NbBytes;
                 }
                 break;
@@ -1795,7 +1799,7 @@ void SX1276OnDio2Irq( int chip )
 
                 if( ( SX1276[chip].Settings.FskPacketHandler.PreambleDetected == true ) && ( SX1276[chip].Settings.FskPacketHandler.SyncWordDetected == false ) )
                 {
-                    //del_timer( &RxTimeoutSyncWord[chip] );
+                    del_timer( &RxTimeoutSyncWord[chip] );
 
                     SX1276[chip].Settings.FskPacketHandler.SyncWordDetected = true;
 

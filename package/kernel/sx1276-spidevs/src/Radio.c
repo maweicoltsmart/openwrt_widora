@@ -160,15 +160,15 @@ void RadioRemove(void)
     del_timer(&TxTimeoutTimer[0]);
     del_timer(&RxTimeoutTimer[0]);
 
-    //del_timer(&RxTimeoutSyncWord[0]);
+    del_timer(&RxTimeoutSyncWord[0]);
     del_timer(&TxTimeoutTimer[1]);
     del_timer(&RxTimeoutTimer[1]);
-    //del_timer(&RxTimeoutSyncWord[1]);
+    del_timer(&RxTimeoutSyncWord[1]);
     #if defined(GATEWAY_V2_3CHANNEL)
     del_timer(&TxTimeoutTimer[2]);
     del_timer(&RxTimeoutTimer[2]);
     #endif
-    //del_timer(&RxTimeoutSyncWord[2]);
+    del_timer(&RxTimeoutSyncWord[2]);
 
     SX1276IoIrqFree(0);
     SX1276IoFree(0);

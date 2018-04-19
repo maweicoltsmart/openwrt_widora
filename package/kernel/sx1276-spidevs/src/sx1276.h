@@ -410,7 +410,7 @@ void SX1276SetPublicNetwork( int chip,bool enable );
 extern SX1276_t SX1276[];
 extern struct timer_list TxTimeoutTimer[3];
 extern struct timer_list RxTimeoutTimer[3];
-//extern struct timer_list RxTimeoutSyncWord[3];
+extern struct timer_list RxTimeoutSyncWord[3];
 extern struct timeval oldtv;
 
 

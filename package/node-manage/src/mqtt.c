@@ -33,7 +33,7 @@ void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mo
 	uint32_t sendlen;
 	uint8_t stringformat[256 * 2];
 
-	printf("%s ,%d\r\n",__func__,__LINE__);
+	//printf("%s ,%d\r\n",__func__,__LINE__);
 	pst_ServerMsgDown pstServerMsgDown = (pst_ServerMsgDown)writebuf;
     if(message->payloadlen > 0)
 	{
@@ -185,6 +185,7 @@ void *mjmqtt_client_routin(void *data)
          sprintf(&strmacaddr[5 * 2],"%02X",macaddr[5]);
          printf("%s\r\n",strmacaddr);
 	}
+    init_mqtt:
 	//libmosquitto 库初始化
 	mosquitto_lib_init();
 	//创建mosquitto客户端
@@ -334,6 +335,7 @@ void *mjmqtt_client_routin(void *data)
 	}
 	mosquitto_destroy(mosq);
 	mosquitto_lib_cleanup();
+    goto init_mqtt;
 	return 0;
 }
 

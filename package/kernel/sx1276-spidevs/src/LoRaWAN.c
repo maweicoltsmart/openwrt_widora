@@ -6,6 +6,7 @@
 #include <linux/interrupt.h>
 #include "LoRaWAN.h"
 #include "proc.h"
+#include "utilities.h"
 
 LoRaMacParams_t LoRaMacParams;
 st_GatewayParameter stGatewayParameter;
@@ -36,12 +37,19 @@ void LoRaWANInit(void)
 	memcpy(stGatewayParameter.AppKey,stMacCfg.APPKEY,16);
 	DEBUG_OUTPUT_DATA((unsigned char *)stGatewayParameter.AppKey,16);
 	memcpy(stGatewayParameter.NetID,stMacCfg.NetID,3);
-	memcpy(stGatewayParameter.AppNonce,stMacCfg.AppNonce,3);
+	//memcpy(stGatewayParameter.AppNonce,stMacCfg.AppNonce,3);
+    printk("%s, %d\r\n",__func__,__LINE__);
 	ServerMsgInit();
+    printk("%s, %d\r\n",__func__,__LINE__);
 	NodeDatabaseInit();
+    printk("%s, %d\r\n",__func__,__LINE__);
 	RadioInit();
+    printk("%s, %d\r\n",__func__,__LINE__);
+    srand1(8);
+    printk("%s, %d\r\n",__func__,__LINE__);
 	radio_routin = kthread_create(LoRaWANRxDataProcess, NULL, "LoRaWANRxDataProcess");
     wake_up_process(radio_routin);
+    printk("%s, %d\r\n",__func__,__LINE__);
 }
 
 void LoRaWANRemove(void)
@@ -96,6 +104,11 @@ int LoRaWANRxDataProcess(void *data){
 						stNodeJoinInfo.snr= stRadioRxList.stRadioRx.snr;
 						stNodeJoinInfo.jiffies = stRadioRxList.jiffies;
 						stNodeJoinInfo.classtype = macHdr.Bits.RFU;
+                        uint32_t random = randr(0x00,0xffffff);
+                        stGatewayParameter.AppNonce[0] = (random & 0xff)  >> 0;
+                        stGatewayParameter.AppNonce[1] = (random & 0xff00)  >> 1;
+                        stGatewayParameter.AppNonce[2] = (random & 0xff0000)  >> 2;
+
 						if((addr = NodeDatabaseJoin(&stNodeJoinInfo)) < 0)
 						{
 							printk("%s,%d\r\n",__func__,__LINE__);
@@ -388,7 +401,7 @@ void LoRaWANDataDownTimer1Tasklet(unsigned long index)
 	{
 		stNodeDatabase[index].timer2.function = LoRaWANDataDownWaitAckTimer2Callback;
 		stNodeDatabase[index].timer2.data = index;
-		stNodeDatabase[index].timer2.expires = jiffies + HZ;
+		stNodeDatabase[index].timer2.expires = jiffies + 3 * HZ;
 		add_timer(&stNodeDatabase[index].timer2);
 	}
 }
@@ -449,7 +462,7 @@ void LoRaWANDataDownTimer2Tasklet(unsigned long index)
 	{
 		stNodeDatabase[index].timer2.function = LoRaWANDataDownWaitAckTimer2Callback;
 		stNodeDatabase[index].timer2.data = index;
-		stNodeDatabase[index].timer2.expires = jiffies + HZ;
+		stNodeDatabase[index].timer2.expires = jiffies + 3 * HZ;
 		add_timer(&stNodeDatabase[index].timer2);
 	}
 }
@@ -524,7 +537,7 @@ void LoRaWANDataDownClassCTimer1Tasklet(unsigned long index)
 	{
 		stNodeDatabase[index].timer2.function = LoRaWANDataDownClassCWaitAckTimer2Callback;
 		stNodeDatabase[index].timer2.data = index;
-		stNodeDatabase[index].timer2.expires = jiffies + HZ;
+		stNodeDatabase[index].timer2.expires = jiffies + 3 * HZ;
 		add_timer(&stNodeDatabase[index].timer2);
 	}
 }
@@ -585,7 +598,7 @@ void LoRaWANDataDownClassCTimer2Tasklet(unsigned long index)
 	{
 		stNodeDatabase[index].timer2.function = LoRaWANDataDownClassCWaitAckTimer2Callback;
 		stNodeDatabase[index].timer2.data = index;
-		stNodeDatabase[index].timer2.expires = jiffies + HZ;
+		stNodeDatabase[index].timer2.expires = jiffies + 3 * HZ;
 		add_timer(&stNodeDatabase[index].timer2);
 	}
 }
@@ -652,7 +665,7 @@ void LoRaWANRadomDataDownClassCTimer2Tasklet(unsigned long index)
 	{
 		stNodeDatabase[index].timer2.function = LoRaWANDataDownClassCWaitAckTimer2Callback;
 		stNodeDatabase[index].timer2.data = index;
-		stNodeDatabase[index].timer2.expires = jiffies + HZ;
+		stNodeDatabase[index].timer2.expires = jiffies + 3 * HZ;
 		add_timer(&stNodeDatabase[index].timer2);
 	}
 }
@@ -698,6 +711,7 @@ void LoRaWANJoinAccept(uint32_t addr)
 	macHdr.Value = 0;
 	macHdr.Bits.MType = FRAME_TYPE_JOIN_ACCEPT;
 	acceptbuf[0] = macHdr.Value;
+    
 	memcpy(acceptbuf + 1,stGatewayParameter.AppNonce,3);
 	memcpy(acceptbuf + 1 + 3,stGatewayParameter.NetID,3);
 	*(uint32_t *)(acceptbuf + 1 + 3 + 3) = stNodeInfoToSave[addr].stDevNetParameter.DevAddr;
