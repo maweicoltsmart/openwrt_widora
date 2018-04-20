@@ -38,18 +38,12 @@ void LoRaWANInit(void)
 	DEBUG_OUTPUT_DATA((unsigned char *)stGatewayParameter.AppKey,16);
 	memcpy(stGatewayParameter.NetID,stMacCfg.NetID,3);
 	//memcpy(stGatewayParameter.AppNonce,stMacCfg.AppNonce,3);
-    printk("%s, %d\r\n",__func__,__LINE__);
 	ServerMsgInit();
-    printk("%s, %d\r\n",__func__,__LINE__);
 	NodeDatabaseInit();
-    printk("%s, %d\r\n",__func__,__LINE__);
 	RadioInit();
-    printk("%s, %d\r\n",__func__,__LINE__);
     srand1(8);
-    printk("%s, %d\r\n",__func__,__LINE__);
 	radio_routin = kthread_create(LoRaWANRxDataProcess, NULL, "LoRaWANRxDataProcess");
     wake_up_process(radio_routin);
-    printk("%s, %d\r\n",__func__,__LINE__);
 }
 
 void LoRaWANRemove(void)
@@ -266,7 +260,7 @@ void LoRaWANJoinTimer1Tasklet(unsigned long index)
 		printk("accept busy ,1 ,%d\r\n",index);
 		return;
 	}
-	if(time_before((unsigned long)stNodeDatabase[index].jiffies + LoRaMacParams.JoinAcceptDelay1 + 25,(unsigned long)jiffies))
+	if(time_before(stNodeDatabase[index].jiffies + LoRaMacParams.JoinAcceptDelay1 + 25,jiffies))
 	{
 		stNodeDatabase[index].timer2.function = LoRaWANJoinTimer2Callback;
 		stNodeDatabase[index].timer2.data = index;
@@ -315,7 +309,7 @@ void LoRaWANJoinTimer2Tasklet(unsigned long index)
 		printk("accept busy ,2 ,%d\r\n",index);
 		return;
 	}
-	if(time_before((unsigned long)stNodeDatabase[index].jiffies + LoRaMacParams.JoinAcceptDelay2 + 25,(unsigned long)jiffies))
+	if(time_before(stNodeDatabase[index].jiffies + LoRaMacParams.JoinAcceptDelay2 + 25,(unsigned long)jiffies))
 	{
 		stNodeDatabase[index].stTxData.len = 0;
 		printk("accept delay ,2 ,%d\r\n",index);
@@ -367,7 +361,7 @@ void LoRaWANDataDownTimer1Tasklet(unsigned long index)
 		printk("data busy ,1 ,%d\r\n",index);
 		return;
 	}
-	if(time_before((unsigned long)stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay1 + 25,(unsigned long)jiffies))
+	if(time_before(stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay1 + 25,(unsigned long)jiffies))
 	{
 		stNodeDatabase[index].timer2.function = LoRaWANDataDownTimer2Callback;
 		stNodeDatabase[index].timer2.data = index;
@@ -394,7 +388,7 @@ void LoRaWANDataDownTimer1Tasklet(unsigned long index)
 		stRadioCfg_Tx.timeout);
 	Radio.SetChannel(stNodeDatabase[index].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[index].chip]]);
 	Radio.Send(stNodeDatabase[index].chip,stNodeDatabase[index].stTxData.buf,stNodeDatabase[index].stTxData.len);
-	stNodeDatabase[index].stTxData.len = 0;
+	//stNodeDatabase[index].stTxData.len = 0;
 	stNodeDatabase[index].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
 	if(stNodeDatabase[index].stTxData.needack)
@@ -404,6 +398,10 @@ void LoRaWANDataDownTimer1Tasklet(unsigned long index)
 		stNodeDatabase[index].timer2.expires = jiffies + 3 * HZ;
 		add_timer(&stNodeDatabase[index].timer2);
 	}
+    else
+    {
+        stNodeDatabase[index].stTxData.len = 0;
+    }
 }
 
 void LoRaWANDataDownTimer2Tasklet(unsigned long index)
@@ -419,7 +417,7 @@ void LoRaWANDataDownTimer2Tasklet(unsigned long index)
 	}
 	if(Radio.GetStatus(0) == RF_TX_RUNNING)
 	{
-		stNodeDatabase[index].stTxData.len = 0;
+		//stNodeDatabase[index].stTxData.len = 0;
 		printk("data busy ,2 ,%d\r\n",index);		
 		stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 		memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[index].stDevNetParameter.DevEUI,8);
@@ -427,9 +425,9 @@ void LoRaWANDataDownTimer2Tasklet(unsigned long index)
 		ServerMsgUpListAdd(&stServerMsgUp);
 		return;
 	}
-	if(time_before((unsigned long)stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay2 + 25,(unsigned long)jiffies))
+	if(time_before(stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay2 + 25,(unsigned long)jiffies))
 	{
-		stNodeDatabase[index].stTxData.len = 0;
+		//stNodeDatabase[index].stTxData.len = 0;
 		printk("data delay ,2 ,%d\r\n",index);
 		stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 		memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[index].stDevNetParameter.DevEUI,8);
@@ -454,7 +452,7 @@ void LoRaWANDataDownTimer2Tasklet(unsigned long index)
 		stRadioCfg_Tx.timeout);
 	Radio.SetChannel(0,stRadioCfg_Tx.freq_tx[25]);
 	Radio.Send(0,stNodeDatabase[index].stTxData.buf,stNodeDatabase[index].stTxData.len);
-	stNodeDatabase[index].stTxData.len = 0;
+	//stNodeDatabase[index].stTxData.len = 0;
 	stNodeDatabase[index].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
 	
@@ -465,6 +463,10 @@ void LoRaWANDataDownTimer2Tasklet(unsigned long index)
 		stNodeDatabase[index].timer2.expires = jiffies + 3 * HZ;
 		add_timer(&stNodeDatabase[index].timer2);
 	}
+    else
+    {
+        stNodeDatabase[index].stTxData.len = 0;
+    }
 }
 
 void LoRaWANDataDownWaitAckTimer2Tasklet(unsigned long index)
@@ -487,7 +489,7 @@ void LoRaWANDataDownClassCTimer1Tasklet(unsigned long index)
 
 	if(stNodeDatabase[index].stTxData.len == 0)
 	{
-		stNodeDatabase[index].timer2.function = LoRaWANDataDownTimer2Callback;
+		stNodeDatabase[index].timer2.function = LoRaWANDataDownClassCTimer2Callback;
 		stNodeDatabase[index].timer2.data = index;
 		stNodeDatabase[index].timer2.expires = stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay2;
 		add_timer(&stNodeDatabase[index].timer2);
@@ -496,16 +498,16 @@ void LoRaWANDataDownClassCTimer1Tasklet(unsigned long index)
 	}
 	if(Radio.GetStatus(stNodeDatabase[index].chip) == RF_TX_RUNNING)
 	{
-		stNodeDatabase[index].timer2.function = LoRaWANDataDownTimer2Callback;
+		stNodeDatabase[index].timer2.function = LoRaWANDataDownClassCTimer2Callback;
 		stNodeDatabase[index].timer2.data = index;
 		stNodeDatabase[index].timer2.expires = stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay2;
 		add_timer(&stNodeDatabase[index].timer2);
 		printk("data busy ,1 ,%d\r\n",index);
 		return;
 	}
-	if(time_before((unsigned long)stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay1 + 25,(unsigned long)jiffies))
+	if(time_before(stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay1 + 25,(unsigned long)jiffies))
 	{
-		stNodeDatabase[index].timer2.function = LoRaWANDataDownTimer2Callback;
+		stNodeDatabase[index].timer2.function = LoRaWANDataDownClassCTimer2Callback;
 		stNodeDatabase[index].timer2.data = index;
 		stNodeDatabase[index].timer2.expires = stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay2;
 		add_timer(&stNodeDatabase[index].timer2);
@@ -530,7 +532,7 @@ void LoRaWANDataDownClassCTimer1Tasklet(unsigned long index)
 		stRadioCfg_Tx.timeout);
 	Radio.SetChannel(stNodeDatabase[index].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[index].chip]]);
 	Radio.Send(stNodeDatabase[index].chip,stNodeDatabase[index].stTxData.buf,stNodeDatabase[index].stTxData.len);
-	stNodeDatabase[index].stTxData.len = 0;
+	//stNodeDatabase[index].stTxData.len = 0;
 	stNodeDatabase[index].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
 	if(stNodeDatabase[index].stTxData.needack)
@@ -540,6 +542,10 @@ void LoRaWANDataDownClassCTimer1Tasklet(unsigned long index)
 		stNodeDatabase[index].timer2.expires = jiffies + 3 * HZ;
 		add_timer(&stNodeDatabase[index].timer2);
 	}
+    else
+    {
+        stNodeDatabase[index].stTxData.len = 0;
+    }
 }
 
 void LoRaWANDataDownClassCTimer2Tasklet(unsigned long index)
@@ -555,7 +561,13 @@ void LoRaWANDataDownClassCTimer2Tasklet(unsigned long index)
 	}
 	if(Radio.GetStatus(0) == RF_TX_RUNNING)
 	{
-		stNodeDatabase[index].stTxData.len = 0;
+        stNodeDatabase[index].stTxData.classcjiffies = jiffies;
+        stNodeDatabase[index].timer2.function = LoRaWANRadomDataDownClassCTimer2Callback;
+        stNodeDatabase[index].timer2.data = index;
+        stNodeDatabase[index].timer2.expires = jiffies + 1000;
+        add_timer(&stNodeDatabase[index].timer2);
+        stNodeDatabase[index].state = enStateRxWindow1;
+		//stNodeDatabase[index].stTxData.len = 0;
 		printk("data busy ,2 ,%d\r\n",index);		
 		stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 		memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[index].stDevNetParameter.DevEUI,8);
@@ -563,9 +575,15 @@ void LoRaWANDataDownClassCTimer2Tasklet(unsigned long index)
 		ServerMsgUpListAdd(&stServerMsgUp);
 		return;
 	}
-	if(time_before((unsigned long)stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay2 + 100 + 3000,(unsigned long)jiffies))
+	if(time_before(stNodeDatabase[index].jiffies + LoRaMacParams.ReceiveDelay2 + 100 + 3000,(unsigned long)jiffies))
 	{
-		stNodeDatabase[index].stTxData.len = 0;
+        stNodeDatabase[index].stTxData.classcjiffies = jiffies;
+        stNodeDatabase[index].timer2.function = LoRaWANRadomDataDownClassCTimer2Callback;
+        stNodeDatabase[index].timer2.data = index;
+        stNodeDatabase[index].timer2.expires = jiffies + 1000;
+        add_timer(&stNodeDatabase[index].timer2);
+        stNodeDatabase[index].state = enStateRxWindow1;
+		//stNodeDatabase[index].stTxData.len = 0;
 		printk("data delay ,2 ,%d\r\n",index);
 		stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 		memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[index].stDevNetParameter.DevEUI,8);
@@ -590,7 +608,7 @@ void LoRaWANDataDownClassCTimer2Tasklet(unsigned long index)
 		stRadioCfg_Tx.timeout);
 	Radio.SetChannel(0,stRadioCfg_Tx.freq_tx[25]);
 	Radio.Send(0,stNodeDatabase[index].stTxData.buf,stNodeDatabase[index].stTxData.len);
-	stNodeDatabase[index].stTxData.len = 0;
+	//stNodeDatabase[index].stTxData.len = 0;
 	stNodeDatabase[index].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
 	
@@ -601,6 +619,10 @@ void LoRaWANDataDownClassCTimer2Tasklet(unsigned long index)
 		stNodeDatabase[index].timer2.expires = jiffies + 3 * HZ;
 		add_timer(&stNodeDatabase[index].timer2);
 	}
+    else
+    {
+        stNodeDatabase[index].stTxData.len = 0;
+    }
 }
 void LoRaWANRadomDataDownClassCTimer2Tasklet(unsigned long index)
 {
@@ -625,14 +647,20 @@ void LoRaWANRadomDataDownClassCTimer2Tasklet(unsigned long index)
 		
 		stNodeDatabase[index].timer2.function = LoRaWANRadomDataDownClassCTimer2Callback;
 		stNodeDatabase[index].timer2.data = index;
-		stNodeDatabase[index].timer2.expires = jiffies + 200;
+		stNodeDatabase[index].timer2.expires = jiffies + 1000;
 		add_timer(&stNodeDatabase[index].timer2);
 		stNodeDatabase[index].state = enStateRxWindow1;
 		return;
 	}
-	if(time_before((unsigned long)stNodeDatabase[index].stTxData.classcjiffies + LoRaMacParams.ReceiveDelay2 + 100 + 3000,(unsigned long)jiffies))
+	if(time_before(stNodeDatabase[index].stTxData.classcjiffies + LoRaMacParams.ReceiveDelay2 + 100 + 3000,(unsigned long)jiffies))
 	{
-		stNodeDatabase[index].stTxData.len = 0;
+	    stNodeDatabase[index].stTxData.classcjiffies = jiffies;
+		stNodeDatabase[index].timer2.function = LoRaWANRadomDataDownClassCTimer2Callback;
+		stNodeDatabase[index].timer2.data = index;
+		stNodeDatabase[index].timer2.expires = jiffies + 1000;
+		add_timer(&stNodeDatabase[index].timer2);
+		stNodeDatabase[index].state = enStateRxWindow1;
+		//stNodeDatabase[index].stTxData.len = 0;
 		printk("data delay ,2 ,%d\r\n",index);
 		stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 		memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[index].stDevNetParameter.DevEUI,8);
@@ -657,7 +685,7 @@ void LoRaWANRadomDataDownClassCTimer2Tasklet(unsigned long index)
 		stRadioCfg_Tx.timeout);
 	Radio.SetChannel(0,stRadioCfg_Tx.freq_tx[25]);
 	Radio.Send(0,stNodeDatabase[index].stTxData.buf,stNodeDatabase[index].stTxData.len);
-	stNodeDatabase[index].stTxData.len = 0;
+	//stNodeDatabase[index].stTxData.len = 0;
 	stNodeDatabase[index].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
 	
@@ -668,6 +696,10 @@ void LoRaWANRadomDataDownClassCTimer2Tasklet(unsigned long index)
 		stNodeDatabase[index].timer2.expires = jiffies + 3 * HZ;
 		add_timer(&stNodeDatabase[index].timer2);
 	}
+    else
+    {
+        stNodeDatabase[index].stTxData.len = 0;
+    }
 }
 
 void LoRaWANDataDownClassCWaitAckTimer2Tasklet(unsigned long index)
@@ -675,6 +707,12 @@ void LoRaWANDataDownClassCWaitAckTimer2Tasklet(unsigned long index)
 	st_ServerMsgUp stServerMsgUp;
 	del_timer(&stNodeDatabase[index].timer2);
 	
+    stNodeDatabase[index].stTxData.classcjiffies = jiffies;
+    stNodeDatabase[index].timer2.function = LoRaWANRadomDataDownClassCTimer2Callback;
+    stNodeDatabase[index].timer2.data = index;
+    stNodeDatabase[index].timer2.expires = jiffies + 1000;
+    add_timer(&stNodeDatabase[index].timer2);
+    stNodeDatabase[index].state = enStateRxWindow1;
 	printk("Nack ,%d\r\n",index);
 	stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 	memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[index].stDevNetParameter.DevEUI,8);

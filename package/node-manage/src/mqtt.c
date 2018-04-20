@@ -193,18 +193,25 @@ void *mjmqtt_client_routin(void *data)
 	if(!mosq){
 		printf("create client failed..\n");
 		mosquitto_lib_cleanup();
-		return 0;
+        sleep(1);
+        goto init_mqtt;
+		//return 0;
 	}
 	//设置回调函数，需要时可使用
 	//mosquitto_log_callback_set(mosq, my_log_callback);
 	mosquitto_connect_callback_set(mosq, my_connect_callback);
 	mosquitto_message_callback_set(mosq, my_message_callback);
 	//mosquitto_subscribe_callback_set(mosq, my_subscribe_callback);
+	mosquitto_username_pw_set(mosq,"MJ-Modem","www.colt.xin");
 	//printf("%s, %d\r\n",__func__,__LINE__);
 	//连接服务器
 	if(mosquitto_connect(mosq, gateway_pragma.server_ip, gateway_pragma.server_port, KEEP_ALIVE)){
 		fprintf(stderr, "Unable to connect.\n");
-		return 0;
+        mosquitto_destroy(mosq);
+        mosquitto_lib_cleanup();
+        sleep(1);
+        goto init_mqtt;
+		//return 0;
 	}
 	//printf("%s, %d\r\n",__func__,__LINE__);
 	//开启一个线程，在线程里不停的调用 mosquitto_loop() 来处理网络信息
@@ -212,7 +219,11 @@ void *mjmqtt_client_routin(void *data)
 	if(loop != MOSQ_ERR_SUCCESS)
 	{
 		printf("mosquitto loop error\n");
-		return 0;
+        mosquitto_destroy(mosq);
+        mosquitto_lib_cleanup();
+        sleep(1);
+        goto init_mqtt;
+		//return 0;
 	}
 	//printf("%s, %d\r\n",__func__,__LINE__);
 	while(1)

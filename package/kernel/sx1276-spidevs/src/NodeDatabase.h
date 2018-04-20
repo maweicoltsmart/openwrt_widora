@@ -37,7 +37,7 @@ typedef struct
     uint8_t buf[128];
     uint8_t len;
 	bool needack;
-	uint32_t classcjiffies;
+	unsigned long classcjiffies;
 	//uint8_t fPort;
 }st_TxData;
 
@@ -58,7 +58,7 @@ typedef struct
     //st_NodeInfoToSave stNodeInfoToSave;
     struct timer_list timer1;
     struct timer_list timer2;
-    uint32_t jiffies;
+    unsigned long jiffies;
     st_TxData stTxData;
     en_NodeState state;
     int16_t rssi;
@@ -80,7 +80,7 @@ typedef struct
     uint8_t chip;
     int16_t rssi;
     int8_t snr;
-    uint32_t jiffies;
+    unsigned long jiffies;
 	DeviceClass_t classtype;
 }st_NodeJoinInfo,*pst_NodeJoinInfo;
 

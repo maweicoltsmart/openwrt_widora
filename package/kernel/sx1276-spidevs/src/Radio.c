@@ -223,6 +223,7 @@ void RadioTxDone( int chip )
 
 void RadioTxTimeout( int chip )
 {
+    printk("%s , %d\r\n",__func__,chip);
 	Radio.Sleep( chip);
     SX1276SetRxConfig(chip,
             stRadioCfg_Rx.modem,
@@ -245,6 +246,7 @@ void RadioTxTimeout( int chip )
 
 void RadioRxTimeout( int chip )
 {
+    printk("%s , %d\r\n",__func__,chip);
     Radio.Sleep( chip);
     SX1276SetRxConfig(chip,
             stRadioCfg_Rx.modem,

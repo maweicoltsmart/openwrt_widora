@@ -1425,7 +1425,7 @@ void SX1276SetPublicNetwork( int chip,bool enable )
     }
 }
 
-void SX1276OnTimeoutIrq( unsigned long chip )
+void SX1276OnTimeoutIrqTasklet( unsigned long chip )
 {
     uint8_t i = 0;
     printk("%s, %d\r\n",__func__,(int)chip);
@@ -1470,7 +1470,7 @@ void SX1276OnTimeoutIrq( unsigned long chip )
         // The workaround is to put the radio in a known state. Thus, we re-initialize it.
 
         // BEGIN WORKAROUND
-
+        del_timer(&TxTimeoutTimer[chip]);
         // Reset the radio
         SX1276Reset(chip );
 
@@ -1500,6 +1500,34 @@ void SX1276OnTimeoutIrq( unsigned long chip )
     default:
         break;
     }
+}
+
+DECLARE_TASKLET(sx1276_1OnTimeoutIrq,SX1276OnTimeoutIrqTasklet,0);
+DECLARE_TASKLET(sx1276_2OnTimeoutIrq,SX1276OnTimeoutIrqTasklet,1);
+DECLARE_TASKLET(sx1276_3OnTimeoutIrq,SX1276OnTimeoutIrqTasklet,2);
+DECLARE_TASKLET(sx1276_4OnTimeoutIrq,SX1276OnTimeoutIrqTasklet,3);
+
+void SX1276OnTimeoutIrq( unsigned long chip )
+{
+    switch(chip)
+    {
+        case 0:
+            tasklet_schedule(&sx1276_1OnTimeoutIrq);
+            break;
+        case 1:
+            tasklet_schedule(&sx1276_2OnTimeoutIrq);
+            break;
+        case 2:
+            tasklet_schedule(&sx1276_3OnTimeoutIrq);
+            break;
+        case 3:
+            tasklet_schedule(&sx1276_4OnTimeoutIrq);
+            break;
+        default:
+            break;
+    }
+    
+    
 }
 
 void SX1276OnDio0Irq( int chip )

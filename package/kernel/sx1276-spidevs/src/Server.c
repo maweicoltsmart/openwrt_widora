@@ -137,7 +137,7 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
 			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerInLastDutyCycle;
 			ServerMsgUpListAdd(&stServerMsgUp);
-			return;
+			//return;
 		}
 		if(pstServerMsgDown->Msg.stData2Node.size > 51)
 		{
@@ -157,14 +157,14 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 		}
 		if(stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].classtype == CLASS_A)
 		{
-			if(time_before((unsigned long)stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].jiffies + LoRaMacParams.ReceiveDelay2 + 25,(unsigned long)jiffies))
+			if(time_before(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].jiffies + LoRaMacParams.ReceiveDelay2 + 25,jiffies))
 			{
 				printk("%d rx off\r\n",pstServerMsgDown->Msg.stData2Node.DevAddr);
 				stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 				memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
 				stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerNodeNotOnRxWindow;
 				ServerMsgUpListAdd(&stServerMsgUp);
-				return;
+				//return;
 			}
 			else
 			{
@@ -174,7 +174,7 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 		else if(stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].classtype == CLASS_C)
 		{
 			stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.classcjiffies = jiffies;
-			if(time_before((unsigned long)stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].jiffies + LoRaMacParams.ReceiveDelay2 - 1,(unsigned long)jiffies))
+			if(time_before(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].jiffies + LoRaMacParams.ReceiveDelay2 - 1,jiffies))
 			{
 				del_timer(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer1);
 				del_timer(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2);
