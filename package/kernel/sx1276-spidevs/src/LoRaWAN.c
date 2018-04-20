@@ -161,6 +161,7 @@ int LoRaWANRxDataProcess(void *data){
 					}
 					if(stFrameDataUp.frameHdr.Fctrl.Bits.Ack)
 					{
+					    stFrameDataUp.frameHdr.Fctrl.Bits.Ack = false;
 						stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 						memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[stFrameDataUp.frameHdr.DevAddr].stDevNetParameter.DevEUI,8);
 						stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerSuccess;
