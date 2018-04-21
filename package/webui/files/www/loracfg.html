@@ -42,7 +42,7 @@
                     return false;
                 }
             }
-             
+
            return true;
         }
 
@@ -63,7 +63,7 @@
                     return false;
                 }
             }
-             
+
            return true;
         }
 
@@ -75,14 +75,14 @@
      	if(reg.test(paraStr)){
      		var paraInt=parseInt(paraStr) ;
    	    //alert(paraInt);
-   	    if(paraInt<0 || paraInt>96){
-   	   	     alert('必须为0-96的整数');
+   	    if(paraInt<0 || paraInt>95 || paraInt==25){
+   	   	     alert('必须为除25以外0-95的整数');
    	   	     paraObj .focus();
    	   	     return false;
    	   	}
 
      	}else{
-     		alert('必须为0-96的整数');
+     		alert('必须为除25以外0-95的整数');
    	   	paraObj.focus();
    	   	return false;
 
@@ -93,20 +93,20 @@
 
 
    function widoraset(){
-    	
+
     var isLegal=true;
-    	
+
     isLegal=check_APPKEY();
     if(isLegal){
      	 isLegal=check_NetID();
     }
-    
+
     //check_channel($("#channel_0"));
-    //check_channel($("#channel_1")); 
+    //check_channel($("#channel_1"));
     //check_channel($("#channel_2"));
-    	
+
     if(isLegal){
-    var init_info='{"NetType":"Private","APPKEY":"2B7E151628AED2A6ABF7158809CF4F3C","AppNonce":"123456","NetID":"789ABC","serverip":"192.168.1.100","serverport":32500,"localip":"192.168.1.100","localport":32500,"radio":[{"index":0,"channel":0,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"},{"index":0,"channel":2,"datarate":"DR_0"}]}';
+    var init_info='{"NetType":"Private","APPKEY":"2B7E151628AED2A6ABF7158809CF4F3C","NetID":"789ABC","serverip":"192.168.1.100","serverport":32500,"radio":[{"index":0,"channel":0,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"},{"index":0,"channel":2,"datarate":"DR_0"}]}';
 
     var init_info_json =JSON.parse(init_info);
 
@@ -115,8 +115,6 @@
    	init_info_json.NetID =$("#NetID").val();
    	init_info_json.serverip =$("#serverip").val();
    	init_info_json.serverport =$("#serverport").val();
-   	init_info_json.localip =$("#localip").val();
-   	init_info_json.localport =$("#localport").val();
 
    	var radioArray = init_info_json.radio;
    	for(var i=0;i<radioArray.length;i++){
@@ -159,20 +157,14 @@
                <div class="form-group">
                 <label for="NetType">NetType</label>
                 <select id="NetType" name="NetType" class="form-control" data-live-search="true">
-                  <option value="Private">Private</option>
-                  <option value="Public">Public</option>
+                  <option value="Private">中国移动</option>
+                  <option value="Public">中国联通</option>
                 </select>
               </div>
 
               <div class="form-group">
                 <label for="APPKEY">APPKEY</label>
                 <input id="APPKEY" type="text" name="APPKEY" class="form-control"/>
-              </div>
-
-
-              <div class="form-group">
-                <label for="AppNonce">AppNonce</label>
-                <p id="AppNonce" > </p>
               </div>
 
               <div class="form-group">
@@ -189,18 +181,6 @@
                 <label for="serverport">serverport</label>
                 <input id="serverport" type="text" name="serverport" class="form-control"/>
               </div>
-
-              <div class="form-group">
-                <label for="localip">localip</label>
-                <input id="localip" type="text" name="localip" class="form-control"/>
-              </div>
-
-              <div class="form-group">
-                <label for="localport">localport</label>
-                <input id="localport" type="text" name="localport" class="form-control"/>
-              </div>
-
-
 
              <div class="form-group">
              <label for="widora_radio">lora_radio</label>
@@ -252,6 +232,13 @@
                 </select></td>
 		          </tr>
 
+                <tr>
+                 <td id="index_3">3</td>
+                 <td><label> 25</label>
+                  <p> </p></td>
+                 <td><label> DR_0</label>
+                  <p> </p></td>
+              </tr>
 
 	          </tbody>
            </table>
@@ -286,12 +273,9 @@
            	$("#NetType").val(json.NetType) ;
 
            	$("#APPKEY").val(json.APPKEY);
-           	$("#AppNonce").text(json.AppNonce);
            	$("#NetID").val(json.NetID);
            	$("#serverip").val(json.serverip);
            	$("#serverport").val(json.serverport);
-           	$("#localip").val(json.localip);
-           	$("#localport").val(json.localport);
 
            	var radioArray=json.radio;
            	for(var i=0;i<radioArray.length;i++){

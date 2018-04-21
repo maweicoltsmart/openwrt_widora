@@ -139,30 +139,10 @@ int main(int argc, char*argv[])
             Hex2Str(gateway_pragma.APPKEY,byte,16);
             json_object_object_add(pragma,"APPKEY",json_object_new_string(byte));
             memset(byte,0,100);
-            Hex2Str(gateway_pragma.AppNonce,byte,3);
-            json_object_object_add(pragma,"AppNonce",json_object_new_string(byte));
-            memset(byte,0,100);
             Hex2Str(gateway_pragma.NetID,byte,3);
             json_object_object_add(pragma,"NetID",json_object_new_string(byte));
             json_object_object_add(pragma,"serverip",json_object_new_string("101.132.97.241"));
             json_object_object_add(pragma,"serverport",json_object_new_string("32500"));
-
-            char hname[128];
-            struct hostent *hent;
-            int i;
-
-            gethostname(hname, sizeof(hname));
-
-            //hent = gethostent();
-            hent = gethostbyname(hname);
-
-            printf("hostname: %s/naddress list: ", hent->h_name);
-            for(i = 0; hent->h_addr_list[i]; i++) {
-                //printf("%s/t", inet_ntoa(*(struct in_addr*)(hent->h_addr_list[i])));
-            }
-
-            json_object_object_add(pragma,"localip",json_object_new_string(inet_ntoa(*(struct in_addr*)(hent->h_addr_list[0]))));
-            json_object_object_add(pragma,"localport",json_object_new_string("32500"));
 
             json_object_object_add(pragma,"radio",array = json_object_new_array());
             const char* drname[] = {"DR_0","DR_1","DR_2","DR_3","DR_4","DR_5"};

@@ -54,28 +54,10 @@ void GetGatewayPragma(void)
         Hex2Str(gateway_pragma.APPKEY,byte,16);
         json_object_object_add(pragma,"APPKEY",json_object_new_string(byte));
         memset(byte,0,100);
-        Hex2Str(gateway_pragma.AppNonce,byte,3);
-        json_object_object_add(pragma,"AppNonce",json_object_new_string(byte));
-        memset(byte,0,100);
         Hex2Str(gateway_pragma.NetID,byte,3);
         json_object_object_add(pragma,"NetID",json_object_new_string(byte));
         json_object_object_add(pragma,"serverip",json_object_new_string("101.132.97.241"));
         json_object_object_add(pragma,"serverport",json_object_new_string("1883"));
-        char hname[128];
-        struct hostent *hent;
-        int i;
-
-        gethostname(hname, sizeof(hname));
-
-        hent = gethostbyname(hname);
-
-        printf("hostname: %s/naddress list: ", hent->h_name);
-        for(i = 0; hent->h_addr_list[i]; i++) {
-            printf("%s/t", inet_ntoa(*(struct in_addr*)(hent->h_addr_list[i])));
-        }
-
-        json_object_object_add(pragma,"localip",json_object_new_string(inet_ntoa(*(struct in_addr*)(hent->h_addr_list[0]))));
-        json_object_object_add(pragma,"localport",json_object_new_string("32500"));
 
         json_object_object_add(pragma,"radio",array = json_object_new_array());
         const char* drname[] = {"DR_0","DR_1","DR_2","DR_3","DR_4","DR_5"};
@@ -94,13 +76,14 @@ void GetGatewayPragma(void)
     json_object_object_get_ex(pragma,"NetType",&obj);
     memset(byte,0,100);
     strcpy(byte,json_object_get_string(obj));
+    gateway_pragma.NetType = 0;
     if(strcmp(byte,nettype[0]) == 0)
     {
-        gateway_pragma.NetType = 0;
+        //gateway_pragma.NetType = 0;
     }
     else
     {
-        gateway_pragma.NetType = 1;
+    //    gateway_pragma.NetType = 1;
     }
 	json_object_object_get_ex(pragma,"APPKEY",&obj);
 	memset(byte,0,100);
@@ -111,11 +94,11 @@ void GetGatewayPragma(void)
 	memset(byte,0,100);
     strcpy(byte,json_object_get_string(obj));
 	Str2Hex(byte,gateway_pragma.NetID,2 * 3);
-	
+
 	json_object_object_get_ex(pragma,"serverip",&obj);
 	memset(gateway_pragma.server_ip,0,MAX_IP_STRING_LENTH);
     strcpy(gateway_pragma.server_ip,json_object_get_string(obj));
-	
+
 	json_object_object_get_ex(pragma,"serverport",&obj);
 	memset(byte,0,100);
     strcpy(byte,json_object_get_string(obj));
