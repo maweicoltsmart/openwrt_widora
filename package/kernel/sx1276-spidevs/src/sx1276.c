@@ -22,13 +22,15 @@ Maintainer: Miguel Luis, Gregory Cristian and Wael Guibene
 #include <linux/spi/spi.h>
 #include <linux/spi/spi_gpio.h>
 #include <asm/ptrace.h>
+#include <asm/irq.h>
+#include <linux/interrupt.h>
+
 #include "Radio.h"
 #include "sx1276.h"
 #include "sx1276-board.h"
 #include "utilities.h"
 #include "pinmap.h"
-#include <asm/irq.h>
-#include <linux/interrupt.h>
+#include "NodeDatabase.h"
 
 /*
  * Local types definition
@@ -106,12 +108,12 @@ void SX1276SetOpMode( int chip,uint8_t opMode );
 /*!
  * \brief DIO 0 IRQ callback
  */
-void SX1276OnDio0Irq( int chip );
+void SX1276OnDio0Irq(struct work_struct *p_work);
 
 /*!
  * \brief DIO 1 IRQ callback
  */
-void SX1276OnDio1Irq( int chip );
+void SX1276OnDio1Irq(struct work_struct *p_work);
 
 /*!
  * \brief DIO 2 IRQ callback
@@ -223,7 +225,7 @@ struct timer_list TxTimeoutTimer[3];
 struct timer_list RxTimeoutTimer[3];
 struct timer_list RxTimeoutSyncWord[3];
 struct timeval oldtv;
-
+extern struct workqueue_struct *RadioWorkQueue;
 
 /*
  * Radio driver functions implementation
@@ -1425,9 +1427,12 @@ void SX1276SetPublicNetwork( int chip,bool enable )
     }
 }
 
-void SX1276OnTimeoutIrqTasklet( unsigned long chip )
+void SX1276OnTimeoutIrqWorkQueue(struct work_struct *p_work)
 {
     uint8_t i = 0;
+    unsigned long chip;
+    pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
+    chip = pstMyWork->param;
     printk("%s, %d\r\n",__func__,(int)chip);
     switch( SX1276[chip].Settings.State )
     {
@@ -1502,26 +1507,39 @@ void SX1276OnTimeoutIrqTasklet( unsigned long chip )
     }
 }
 
-DECLARE_TASKLET(sx1276_1OnTimeoutIrq,SX1276OnTimeoutIrqTasklet,0);
-DECLARE_TASKLET(sx1276_2OnTimeoutIrq,SX1276OnTimeoutIrqTasklet,1);
-DECLARE_TASKLET(sx1276_3OnTimeoutIrq,SX1276OnTimeoutIrqTasklet,2);
-DECLARE_TASKLET(sx1276_4OnTimeoutIrq,SX1276OnTimeoutIrqTasklet,3);
+static st_MyWork stMyWorkChip1,stMyWorkChip2,stMyWorkChip3,stMyWorkChip4;
+//DECLARE_TASKLET(sx1276_1OnTimeoutIrq,SX1276OnTimeoutIrqTasklet,0);
+//DECLARE_TASKLET(sx1276_2OnTimeoutIrq,SX1276OnTimeoutIrqTasklet,1);
+//DECLARE_TASKLET(sx1276_3OnTimeoutIrq,SX1276OnTimeoutIrqTasklet,2);
+//DECLARE_TASKLET(sx1276_4OnTimeoutIrq,SX1276OnTimeoutIrqTasklet,3);
 
 void SX1276OnTimeoutIrq( unsigned long chip )
 {
     switch(chip)
     {
         case 0:
-            tasklet_schedule(&sx1276_1OnTimeoutIrq);
+            stMyWorkChip1.param = chip;
+            INIT_WORK(&(stMyWorkChip1.save), SX1276OnTimeoutIrqWorkQueue);
+            queue_work(RadioWorkQueue, &(stMyWorkChip1.save));
+            //tasklet_schedule(&sx1276_1OnTimeoutIrq);
             break;
         case 1:
-            tasklet_schedule(&sx1276_2OnTimeoutIrq);
+            stMyWorkChip2.param = chip;
+            INIT_WORK(&(stMyWorkChip2.save), SX1276OnTimeoutIrqWorkQueue);
+            queue_work(RadioWorkQueue, &(stMyWorkChip2.save));
+            //tasklet_schedule(&sx1276_2OnTimeoutIrq);
             break;
         case 2:
-            tasklet_schedule(&sx1276_3OnTimeoutIrq);
+            stMyWorkChip3.param = chip;
+            INIT_WORK(&(stMyWorkChip3.save), SX1276OnTimeoutIrqWorkQueue);
+            queue_work(RadioWorkQueue, &(stMyWorkChip3.save));
+            //tasklet_schedule(&sx1276_3OnTimeoutIrq);
             break;
         case 3:
-            tasklet_schedule(&sx1276_4OnTimeoutIrq);
+            stMyWorkChip4.param = chip;
+            INIT_WORK(&(stMyWorkChip4.save), SX1276OnTimeoutIrqWorkQueue);
+            queue_work(RadioWorkQueue, &(stMyWorkChip4.save));
+            //tasklet_schedule(&sx1276_4OnTimeoutIrq);
             break;
         default:
             break;
@@ -1530,10 +1548,13 @@ void SX1276OnTimeoutIrq( unsigned long chip )
     
 }
 
-void SX1276OnDio0Irq( int chip )
+void SX1276OnDio0Irq(struct work_struct *p_work)
 {
+    unsigned long chip;
     volatile uint8_t irqFlags = 0;
     int16_t rssi;
+    pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
+    chip = pstMyWork->param;
     //printk("%s,%d\r\n",__func__,chip);
     switch( SX1276[chip].Settings.State )
     {
@@ -1732,8 +1753,11 @@ void SX1276OnDio0Irq( int chip )
     }
 }
 
-void SX1276OnDio1Irq( int chip )
+void SX1276OnDio1Irq(struct work_struct *p_work)
 {
+    unsigned long chip;
+    pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
+    chip = pstMyWork->param;
     //printk("%s,%d\r\n",__func__,chip);
     switch( SX1276[chip].Settings.State )
     {

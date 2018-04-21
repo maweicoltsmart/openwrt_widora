@@ -38,7 +38,7 @@ void NodeDatabaseRemove(void)
 		del_timer(&stNodeDatabase[loop].timer1);
 		del_timer(&stNodeDatabase[loop].timer2);
 		stNodeDatabase[loop].stTxData.len = 0;
-		tasklet_kill(&stNodeDatabase[loop].tasklet);
+		//tasklet_kill(&stNodeDatabase[loop].tasklet);
 		//if(loop < node_cnt)
 		//NodeDatabaseRestore(loop);
     }

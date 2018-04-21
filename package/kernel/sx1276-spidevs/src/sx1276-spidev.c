@@ -80,7 +80,10 @@ DEFINE_SPINLOCK(spi_lock);
 #define DRV_DESC  "LoraWAN Driver"
 #define DRV_VERSION "0.1"
 
-extern unsigned int sx1278_1_dio0irq,sx1278_1_dio1irq,sx1278_1_dio2irq,sx1278_1_dio3irq,sx1278_1_dio4irq,sx1278_1_dio5irq;
+extern unsigned int sx1278_1_dio0irq,sx1278_1_dio1irq;
+extern unsigned int sx1278_2_dio0irq,sx1278_2_dio1irq;
+extern unsigned int sx1278_3_dio0irq,sx1278_3_dio1irq;
+extern unsigned int sx1278_4_dio0irq,sx1278_4_dio1irq;
 
 static int sx1276_spidevs_remove_1(struct spi_device *spi);
 static int sx1276_spidevs_probe_1(struct spi_device *spi);

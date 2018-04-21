@@ -8,6 +8,7 @@
 #include <linux/timer.h>
 #include <asm/irq.h>
 #include <linux/interrupt.h>
+#include <linux/workqueue.h>
 
 #include "Radio.h"
 #include "LoRaMac.h"
@@ -55,6 +56,12 @@ typedef enum
 
 typedef struct
 {
+    unsigned long param;
+    struct work_struct save;
+}st_MyWork,*pst_MyWork;
+
+typedef struct
+{
     //st_NodeInfoToSave stNodeInfoToSave;
     struct timer_list timer1;
     struct timer_list timer2;
@@ -68,7 +75,7 @@ typedef struct
     uint16_t sequence_up;
 	uint16_t sequence_down;
     uint8_t Battery;
-	struct tasklet_struct tasklet;
+	st_MyWork stMyWork;
 	uint8_t chip;
 }st_NodeDatabase,*pst_NodeDatabase;
 

@@ -10,6 +10,7 @@
 #include <linux/fcntl.h>
 #include <linux/kthread.h>
 #include <linux/err.h>
+#include <linux/workqueue.h>
 #include "LoRaMacCrypto.h"
 #include "LoRaMac.h"
 #include "Radio.h"
@@ -66,6 +67,7 @@ typedef struct
 }st_FrameDataDown,*pst_FrameDataDown;
 
 extern st_GatewayParameter stGatewayParameter;
+extern struct workqueue_struct *RadioWorkQueue;
 
 void LoRaWANInit(void);
 void LoRaWANRemove(void);
