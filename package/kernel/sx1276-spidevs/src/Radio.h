@@ -356,6 +356,7 @@ typedef struct
 extern const struct Radio_s Radio;
 extern bool rx_done;
 extern wait_queue_head_t lora_wait;
+extern struct mutex RadioChipMutex[4];
 
 void RadioInit(void);
 void RadioRemove(void);

@@ -13,6 +13,8 @@ bool rx_done = false;
 st_RadioRxList stRadioRxListHead;
 static RadioEvents_t RadioEvent;
 
+struct mutex RadioChipMutex[4];
+
 extern void RadioTxDone( int chip );
 extern void RadioRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr );
 extern void RadioTxTimeout( int chip );
@@ -22,28 +24,19 @@ extern void RadioRxError( int chip );
 void RadioInit(void)
 {
 	int chip = 0;
+    
 	INIT_LIST_HEAD(&stRadioRxListHead.list);
 	RadioEvent.TxDone = RadioTxDone;
     RadioEvent.RxDone = RadioRxDone;
     RadioEvent.RxError = RadioRxError;
     RadioEvent.TxTimeout = RadioTxTimeout;
     RadioEvent.RxTimeout = RadioRxTimeout;
-    Radio.Init(0,&RadioEvent);
-    Radio.Init(1,&RadioEvent);
-    #if defined(GATEWAY_V2_3CHANNEL)
-    Radio.Init(2,&RadioEvent);
-    #endif
-    Radio.Sleep(0);
-    Radio.Sleep(1);
-    #if defined(GATEWAY_V2_3CHANNEL)
-    Radio.Sleep(2);
-    #endif
-    Radio.SetPublicNetwork(0,stRadioCfg_Rx.isPublic);
-    Radio.SetPublicNetwork(1,stRadioCfg_Rx.isPublic);
-    #if defined(GATEWAY_V2_3CHANNEL)
-    Radio.SetPublicNetwork(2,stRadioCfg_Rx.isPublic);
-    #endif
+    
     chip = 0;
+    mutex_init(&RadioChipMutex[chip]);
+    Radio.Init(chip,&RadioEvent);
+    Radio.Sleep(chip);
+    Radio.SetPublicNetwork(chip,stRadioCfg_Rx.isPublic);
     Radio.SetTxConfig(chip,
             stRadioCfg_Tx.modem,
             stRadioCfg_Tx.power,
@@ -76,6 +69,10 @@ void RadioInit(void)
     Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
     Radio.Rx( chip,0 );
     chip = 1;
+    mutex_init(&RadioChipMutex[chip]);
+    Radio.Init(chip,&RadioEvent);
+    Radio.Sleep(chip);
+    Radio.SetPublicNetwork(chip,stRadioCfg_Rx.isPublic);
     Radio.SetTxConfig(chip,
             stRadioCfg_Tx.modem,
             stRadioCfg_Tx.power,
@@ -107,8 +104,11 @@ void RadioInit(void)
             stRadioCfg_Rx.rxContinuous);
     Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
     Radio.Rx( chip,0 );
-    #if defined(GATEWAY_V2_3CHANNEL)
     chip = 2;
+    mutex_init(&RadioChipMutex[chip]);
+    Radio.Init(chip,&RadioEvent);
+    Radio.Sleep(chip);
+    Radio.SetPublicNetwork(chip,stRadioCfg_Rx.isPublic);
     Radio.SetTxConfig(chip,
             stRadioCfg_Tx.modem,
             stRadioCfg_Tx.power,
@@ -140,10 +140,6 @@ void RadioInit(void)
             stRadioCfg_Rx.rxContinuous);
     Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
     Radio.Rx( chip,0 );
-    #endif
-
-    //radio_routin = kthread_create(Radio_routin, NULL, "Radio routin thread");
-    //wake_up_process(radio_routin);
     return;
 }
 

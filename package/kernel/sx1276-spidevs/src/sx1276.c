@@ -1434,6 +1434,7 @@ void SX1276OnTimeoutIrqWorkQueue(struct work_struct *p_work)
     pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
     chip = pstMyWork->param;
     printk("%s, %d\r\n",__func__,(int)chip);
+    mutex_lock(&RadioChipMutex[chip]);
     switch( SX1276[chip].Settings.State )
     {
     case RF_RX_RUNNING:
@@ -1505,6 +1506,7 @@ void SX1276OnTimeoutIrqWorkQueue(struct work_struct *p_work)
     default:
         break;
     }
+    mutex_unlock(&RadioChipMutex[chip]);
 }
 
 static st_MyWork stMyWorkChip1,stMyWorkChip2,stMyWorkChip3,stMyWorkChip4;
@@ -1555,6 +1557,7 @@ void SX1276OnDio0Irq(struct work_struct *p_work)
     int16_t rssi;
     pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
     chip = pstMyWork->param;
+    mutex_lock(&RadioChipMutex[chip]);
     //printk("%s,%d\r\n",__func__,chip);
     switch( SX1276[chip].Settings.State )
     {
@@ -1751,6 +1754,7 @@ void SX1276OnDio0Irq(struct work_struct *p_work)
         default:
             break;
     }
+    mutex_unlock(&RadioChipMutex[chip]);
 }
 
 void SX1276OnDio1Irq(struct work_struct *p_work)
@@ -1759,6 +1763,7 @@ void SX1276OnDio1Irq(struct work_struct *p_work)
     pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
     chip = pstMyWork->param;
     //printk("%s,%d\r\n",__func__,chip);
+    mutex_lock(&RadioChipMutex[chip]);
     switch( SX1276[chip].Settings.State )
     {
         case RF_RX_RUNNING:
@@ -1832,6 +1837,7 @@ void SX1276OnDio1Irq(struct work_struct *p_work)
         default:
             break;
     }
+    mutex_unlock(&RadioChipMutex[chip]);
 }
 
 void SX1276OnDio2Irq( int chip )

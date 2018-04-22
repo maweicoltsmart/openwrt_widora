@@ -275,6 +275,7 @@ void LoRaWANJoinTimer1WorkQueue(struct work_struct *p_work)
 		printk("accept delay ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
+    mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip);
 	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip,
 		stRadioCfg_Tx.modem,
@@ -292,6 +293,7 @@ void LoRaWANJoinTimer1WorkQueue(struct work_struct *p_work)
 		stRadioCfg_Tx.timeout);
 	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip]]);
 	Radio.Send(stNodeDatabase[pstMyWork->param].chip,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
+    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	stNodeDatabase[pstMyWork->param].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
@@ -322,6 +324,7 @@ void LoRaWANJoinTimer2WorkQueue(struct work_struct *p_work)
 		printk("accept delay ,2 ,%d\r\n",pstMyWork->param);
 		return;
 	}
+    mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	Radio.Sleep(0);
 	Radio.SetTxConfig(0,
 		stRadioCfg_Tx.modem,
@@ -339,6 +342,7 @@ void LoRaWANJoinTimer2WorkQueue(struct work_struct *p_work)
 		stRadioCfg_Tx.timeout);
 	Radio.SetChannel(0,stRadioCfg_Tx.freq_tx[25]);
 	Radio.Send(0,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
+    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	stNodeDatabase[pstMyWork->param].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
@@ -378,7 +382,7 @@ void LoRaWANDataDownTimer1WorkQueue(struct work_struct *p_work)
 		printk("data delay ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-	
+	mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip);
 	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip,
 		stRadioCfg_Tx.modem,
@@ -396,6 +400,7 @@ void LoRaWANDataDownTimer1WorkQueue(struct work_struct *p_work)
 		stRadioCfg_Tx.timeout);
 	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip]]);
 	Radio.Send(stNodeDatabase[pstMyWork->param].chip,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
+    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	stNodeDatabase[pstMyWork->param].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
@@ -444,6 +449,7 @@ void LoRaWANDataDownTimer2WorkQueue(struct work_struct *p_work)
 		ServerMsgUpListAdd(&stServerMsgUp);
 		return;
 	}
+    mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	Radio.Sleep(0);
 	Radio.SetTxConfig(0,
 		stRadioCfg_Tx.modem,
@@ -461,6 +467,7 @@ void LoRaWANDataDownTimer2WorkQueue(struct work_struct *p_work)
 		stRadioCfg_Tx.timeout);
 	Radio.SetChannel(0,stRadioCfg_Tx.freq_tx[25]);
 	Radio.Send(0,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
+    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	stNodeDatabase[pstMyWork->param].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
@@ -525,7 +532,7 @@ void LoRaWANDataDownClassCTimer1WorkQueue(struct work_struct *p_work)
 		printk("data delay ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-	
+	mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip);
 	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip,
 		stRadioCfg_Tx.modem,
@@ -543,6 +550,7 @@ void LoRaWANDataDownClassCTimer1WorkQueue(struct work_struct *p_work)
 		stRadioCfg_Tx.timeout);
 	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip]]);
 	Radio.Send(stNodeDatabase[pstMyWork->param].chip,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
+    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	stNodeDatabase[pstMyWork->param].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
@@ -603,6 +611,7 @@ void LoRaWANDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 		ServerMsgUpListAdd(&stServerMsgUp);
 		return;
 	}
+    mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	Radio.Sleep(0);
 	Radio.SetTxConfig(0,
 		stRadioCfg_Tx.modem,
@@ -620,7 +629,8 @@ void LoRaWANDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 		stRadioCfg_Tx.timeout);
 	Radio.SetChannel(0,stRadioCfg_Tx.freq_tx[25]);
 	Radio.Send(0,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
-	//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
+    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
+    //stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	stNodeDatabase[pstMyWork->param].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
 	
@@ -681,6 +691,7 @@ void LoRaWANRadomDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 		ServerMsgUpListAdd(&stServerMsgUp);
 		return;
 	}
+    mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	Radio.Sleep(0);
 	Radio.SetTxConfig(0,
 		stRadioCfg_Tx.modem,
@@ -698,7 +709,8 @@ void LoRaWANRadomDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 		stRadioCfg_Tx.timeout);
 	Radio.SetChannel(0,stRadioCfg_Tx.freq_tx[25]);
 	Radio.Send(0,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
-	//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
+    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
+    //stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	stNodeDatabase[pstMyWork->param].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
 	
