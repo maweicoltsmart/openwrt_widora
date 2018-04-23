@@ -131,6 +131,22 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 			ServerMsgUpListAdd(&stServerMsgUp);
 			return;
 		}
+        if(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].state == enStateJoinning)
+        {
+            if(time_before(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].jiffies + LoRaMacParams.JoinAcceptDelay2 + 1 * HZ,jiffies))
+            {
+                stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].state = enStateJoined;
+                printk("###################%d\r\n",pstServerMsgDown->Msg.stData2Node.DevAddr);
+            }
+            else
+            {
+			    stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+			    memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
+			    stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerOffline;
+			    ServerMsgUpListAdd(&stServerMsgUp);
+			    return;
+            }
+		}
 		if((stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf != NULL) && (stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len > 0))
 		{
 			stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
@@ -183,7 +199,6 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2.data = pstServerMsgDown->Msg.stData2Node.DevAddr;
 				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2.expires = jiffies + 100;
 				add_timer(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2);
-				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].state = enStateRxWindow1;
 			}
 		}
 		else
@@ -228,7 +243,6 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 		stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len = LoRaMacBufferPktLen;
 		stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].sequence_down ++;
 
-		stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].state = enStateRxWindow1;
 	}
 	else if(pstServerMsgDown->enMsgDownFramType == en_MsgDownFramConfirm)
 	{

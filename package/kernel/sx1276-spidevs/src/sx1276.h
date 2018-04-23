@@ -407,10 +407,10 @@ void SX1276SetMaxPayloadLength( int chip,RadioModems_t modem, uint8_t max );
  */
 void SX1276SetPublicNetwork( int chip,bool enable );
 
-extern SX1276_t SX1276[];
-extern struct timer_list TxTimeoutTimer[3];
-extern struct timer_list RxTimeoutTimer[3];
-extern struct timer_list RxTimeoutSyncWord[3];
+extern SX1276_t SX1276[4];
+extern struct timer_list TxTimeoutTimer[4];
+extern struct timer_list RxTimeoutTimer[4];
+extern struct timer_list RxTimeoutSyncWord[4];
 extern struct timeval oldtv;
 
 

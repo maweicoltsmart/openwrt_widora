@@ -13,7 +13,7 @@
 #include "Radio.h"
 #include "LoRaMac.h"
 
-#define MAX_NODE    100
+#define MAX_NODE    2000
 
 typedef struct
 {
@@ -35,7 +35,7 @@ typedef struct
 
 typedef struct
 {
-    uint8_t buf[128];
+    uint8_t buf[51];
     uint8_t len;
 	bool needack;
 	unsigned long classcjiffies;

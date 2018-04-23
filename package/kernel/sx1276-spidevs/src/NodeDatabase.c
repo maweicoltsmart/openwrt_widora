@@ -24,6 +24,7 @@ void NodeDatabaseInit(void)
     for(loop = 0;loop < MAX_NODE;loop ++)
     {
         stNodeDatabase[loop].state = enStateInit;
+        stNodeDatabase[loop].jiffies = jiffies;
 		init_timer(&stNodeDatabase[loop].timer1);
 		init_timer(&stNodeDatabase[loop].timer2);
     }
@@ -153,11 +154,10 @@ uint32_t NodeDatabaseJoin(const pst_NodeJoinInfo node)
             DEBUG_OUTPUT_DATA((unsigned char *)stNodeInfoToSave[loop].stDevNetParameter.AppSKey,16);
             DEBUG_OUTPUT_INFO("NwkSKey: 0x");
             DEBUG_OUTPUT_DATA((unsigned char *)stNodeInfoToSave[loop].stDevNetParameter.NwkSKey,16);
-            if(stNodeDatabase[loop].state == enStateJoinning)
+            /*if(stNodeDatabase[loop].state == enStateJoinning)
             {
                 return -1;
-            }else{
-                stNodeDatabase[loop].state = enStateJoinning;
+            }else*/{
                 stNodeDatabase[loop].snr = node->snr;
                 stNodeDatabase[loop].chip = node->chip;
                 stNodeDatabase[loop].rssi = node->rssi;
@@ -186,7 +186,6 @@ uint32_t NodeDatabaseJoin(const pst_NodeJoinInfo node)
         DEBUG_OUTPUT_DATA((unsigned char *)stNodeInfoToSave[loop].stDevNetParameter.AppSKey,16);
         DEBUG_OUTPUT_INFO("NwkSKey: 0x");
         DEBUG_OUTPUT_DATA((unsigned char *)stNodeInfoToSave[loop].stDevNetParameter.NwkSKey,16);
-        stNodeDatabase[loop].state = enStateJoinning;
         stNodeDatabase[loop].snr = node->snr;
         stNodeDatabase[loop].chip = node->chip;
         stNodeDatabase[loop].rssi = node->rssi;
@@ -218,6 +217,7 @@ void NodeDatabaseUpdateParameters(uint32_t addr, uint16_t fcnt, pst_RadioRxList 
 	{
 		stNodeDatabase[addr].sequence_down = 0;
 	}
+    stNodeDatabase[addr].state = enStateJoined;
 }
 bool NodeDatabaseVerifyNetAddr(uint32_t addr)
 {

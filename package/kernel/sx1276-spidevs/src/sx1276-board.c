@@ -277,6 +277,49 @@ void SX1276IoInit( int chip )
                 printk("%s,%d\r\n",__func__,__LINE__);
             }
             break;
+        case 3:
+            err = gpio_request(SX1278_4_RST_PIN, "SX1278_4_RST_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_output(SX1278_4_RST_PIN,0);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            //SX1276.Spi = slave;
+            err = gpio_request(SX1278_4_DIO0_PIN, "SX1278_4_DIO0_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_4_DIO0_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_4_DIO1_PIN, "SX1278_4_DIO1_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_input(SX1278_4_DIO1_PIN);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_request(SX1278_4_DIO2_PIN, "SX1278_4_DIO2_PIN");
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            err = gpio_direction_output(SX1278_4_DIO2_PIN,0);
+            if(err)
+            {
+                printk("%s,%d\r\n",__func__,__LINE__);
+            }
+            break;
         default:
             break;
     }
@@ -333,6 +376,22 @@ void SX1276IoIrqInit( int chip )
             if(err)
             {
                 printk( "sx1278_3_dio1irq request failed\r\n");
+            }
+            break;
+        case 3:
+			sx1278_4_dio0irq = gpio_to_irq(SX1278_4_DIO0_PIN);
+            err = request_irq(sx1278_4_dio0irq,sx1278_4_dio0irq_handler,IRQF_TRIGGER_RISING,"sx1278_4_dio0irq",NULL);
+            //disable_irq(sx1278_4_dio0irq);
+            if(err)
+            {
+                printk( "sx1278_4_dio0irq request failed\r\n");
+            }
+            sx1278_4_dio1irq = gpio_to_irq(SX1278_4_DIO1_PIN);
+            err = request_irq(sx1278_4_dio1irq,sx1278_4_dio1irq_handler,IRQF_TRIGGER_RISING,"sx1278_4_dio1irq",NULL);
+            //disable_irq(sx1278_4_dio1irq);
+            if(err)
+            {
+                printk( "sx1278_4_dio1irq request failed\r\n");
             }
             break;
         default:
@@ -463,6 +522,9 @@ void SX1276SetAntSw( int chip,uint8_t opMode )
 		case 2:
 		gpio_set_value(SX1278_3_DIO2_PIN,0);
 		break;
+		case 3:
+		gpio_set_value(SX1278_4_DIO2_PIN,0);
+		break;
 		default:
 		break;
 	}
@@ -483,6 +545,9 @@ void SX1276SetAntSw( int chip,uint8_t opMode )
                 break;
                 case 2:
                 gpio_set_value(SX1278_3_DIO2_PIN,1);
+                break;
+                case 3:
+                gpio_set_value(SX1278_4_DIO2_PIN,1);
                 break;
                 default:
                 break;
@@ -521,6 +586,12 @@ void SX1276IoFree(int chip)
             gpio_free(SX1278_3_DIO1_PIN);
             gpio_free(SX1278_3_DIO2_PIN);
             break;
+        case 3:
+			gpio_free(SX1278_4_RST_PIN);
+            gpio_free(SX1278_4_DIO0_PIN);
+            gpio_free(SX1278_4_DIO1_PIN);
+            gpio_free(SX1278_4_DIO2_PIN);
+            break;
         default:
             break;
     }
@@ -541,6 +612,10 @@ void SX1276IoIrqFree(int chip)
         case 2:
 			free_irq(sx1278_3_dio0irq,NULL);
             free_irq(sx1278_3_dio1irq,NULL);
+            break;
+        case 3:
+			free_irq(sx1278_4_dio0irq,NULL);
+            free_irq(sx1278_4_dio1irq,NULL);
             break;
         default:
             break;

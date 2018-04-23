@@ -89,8 +89,10 @@ static int sx1276_spidevs_remove_1(struct spi_device *spi);
 static int sx1276_spidevs_probe_1(struct spi_device *spi);
 static int sx1276_spidevs_remove_2(struct spi_device *spi);
 static int sx1276_spidevs_probe_2(struct spi_device *spi);
-static int sx1276_spidevs_remove_2(struct spi_device *spi);
+static int sx1276_spidevs_remove_3(struct spi_device *spi);
 static int sx1276_spidevs_probe_3(struct spi_device *spi);
+static int sx1276_spidevs_remove_4(struct spi_device *spi);
+static int sx1276_spidevs_probe_4(struct spi_device *spi);
 
 static int sx1276_spidevs_remove_1(struct spi_device *spi)
 {
@@ -109,10 +111,6 @@ static int sx1276_spidevs_probe_1(struct spi_device *spi)
 
 static int sx1276_spidevs_remove_2(struct spi_device *spi)
 {
-    #ifndef GATEWAY_V2_3CHANNEL
-    unregister_sx1276_cdev();
-    cleanup_procfs_lora();
-	#endif
     return 0;
 }
 static int sx1276_spidevs_probe_2(struct spi_device *spi)
@@ -123,25 +121,35 @@ static int sx1276_spidevs_probe_2(struct spi_device *spi)
     spi->bits_per_word = 8;
     spi->mode = SPI_MODE_0;
     err = spi_setup(spi);
-    #ifndef GATEWAY_V2_3CHANNEL
-    register_sx1276_cdev();
-    init_procfs_lora();
-	#endif
     return err;
 }
 
-#if defined(GATEWAY_V2_3CHANNEL)
 static int sx1276_spidevs_remove_3(struct spi_device *spi)
 {
-    unregister_sx1276_cdev();
-    cleanup_procfs_lora();
     return 0;
 }
 static int sx1276_spidevs_probe_3(struct spi_device *spi)
 {
     int err = 0;
-
     SX1276[2].Spi = spi;
+    printk(KERN_INFO DRV_DESC " version " DRV_VERSION "\n");
+    spi->bits_per_word = 8;
+    spi->mode = SPI_MODE_0;
+    err = spi_setup(spi);
+    return err;
+}
+
+static int sx1276_spidevs_remove_4(struct spi_device *spi)
+{
+    unregister_sx1276_cdev();
+    cleanup_procfs_lora();
+    return 0;
+}
+static int sx1276_spidevs_probe_4(struct spi_device *spi)
+{
+    int err = 0;
+
+    SX1276[3].Spi = spi;
     printk(KERN_INFO DRV_DESC " version " DRV_VERSION "\n");
     spi->bits_per_word = 8;
     spi->mode = SPI_MODE_0;
@@ -151,7 +159,6 @@ static int sx1276_spidevs_probe_3(struct spi_device *spi)
     init_procfs_lora();
     return err;
 }
-#endif
 static const struct of_device_id lorawan_dt_ids_1[] = {
     { .compatible = "semtech,sx1278-1" },
     {},
@@ -198,7 +205,6 @@ static struct spi_driver lorawan_spi_driver_2 = {
     */
 };
 
-#if defined(GATEWAY_V2_3CHANNEL)
 static const struct of_device_id lorawan_dt_ids_3[] = {
     { .compatible = "semtech,sx1278-3" },
     {},
@@ -221,16 +227,37 @@ static struct spi_driver lorawan_spi_driver_3 = {
     * most issues; the controller driver handles the rest.
     */
 };
-#endif
+
+static const struct of_device_id lorawan_dt_ids_4[] = {
+    { .compatible = "semtech,sx1278-4" },
+    {},
+};
+
+MODULE_DEVICE_TABLE(of, lorawan_dt_ids_4);
+
+static struct spi_driver lorawan_spi_driver_4 = {
+        .driver = {
+        .name =         "semtech,sx1278-4",
+        .owner =        THIS_MODULE,
+        .of_match_table = of_match_ptr(lorawan_dt_ids_4),
+    },
+    .probe =        sx1276_spidevs_probe_4,
+    .remove =       sx1276_spidevs_remove_4,
+
+    /* NOTE:  suspend/resume methods are not necessary here.
+    * We don't do anything except pass the requests to/from
+    * the underlying controller.  The refrigerator handles
+    * most issues; the controller driver handles the rest.
+    */
+};
+
 static int __init lorawan_init(void)
 {
     int ret;
     ret = spi_register_driver(&lorawan_spi_driver_1);
     ret = spi_register_driver(&lorawan_spi_driver_2);
-	
-#if defined(GATEWAY_V2_3CHANNEL)
 	ret = spi_register_driver(&lorawan_spi_driver_3);
-#endif
+    ret = spi_register_driver(&lorawan_spi_driver_4);
     return ret;
 }
 
@@ -238,10 +265,8 @@ static void __exit lorawan_exit(void)
 {
     spi_unregister_driver(&lorawan_spi_driver_1);
     spi_unregister_driver(&lorawan_spi_driver_2);
-	
-#if defined(GATEWAY_V2_3CHANNEL)
 	spi_unregister_driver(&lorawan_spi_driver_3);
-#endif
+    spi_unregister_driver(&lorawan_spi_driver_4);
 }
 
 module_init(lorawan_init);

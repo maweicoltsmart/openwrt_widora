@@ -198,8 +198,8 @@ static RadioEvents_t *RadioEvents;
 /*!
  * Reception buffer
  */
-static uint8_t TxBuffer[3][RX_BUFFER_SIZE];
-static uint8_t RxBuffer[3][RX_BUFFER_SIZE];
+static uint8_t TxBuffer[4][RX_BUFFER_SIZE];
+static uint8_t RxBuffer[4][RX_BUFFER_SIZE];
 
 
 /*
@@ -209,7 +209,7 @@ static uint8_t RxBuffer[3][RX_BUFFER_SIZE];
 /*!
  * Radio hardware and global parameters
  */
-SX1276_t SX1276[3];
+SX1276_t SX1276[4];
 
 /*!
  * Hardware DIO IRQ callback initialization
@@ -221,9 +221,9 @@ SX1276_t SX1276[3];
 /*!
  * Tx and Rx timers
  */
-struct timer_list TxTimeoutTimer[3];
-struct timer_list RxTimeoutTimer[3];
-struct timer_list RxTimeoutSyncWord[3];
+struct timer_list TxTimeoutTimer[4];
+struct timer_list RxTimeoutTimer[4];
+struct timer_list RxTimeoutSyncWord[4];
 struct timeval oldtv;
 extern struct workqueue_struct *RadioWorkQueue;
 
@@ -1278,23 +1278,23 @@ void SX1276Reset( int chip )
         udelay(6000);
         break;
         case 1:
-        //gpio_set_value(SX1278_1_RST_PIN,0);
         gpio_set_value(SX1278_2_RST_PIN,0);
         udelay(1000);
-        //gpio_set_value(SX1278_1_RST_PIN,1);
         gpio_set_value(SX1278_2_RST_PIN,1);
         udelay(6000);
         break;
-		#if defined(GATEWAY_V2_3CHANNEL)
         case 2:
-		//gpio_set_value(SX1278_1_RST_PIN,0);
         gpio_set_value(SX1278_3_RST_PIN,0);
         udelay(1000);
-        //gpio_set_value(SX1278_1_RST_PIN,1);
         gpio_set_value(SX1278_3_RST_PIN,1);
         udelay(6000);
         break;
-		#endif
+        case 3:
+        gpio_set_value(SX1278_4_RST_PIN,0);
+        udelay(1000);
+        gpio_set_value(SX1278_4_RST_PIN,1);
+        udelay(6000);
+        break;
         default:
         break;
     }
