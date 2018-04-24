@@ -125,10 +125,10 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 	{
 		if(!NodeDatabaseVerifyNetAddr(pstServerMsgDown->Msg.stData2Node.DevAddr))
 		{
-			stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+			/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
 			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerOffline;
-			ServerMsgUpListAdd(&stServerMsgUp);
+			ServerMsgUpListAdd(&stServerMsgUp);*/
 			return;
 		}
         if(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].state == enStateJoinning)
@@ -136,39 +136,39 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
             if(time_before(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].jiffies + LoRaMacParams.JoinAcceptDelay2 + 1 * HZ,jiffies))
             {
                 stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].state = enStateJoined;
-                printk("###################%d\r\n",pstServerMsgDown->Msg.stData2Node.DevAddr);
+                //printk("###################%d\r\n",pstServerMsgDown->Msg.stData2Node.DevAddr);
             }
             else
             {
-			    stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+			    /*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 			    memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
 			    stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerOffline;
-			    ServerMsgUpListAdd(&stServerMsgUp);
+			    ServerMsgUpListAdd(&stServerMsgUp);*/
 			    return;
             }
 		}
 		if((stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf != NULL) && (stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len > 0))
 		{
-			stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+			/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
 			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerInLastDutyCycle;
-			ServerMsgUpListAdd(&stServerMsgUp);
+			ServerMsgUpListAdd(&stServerMsgUp);*/
 			//return;
 		}
 		if(pstServerMsgDown->Msg.stData2Node.size > 51)
 		{
-			stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+			/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
 			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerTooLong;
-			ServerMsgUpListAdd(&stServerMsgUp);
+			ServerMsgUpListAdd(&stServerMsgUp);*/
 			return;
 		}
 		if((pstServerMsgDown->Msg.stData2Node.fPort > 233) || (pstServerMsgDown->Msg.stData2Node.fPort < 1))
 		{
-			stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+			/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
 			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerPortNotAllow;
-			ServerMsgUpListAdd(&stServerMsgUp);
+			ServerMsgUpListAdd(&stServerMsgUp);*/
 			return;
 		}
 		if(stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].classtype == CLASS_A)
@@ -176,10 +176,10 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 			if(time_before(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].jiffies + LoRaMacParams.ReceiveDelay2 + 25,jiffies))
 			{
 				printk("%d rx off\r\n",pstServerMsgDown->Msg.stData2Node.DevAddr);
-				stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+				/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 				memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
 				stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerNodeNotOnRxWindow;
-				ServerMsgUpListAdd(&stServerMsgUp);
+				ServerMsgUpListAdd(&stServerMsgUp);*/
 				//return;
 			}
 			else
@@ -245,7 +245,7 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 
 	}
 	else if(pstServerMsgDown->enMsgDownFramType == en_MsgDownFramConfirm)
-	{
+	{/*
 		if(!NodeDatabaseVerifyNetAddr(pstServerMsgDown->Msg.stConfirm2Node.DevAddr))
 		{
 			stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
@@ -253,7 +253,7 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerOffline;
 			ServerMsgUpListAdd(&stServerMsgUp);
 			return;
-		}
+		}*/
 	}
 	else
 	{

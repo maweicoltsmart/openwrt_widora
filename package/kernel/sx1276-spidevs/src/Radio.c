@@ -220,10 +220,10 @@ void RadioRemove(void)
 void RadioRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr )
 {
     RadioRxListAdd( chip,payload,size,rssi,snr );
-    if(Radio.GetStatus(chip) == RF_TX_RUNNING)
+    /*if(Radio.GetStatus(chip) == RF_TX_RUNNING)
     {
         return;
-    }
+    }*/
     Radio.Sleep( chip);
     if(chip < 3)
     {
@@ -272,10 +272,10 @@ void RadioRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t
 
 void RadioTxDone( int chip )
 {
-    if(Radio.GetStatus(chip) == RF_TX_RUNNING)
+    /*if(Radio.GetStatus(chip) == RF_TX_RUNNING)
     {
         return;
-    }
+    }*/
     Radio.Sleep( chip);
     if(chip < 3)
     {
@@ -415,10 +415,10 @@ void RadioRxTimeout( int chip )
 
 void RadioRxError( int chip )
 {
-    if(Radio.GetStatus(chip) == RF_TX_RUNNING)
+    /*if(Radio.GetStatus(chip) == RF_TX_RUNNING)
     {
         return;
-    }
+    }*/
     Radio.Sleep( chip);
     if(chip < 3)
     {

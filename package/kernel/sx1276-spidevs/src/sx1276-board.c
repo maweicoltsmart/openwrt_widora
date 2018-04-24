@@ -407,7 +407,7 @@ void SX1276SetRfTxPower( int chip ,int8_t power )
 {
     uint8_t paConfig = 0;
     uint8_t paDac = 0;
-
+    power = 20;
     paConfig = SX1276Read( chip,REG_PACONFIG );
     paDac = SX1276Read( chip,REG_PADAC );
 

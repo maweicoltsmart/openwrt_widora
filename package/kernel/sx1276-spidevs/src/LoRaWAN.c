@@ -119,6 +119,7 @@ int LoRaWANRxDataProcess(void *data){
 					break;
 				case FRAME_TYPE_DATA_UNCONFIRMED_UP:
 				case FRAME_TYPE_DATA_CONFIRMED_UP:
+                    stServerMsgUp.Msg.stData2Server.size = 0;
 					stFrameDataUp.macHdr.Value = stRadioRxList.stRadioRx.payload[0];
 					stFrameDataUp.frameHdr.DevAddr = *(uint32_t*)&stRadioRxList.stRadioRx.payload[1];
 					stFrameDataUp.frameHdr.Fctrl.Value = stRadioRxList.stRadioRx.payload[1 + 4];
@@ -161,11 +162,12 @@ int LoRaWANRxDataProcess(void *data){
 					}
 					if(stFrameDataUp.frameHdr.Fctrl.Bits.Ack)
 					{
-					    stFrameDataUp.frameHdr.Fctrl.Bits.Ack = false;
-						stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+					    stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].stTxData.needack = false;
+					    //stFrameDataUp.frameHdr.Fctrl.Bits.Ack = false;
+						/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 						memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[stFrameDataUp.frameHdr.DevAddr].stDevNetParameter.DevEUI,8);
 						stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerSuccess;
-						ServerMsgUpListAdd(&stServerMsgUp);
+						ServerMsgUpListAdd(&stServerMsgUp);*/
 					}
 					if( ( ( stRadioRxList.stRadioRx.size - 4 ) - appPayloadStartIndex ) > 0 )
 					{
@@ -212,21 +214,22 @@ int LoRaWANRxDataProcess(void *data){
 	                                                       stServerMsgUp.Msg.stData2Server.payload );
 								}
                             }
-							stServerMsgUp.enMsgUpFramType = en_MsgUpFramDataReceive;
-							memcpy(stServerMsgUp.Msg.stData2Server.AppEUI,stNodeInfoToSave[stFrameDataUp.frameHdr.DevAddr].stDevNetParameter.AppEUI,8);
-							memcpy(stServerMsgUp.Msg.stData2Server.DevEUI,stNodeInfoToSave[stFrameDataUp.frameHdr.DevAddr].stDevNetParameter.DevEUI,8);
-							stServerMsgUp.Msg.stData2Server.DevAddr = stFrameDataUp.frameHdr.DevAddr;
-							stServerMsgUp.Msg.stData2Server.Battery = stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].Battery;
-							stServerMsgUp.Msg.stData2Server.CtrlBits.AckRequest = (macHdr.Bits.MType == FRAME_TYPE_DATA_CONFIRMED_UP)?true:false;
-							stServerMsgUp.Msg.stData2Server.CtrlBits.Ack = stFrameDataUp.frameHdr.Fctrl.Bits.Ack;
-							stServerMsgUp.Msg.stData2Server.ClassType = macHdr.Bits.RFU;
-							stServerMsgUp.Msg.stData2Server.fPort = port;
-							stServerMsgUp.Msg.stData2Server.rssi = stRadioRxList.stRadioRx.rssi;
-							stServerMsgUp.Msg.stData2Server.snr = stRadioRxList.stRadioRx.snr;
-							stServerMsgUp.Msg.stData2Server.size = frameLen;
-							ServerMsgUpListAdd(&stServerMsgUp);
 						}
 					}
+                    stServerMsgUp.enMsgUpFramType = en_MsgUpFramDataReceive;
+					memcpy(stServerMsgUp.Msg.stData2Server.AppEUI,stNodeInfoToSave[stFrameDataUp.frameHdr.DevAddr].stDevNetParameter.AppEUI,8);
+					memcpy(stServerMsgUp.Msg.stData2Server.DevEUI,stNodeInfoToSave[stFrameDataUp.frameHdr.DevAddr].stDevNetParameter.DevEUI,8);
+					stServerMsgUp.Msg.stData2Server.DevAddr = stFrameDataUp.frameHdr.DevAddr;
+					stServerMsgUp.Msg.stData2Server.Battery = stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].Battery;
+					stServerMsgUp.Msg.stData2Server.CtrlBits.AckRequest = (macHdr.Bits.MType == FRAME_TYPE_DATA_CONFIRMED_UP)?true:false;
+					stServerMsgUp.Msg.stData2Server.CtrlBits.Ack = stFrameDataUp.frameHdr.Fctrl.Bits.Ack;
+					stServerMsgUp.Msg.stData2Server.ClassType = macHdr.Bits.RFU;
+					stServerMsgUp.Msg.stData2Server.fPort = port;
+					stServerMsgUp.Msg.stData2Server.rssi = stRadioRxList.stRadioRx.rssi;
+					stServerMsgUp.Msg.stData2Server.snr = stRadioRxList.stRadioRx.snr;
+					stServerMsgUp.Msg.stData2Server.size = frameLen;
+					ServerMsgUpListAdd(&stServerMsgUp);
+
 					break;
 				default:
 					DEBUG_OUTPUT_INFO("error: unKnown Frame Type!\r\n");
@@ -429,20 +432,20 @@ void LoRaWANDataDownTimer2WorkQueue(struct work_struct *p_work)
 	{
 		//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 		printk("data busy ,2 ,%d\r\n",pstMyWork->param);		
-		stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+		/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 		memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstMyWork->param].stDevNetParameter.DevEUI,8);
 		stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerRadioBusy;
-		ServerMsgUpListAdd(&stServerMsgUp);
+		ServerMsgUpListAdd(&stServerMsgUp);*/
 		return;
 	}
 	if(time_before(stNodeDatabase[pstMyWork->param].jiffies + LoRaMacParams.ReceiveDelay2 + 25,(unsigned long)jiffies))
 	{
 		//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 		printk("data delay ,2 ,%d\r\n",pstMyWork->param);
-		stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+		/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 		memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstMyWork->param].stDevNetParameter.DevEUI,8);
 		stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerRadioBusy;
-		ServerMsgUpListAdd(&stServerMsgUp);
+		ServerMsgUpListAdd(&stServerMsgUp);*/
 		return;
 	}
     mutex_lock(&RadioChipMutex[3]);
@@ -487,10 +490,10 @@ void LoRaWANDataDownWaitAckTimer2WorkQueue(struct work_struct *p_work)
 	del_timer(&stNodeDatabase[pstMyWork->param].timer2);
 	
 	printk("Nack ,%d\r\n",pstMyWork->param);
-	stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+	/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 	memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstMyWork->param].stDevNetParameter.DevEUI,8);
 	stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerNodeNoAck;
-	ServerMsgUpListAdd(&stServerMsgUp);
+	ServerMsgUpListAdd(&stServerMsgUp);*/
 }
 
 void LoRaWANDataDownClassCTimer1WorkQueue(struct work_struct *p_work)
@@ -582,10 +585,10 @@ void LoRaWANDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
         add_timer(&stNodeDatabase[pstMyWork->param].timer2);
 		//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 		printk("data busy ,2 ,%d\r\n",pstMyWork->param);		
-		stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+		/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 		memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstMyWork->param].stDevNetParameter.DevEUI,8);
 		stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerRadioBusy;
-		ServerMsgUpListAdd(&stServerMsgUp);
+		ServerMsgUpListAdd(&stServerMsgUp);*/
 		return;
 	}
 	if(time_before(stNodeDatabase[pstMyWork->param].jiffies + LoRaMacParams.ReceiveDelay2 + 100 + 3000,(unsigned long)jiffies))
@@ -597,10 +600,10 @@ void LoRaWANDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
         add_timer(&stNodeDatabase[pstMyWork->param].timer2);
 		//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 		printk("data delay ,2 ,%d\r\n",pstMyWork->param);
-		stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+		/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 		memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstMyWork->param].stDevNetParameter.DevEUI,8);
 		stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerRadioBusy;
-		ServerMsgUpListAdd(&stServerMsgUp);
+		ServerMsgUpListAdd(&stServerMsgUp);*/
 		return;
 	}
     mutex_lock(&RadioChipMutex[3]);
@@ -674,10 +677,10 @@ void LoRaWANRadomDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 		add_timer(&stNodeDatabase[pstMyWork->param].timer2);
 		//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 		printk("data delay ,2 ,%d\r\n",pstMyWork->param);
-		stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+		/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 		memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstMyWork->param].stDevNetParameter.DevEUI,8);
 		stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerRadioBusy;
-		ServerMsgUpListAdd(&stServerMsgUp);
+		ServerMsgUpListAdd(&stServerMsgUp);*/
 		return;
 	}
     mutex_lock(&RadioChipMutex[3]);
@@ -720,17 +723,23 @@ void LoRaWANDataDownClassCWaitAckTimer2WorkQueue(struct work_struct *p_work)
     pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
 	st_ServerMsgUp stServerMsgUp;
 	del_timer(&stNodeDatabase[pstMyWork->param].timer2);
-	
-    stNodeDatabase[pstMyWork->param].stTxData.classcjiffies = jiffies;
-    stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANRadomDataDownClassCTimer2Callback;
-    stNodeDatabase[pstMyWork->param].timer2.data = pstMyWork->param;
-    stNodeDatabase[pstMyWork->param].timer2.expires = jiffies + 1000;
-    add_timer(&stNodeDatabase[pstMyWork->param].timer2);
-	printk("Nack ,%d\r\n",pstMyWork->param);
-	stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+	if(stNodeDatabase[pstMyWork->param].stTxData.needack)
+	{
+        stNodeDatabase[pstMyWork->param].stTxData.classcjiffies = jiffies;
+        stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANRadomDataDownClassCTimer2Callback;
+        stNodeDatabase[pstMyWork->param].timer2.data = pstMyWork->param;
+        stNodeDatabase[pstMyWork->param].timer2.expires = jiffies + 1000;
+        add_timer(&stNodeDatabase[pstMyWork->param].timer2);
+	    printk("Nack ,%d\r\n",pstMyWork->param);
+    }
+    else
+    {
+        stNodeDatabase[pstMyWork->param].stTxData.len = 0;
+    }
+	/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 	memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstMyWork->param].stDevNetParameter.DevEUI,8);
 	stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerNodeNoAck;
-	ServerMsgUpListAdd(&stServerMsgUp);
+	ServerMsgUpListAdd(&stServerMsgUp);*/
 }
 
 void LoRaWANAddWorkQueue(unsigned long addr,pdotasklet do_work)
