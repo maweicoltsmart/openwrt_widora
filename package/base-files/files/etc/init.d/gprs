@@ -1,11 +1,107 @@
-#!/bin/sh /etc/rc.common
-START=99
-start(){
-	/etc/ppp/ppp-on
-}
-stop(){
-        /etc/ppp/ppp-off
-}
-restart(){
-       /etc/ppp/ppp-on
-}
+#!/bin/sh
+#
+# Script to initiate a ppp connection. This is the first part of the
+# pair of scripts. This is not a secure pair of scripts as the codes
+# are visible with the 'ps' command.  However, it is simple.
+#
+# These are the parameters. Change as needed.
+TELEPHONE=555-1212	# The telephone number for the connection
+ACCOUNT=horse		# The account name for logon (as in 'George Burns')
+PASSWORD=mj		# The password for this account (and 'Gracie Allen')
+LOCAL_IP=0.0.0.0	# Local IP address if known. Dynamic = 0.0.0.0
+REMOTE_IP=0.0.0.0	# Remote IP address if desired. Normally 0.0.0.0
+NETMASK=255.255.255.0	# The proper netmask if needed
+#
+# Export them so that they will be available at 'ppp-on-dialer' time.
+export TELEPHONE ACCOUNT PASSWORD
+#
+# This is the location of the script which dials the phone and logs
+# in.  Please use the absolute file name as the $PATH variable is not
+# used on the connect option.  (To do so on a 'root' account would be
+# a security hole so don't ask.)
+#
+DIALER_SCRIPT=/etc/ppp/ppp-on-dialer
+#
+# Initiate the connection
+#
+# I put most of the common options on this command. Please, don't
+# forget the 'lock' option or some programs such as mgetty will not
+# work. The asyncmap and escape will permit the PPP link to work with
+# a telnet or rlogin connection. You are welcome to make any changes
+# as desired. Don't use the 'defaultroute' option if you currently
+# have a default route to an ethernet gateway.
+#
+echo 2 > /sys/class/gpio/export
+dns1="119.75.217.109"
+dns2="101.132.97.241"
+
+sleep 8
+echo out > /sys/class/gpio/gpio2/direction
+echo "sim800c power down"
+echo 1 > /sys/class/gpio/gpio2/value
+sleep 2
+echo "sim800c power on"
+echo 0 > /sys/class/gpio/gpio2/value
+echo "wait 10 seconds"
+sleep 10
+echo "start ppp0"
+exec /usr/sbin/pppd call gprs&
+sleep 12
+while true
+do
+       echo "ping DNS1"
+       ping -s 1 -c 1 $dns1
+       #    ……去PING第一个DNS
+       if [ "$?" != "0" ]
+       #      ……假如PING不通
+       then
+           echo "ping DNS2"
+           ping -s 1 -c 2 $dns2
+           #  ……去PING第二个DNS
+           if [ "$?" != "0" ]
+           #     ……假如PING不通
+           then   
+              killall pppd
+              #         ……结束PPPD进程
+              #pppd call gprs-siem & ……再去拨号
+              echo "redial again"
+              echo out > /sys/class/gpio/gpio2/direction
+              echo "sim800c power down"
+              echo 1 > /sys/class/gpio/gpio2/value
+              sleep 2
+              echo "sim800c power on"
+              echo 0 > /sys/class/gpio/gpio2/value
+              echo "wait 10 seconds"
+              sleep 10
+              echo "start ppp0"
+              exec /usr/sbin/pppd call gprs&
+              sleep 12
+              #               ……等待12秒
+           else
+              sleep 5
+              #            ……如果是PING  DNS2通的话就直接等待5秒
+           fi   
+       else
+              sleep 5
+              #            ……如果是PING  DNS1通的话就直接等待5秒（一般要设置多长时间去PING请改这里）
+
+       fi               
+done
+
+#echo out > /sys/class/gpio/gpio2/direction
+#echo "sim800c power down"
+#echo 1 > /sys/class/gpio/gpio2/value
+#sleep 2
+#echo "sim800c power on"
+#echo 0 > /sys/class/gpio/gpio2/value
+#echo "wait 10 seconds"
+#sleep 10
+#echo "start ppp0"
+#exec /usr/sbin/pppd call gprs&
+#exec /usr/sbin/pppd debug lock modem crtscts /dev/ttyS1 115200 \
+#	asyncmap 20A0000 escape FF kdebug 0 $LOCAL_IP:$REMOTE_IP \
+#	noipdefault netmask $NETMASK defaultroute connect $DIALER_SCRIPT
+#while true
+#do
+#	sleep 60
+#done
