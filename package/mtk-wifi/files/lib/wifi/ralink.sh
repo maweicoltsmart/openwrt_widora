@@ -28,8 +28,9 @@ config wifi-iface ap
 	option mode	ap
 	option network  lan
 	option ifname   $dev
-	option ssid	Widora-$(cat /sys/class/net/eth0/address|awk -F ":" '{print $5""$6}'| tr a-z A-Z)
-	option encryption none 
+	option ssid	Colt-$(cat /sys/class/net/eth0/address|awk -F ":" '{print $5""$6}'| tr a-z A-Z)
+	option encryption psk2
+	option key       12345678
 	option hidden    0
 
 config wifi-iface sta

@@ -1,5 +1,5 @@
 config system
-	option hostname	Widora
+	option hostname	Colt
 	option timezone	UTC
 
 config timeserver ntp

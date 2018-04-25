@@ -8,7 +8,7 @@
     <meta name="author" content="">
     <link rel="shortcut icon" href="assets/ico/favicon.ico">
 
-    <title>Widora WIFI SET</title>
+    <title>Colt WIFI SET</title>
 
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -27,7 +27,7 @@
     <script type="text/javascript">
       function setwifi() {
         $.ajax({
-          type: "GET", 
+          type: "GET",
           url: "/cgi-bin/setwifi?ssid="+$('#ssid').val()+"&password="+$('#password').val(),
           dataType: "json",
           contentType: "application/json; charset=utf-8",
@@ -154,7 +154,7 @@
   <script type="text/javascript">
       $(window).on('load', function () {
         $.ajax({
-          type: "GET", 
+          type: "GET",
           url: "/cgi-bin/aps",
           dataType: "json",
           contentType: "application/json; charset=utf-8",
@@ -172,7 +172,7 @@
           }
         });
         $.ajax({
-          type: "GET", 
+          type: "GET",
           url: "/cgi-bin/checkwifi",
           dataType: "json",
           contentType: "application/json; charset=utf-8",
