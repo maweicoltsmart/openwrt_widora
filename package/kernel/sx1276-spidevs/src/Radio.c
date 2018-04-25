@@ -7,6 +7,7 @@
 #include "proc.h"
 #include "debug.h"
 
+#define RADIO_RX_TIMEOUT    (60 * HZ)
 //const struct Radio_s Radio;
 DECLARE_WAIT_QUEUE_HEAD(lora_wait);
 bool rx_done = false;
@@ -263,8 +264,9 @@ void RadioRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t
             stRadioCfg_Rx.rxContinuous);
         Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[25]);
     }
-    Radio.Rx( chip,0 );
+    Radio.Rx( chip,RADIO_RX_TIMEOUT );
     DEBUG_OUTPUT_EVENT(chip, EV_RXCOMPLETE);
+    printk("%s ,%d\r\n",__func__,chip);
     //DEBUG_OUTPUT_DATA(payload,size);
     rx_done = true;
     wake_up(&lora_wait);
@@ -315,7 +317,7 @@ void RadioTxDone( int chip )
             stRadioCfg_Rx.rxContinuous);
         Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[25]);
     }
-    Radio.Rx( chip,0 );
+    Radio.Rx( chip,RADIO_RX_TIMEOUT );
     DEBUG_OUTPUT_EVENT(chip,EV_TXCOMPLETE);
     printk("%s, %d\r\n",__func__,chip);
     //State = TX;
@@ -364,7 +366,7 @@ void RadioTxTimeout( int chip )
         Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[25]);
     }
 
-    Radio.Rx( chip,0 );
+    Radio.Rx( chip,RADIO_RX_TIMEOUT );
 }
 
 void RadioRxTimeout( int chip )
@@ -410,7 +412,7 @@ void RadioRxTimeout( int chip )
         Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[25]);
     }
 
-    Radio.Rx( chip,0 );
+    Radio.Rx( chip,RADIO_RX_TIMEOUT );
 }
 
 void RadioRxError( int chip )
@@ -459,7 +461,8 @@ void RadioRxError( int chip )
         Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[25]);
     }
 
-    Radio.Rx( chip,0 );
+    Radio.Rx( chip,RADIO_RX_TIMEOUT );
+    printk("%s ,%d\r\n",__func__,chip);
 }
 
 int RadioRxListAdd(int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t snr){
