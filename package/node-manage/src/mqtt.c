@@ -82,7 +82,7 @@ void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mo
             	{
                     return;
             	}
-                if(strlen(json_object_get_string(obj)) > 51)
+                if(strlen(json_object_get_string(obj)) > 51 * 2)
                 {
                     return;
                 }
@@ -141,7 +141,7 @@ void *mjmqtt_client_routin(void *data)
 	uint8_t readbuffer[256 + sizeof(st_ServerMsgUp)];
 	pst_ServerMsgUp pstServerMsgUp = (pst_ServerMsgUp)readbuffer;
     struct mosquitto *mosq = NULL;
-    
+
 	uint8_t deveui[8 * 2 + 1] = {0};
 	uint8_t senddata[1024] = {0};
 
@@ -250,7 +250,7 @@ void *mjmqtt_client_routin(void *data)
 			strcat(topic,gateway_pragma.macaddress);
 			strcat(topic,"/");
 			strcat(topic,deveui);
-			
+
 			//printf("topic = %s\r\n",topic);
 			mosquitto_publish(mosq,NULL,topic,strlen(senddata)+1,senddata,0,0);
 			json_object_put(pragma);
