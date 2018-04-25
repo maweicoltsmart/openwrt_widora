@@ -11,6 +11,7 @@ typedef struct{
     int16_t rssi;
     int8_t snr;
     uint8_t size;
+    uint16_t sn;
 	uint8_t *payload;
     struct
     {

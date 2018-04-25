@@ -4,7 +4,8 @@
   /dev/ttyS1
 
 # set baudrate
-  460800
+  #460800
+  115200
 
 # set flowdate 可能你的串口是需要crtscts，硬件流控的，这是由你的串口决定的，一般嵌入式系统的串口没有带硬件流控，也不需要就加nocrtscts
   nocrtscts

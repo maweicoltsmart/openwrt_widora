@@ -207,13 +207,13 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 		if(pstServerMsgDown->Msg.stData2Node.CtrlBits.AckRequest)
     	{
         	macHdr.Bits.MType = FRAME_TYPE_DATA_CONFIRMED_DOWN;
-			stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.needack = true;
+			//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.needack = true;
     	}
 
     	else
     	{
         	macHdr.Bits.MType = FRAME_TYPE_DATA_UNCONFIRMED_DOWN;
-			stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.needack = false;
+			//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.needack = false;
     	}
 		fCtrl.Value = 0;
 		fCtrl.Bits.FPending = false;

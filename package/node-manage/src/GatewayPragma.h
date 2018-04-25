@@ -6,6 +6,10 @@
 typedef struct
 {
 	bool NetType;
+    uint8_t softversion[64];
+    uint8_t macaddress[6 * 2 + 1];
+    uint8_t username[16 + 1];
+    uint8_t password[16 + 1];
     uint8_t APPKEY[16];
     uint8_t AppNonce[3];
     uint8_t NetID[3];

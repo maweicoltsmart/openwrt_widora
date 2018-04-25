@@ -22,6 +22,11 @@ gateway_pragma_t gateway_pragma = {
     .NetID  ={0x78,0x9a,0xbc},
 };
 
+#define VERSION_STR   "VERSION 1.0 ("__DATE__" "__TIME__")"
+
+extern unsigned char streth0macaddr[];
+extern unsigned char strwifimacaddr[];
+
 void GetGatewayPragma(void)
 {
     int len;
@@ -48,6 +53,10 @@ void GetGatewayPragma(void)
     if(!found)
     {
         pragma = json_object_new_object();
+        json_object_object_add(pragma,"SoftWareVersion",json_object_new_string(VERSION_STR));
+        json_object_object_add(pragma,"MacAddress",json_object_new_string(strwifimacaddr));
+        json_object_object_add(pragma,"UserName",json_object_new_string("MJ-Modem"));
+        json_object_object_add(pragma,"Password",json_object_new_string("www.colt.xin"));
         json_object_object_add(pragma,"NetType",json_object_new_string("Private"));
 
         memset(byte,0,100);
@@ -71,6 +80,19 @@ void GetGatewayPragma(void)
         json_object_to_file(GATEWAY_PRAGMA_FILE_PATH,pragma);
     }
 
+    json_object_object_get_ex(pragma,"SoftWareVersion",&obj);
+    memset(gateway_pragma.softversion,0,64);
+    strcpy(gateway_pragma.softversion,json_object_get_string(obj));
+    json_object_object_get_ex(pragma,"MacAddress",&obj);
+    memset(gateway_pragma.macaddress,0,6 * 2 + 1);
+    strcpy(gateway_pragma.macaddress,json_object_get_string(obj));
+    json_object_object_get_ex(pragma,"UserName",&obj);
+    memset(gateway_pragma.username,0,16 + 1);
+    strcpy(gateway_pragma.username,json_object_get_string(obj));
+    json_object_object_get_ex(pragma,"Password",&obj);
+    memset(gateway_pragma.password,0,16 + 1);
+    strcpy(gateway_pragma.password,json_object_get_string(obj));
+    
     const char *nettype[2] = {"Private","Public"};
 
     json_object_object_get_ex(pragma,"NetType",&obj);

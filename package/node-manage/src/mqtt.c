@@ -20,7 +20,6 @@
 #define MSG_MAX_SIZE  512
 
 bool session = true;
-unsigned char strmacaddr[6 * 2 + 1] = {0};
 extern int fd_cdev;
 
 void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
@@ -48,25 +47,16 @@ void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mo
                 return;
             }
 
-            json_object_object_get_ex(pragma,"FrameType",&obj);
-            if(obj == NULL)
-            {
-            	return;
-            }
-			memset(stringformat,0,256 * 2);
-            strcpy(stringformat,json_object_get_string(obj));
-			if(strcmp(stringformat,"DownData") == 0)
-			{
 				pstServerMsgDown->enMsgDownFramType = en_MsgDownFramDataSend;
 				pstServerMsgDown->Msg.stData2Node.payload = writebuf + sizeof(st_ServerMsgDown);
 				json_object_object_get_ex(pragma,"NetAddr",&obj);
-            	if(obj == NULL)
+            	if((obj == NULL) && (!json_object_is_type(&obj,json_type_int)))
             	{
                     return;
             	}
             	pstServerMsgDown->Msg.stData2Node.DevAddr = json_object_get_int(obj);
 				json_object_object_get_ex(pragma,"Port",&obj);
-            	if(obj == NULL)
+            	if((obj == NULL) && (!json_object_is_type(&obj,json_type_int)))
             	{
                     return;
             	}
@@ -76,43 +66,31 @@ void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mo
                 	return;
             	}
 				json_object_object_get_ex(pragma,"ConfirmRequest",&obj);
-	            if(obj == NULL)
+	            if((obj == NULL) && (!json_object_is_type(&obj,json_type_boolean)))
 	            {
 	            	return;
 	            }
 	            pstServerMsgDown->Msg.stData2Node.CtrlBits.AckRequest = json_object_get_boolean(obj);
 				json_object_object_get_ex(pragma,"Confirm",&obj);
-	            if(obj == NULL)
+	            if((obj == NULL) && (!json_object_is_type(&obj,json_type_boolean)))
 	            {
 	            	return;
 	            }
 	            pstServerMsgDown->Msg.stData2Node.CtrlBits.Ack = json_object_get_boolean(obj);
 				json_object_object_get_ex(pragma,"Data",&obj);
-            	if(obj == NULL)
+            	if((obj == NULL) && (!json_object_is_type(&obj,json_type_string)))
             	{
                     return;
             	}
+                if(strlen(json_object_get_string(obj)) > 51)
+                {
+                    return;
+                }
             	memset(stringformat,0,256 * 2);
             	strcpy(stringformat,json_object_get_string(obj));
             	pstServerMsgDown->Msg.stData2Node.size = strlen(stringformat) / 2;
 				sendlen = pstServerMsgDown->Msg.stData2Node.size + sizeof(st_ServerMsgDown);
             	Str2Hex( &stringformat[0],  pstServerMsgDown->Msg.stData2Node.payload, strlen(stringformat) );
-			}
-			else if(strcmp(stringformat,"DownConfirm") == 0)
-			{
-				pstServerMsgDown->enMsgDownFramType = en_MsgDownFramDataSend;
-				json_object_object_get_ex(pragma,"NetAddr",&obj);
-            	if(obj == NULL)
-            	{
-                    return;
-            	}
-            	pstServerMsgDown->Msg.stConfirm2Node.DevAddr = json_object_get_int(obj);
-				sendlen = sizeof(st_ServerMsgDown);
-			}
-			else
-			{
-				return;
-			}
 
             json_object_put(pragma);
 
@@ -131,7 +109,7 @@ void my_connect_callback(struct mosquitto *mosq, void *userdata, int result)
     if(!result){
         /* Subscribe to broker information topics on successful connect. */
         strcpy(topic,"LoRaWAN/Down/");
-        strcat(topic,strmacaddr);
+        strcat(topic,gateway_pragma.macaddress);
         strcat(topic,"/#");
         mosquitto_subscribe(mosq, NULL, topic, 2);
         printf("topic = %s\r\n",topic);
@@ -163,28 +141,11 @@ void *mjmqtt_client_routin(void *data)
 	uint8_t readbuffer[256 + sizeof(st_ServerMsgUp)];
 	pst_ServerMsgUp pstServerMsgUp = (pst_ServerMsgUp)readbuffer;
     struct mosquitto *mosq = NULL;
-    char *device="br-lan";//"eth0"; //eth0是网卡设备名
-    unsigned char macaddr[6]; //ETH_ALEN（6）是MAC地址长度
-    struct ifreq req;
-    int err,i;
+    
 	uint8_t deveui[8 * 2 + 1] = {0};
 	uint8_t senddata[1024] = {0};
 
-    int s=socket(AF_INET,SOCK_DGRAM,0); //internet协议族的数据报类型套接口
-    strcpy(req.ifr_name,device); //将设备名作为输入参数传入
-    err=ioctl(s,SIOCGIFHWADDR,&req); //执行取MAC地址操作
-    close(s);
-    if(err != -1)
-    {
-         memcpy(macaddr,req.ifr_hwaddr.sa_data,6); //取输出的MAC地址
-         sprintf(&strmacaddr[0 * 2],"%02X",macaddr[0]);
-         sprintf(&strmacaddr[1 * 2],"%02X",macaddr[1]);
-         sprintf(&strmacaddr[2 * 2],"%02X",macaddr[2]);
-         sprintf(&strmacaddr[3 * 2],"%02X",macaddr[3]);
-         sprintf(&strmacaddr[4 * 2],"%02X",macaddr[4]);
-         sprintf(&strmacaddr[5 * 2],"%02X",macaddr[5]);
-         printf("%s\r\n",strmacaddr);
-	}
+
     init_mqtt:
 	//libmosquitto 库初始化
 	mosquitto_lib_init();
@@ -202,7 +163,7 @@ void *mjmqtt_client_routin(void *data)
 	mosquitto_connect_callback_set(mosq, my_connect_callback);
 	mosquitto_message_callback_set(mosq, my_message_callback);
 	//mosquitto_subscribe_callback_set(mosq, my_subscribe_callback);
-	mosquitto_username_pw_set(mosq,"MJ-Modem","www.colt.xin");
+	mosquitto_username_pw_set(mosq,gateway_pragma.username,gateway_pragma.password);
 	//printf("%s, %d\r\n",__func__,__LINE__);
 	//连接服务器
 	if(mosquitto_connect(mosq, gateway_pragma.server_ip, gateway_pragma.server_port, KEEP_ALIVE)){
@@ -237,7 +198,7 @@ void *mjmqtt_client_routin(void *data)
 			{
 				//printf("%s, %d\r\n",__func__,__LINE__);
 				pstServerMsgUp->Msg.stData2Server.payload = &readbuffer[sizeof(st_ServerMsgUp)];
-				json_object_object_add(pragma,"FrameType",json_object_new_string("UpData"));
+                json_object_object_add(pragma,"Sn",json_object_new_int(pstServerMsgUp->Msg.stData2Server.sn));
 				switch(pstServerMsgUp->Msg.stData2Server.ClassType)
 				{
 					case 0:
@@ -252,7 +213,6 @@ void *mjmqtt_client_routin(void *data)
 				}
 				memset(stringformat,0,256 * 2);
 				Hex2Str(pstServerMsgUp->Msg.stData2Server.DevEUI,stringformat,8);
-				json_object_object_add(pragma,"DevEUI",json_object_new_string(stringformat));
 				memcpy(deveui,stringformat,8 * 2);
 				memset(stringformat,0,256 * 2);
 				Hex2Str(pstServerMsgUp->Msg.stData2Server.AppEUI,stringformat,8);
@@ -275,61 +235,10 @@ void *mjmqtt_client_routin(void *data)
                     json_object_object_add(pragma,"Data",json_object_new_string("")); /* data that encoded into Base64 */
                 }
 			}
-			else if(pstServerMsgUp->enMsgUpFramType == en_MsgUpFramConfirm)
-			{
-				json_object_object_add(pragma,"FrameType",json_object_new_string("UpConfirm"));
-				switch(pstServerMsgUp->Msg.stConfirm2Server.ClassType)
-				{
-					case 0:
-						json_object_object_add(pragma,"NodeType",json_object_new_string("Class A"));
-						break;
-					case 1:
-						json_object_object_add(pragma,"NodeType",json_object_new_string("Class B"));
-						break;
-					case 2:
-						json_object_object_add(pragma,"NodeType",json_object_new_string("Class C"));
-						break;
-				}
-				memset(stringformat,0,256 * 2);
-				Hex2Str(pstServerMsgUp->Msg.stConfirm2Server.DevEUI,stringformat,8);
-				json_object_object_add(pragma,"DevEUI",json_object_new_string(stringformat));
-				json_object_object_add(pragma,"NetAddr",json_object_new_int(pstServerMsgUp->Msg.stConfirm2Server.DevAddr));
-				switch(pstServerMsgUp->Msg.stConfirm2Server.enConfirm2Server)
-				{
-					case en_Confirm2ServerSuccess:
-						json_object_object_add(pragma,"Result",json_object_new_string("Trasmit Success"));
-						break;
-					case en_Confirm2ServerRadioBusy:
-						json_object_object_add(pragma,"Result",json_object_new_string("Radio Busy"));
-						break;
-					case en_Confirm2ServerOffline:
-						json_object_object_add(pragma,"Result",json_object_new_string("Not Active"));
-						break;
-					case en_Confirm2ServerTooLong:
-						json_object_object_add(pragma,"Result",json_object_new_string("Data Too Long"));
-						break;
-					case en_Confirm2ServerPortNotAllow:
-						json_object_object_add(pragma,"Result",json_object_new_string("Port Error"));
-						break;
-					case en_Confirm2ServerInLastDutyCycle:
-						json_object_object_add(pragma,"Result",json_object_new_string("Last Pkg Is Sending"));
-						break;
-					case en_Confirm2ServerNodeNoAck:
-						json_object_object_add(pragma,"Result",json_object_new_string("Node Have No Ack"));
-						break;
-					case en_Confirm2ServerNodeNotOnRxWindow:
-						json_object_object_add(pragma,"Result",json_object_new_string("Rx Windows off"));
-						break;
-					default:
-						json_object_object_add(pragma,"Result",json_object_new_string("Unkown Fault"));
-						break;
-				}
-				//json_object_object_add(pragma,"Rssi",json_object_new_int(pstServerMsgUp->Msg.stConfirm2Server.rssi));
-				//json_object_object_add(pragma,"Snr",json_object_new_double(pstServerMsgUp->Msg.stConfirm2Server.snr));
-			}
 			else
 			{
 				printf("%s ,%d\r\n",__func__,__LINE__);
+			    return;
 			}
 			//printf("%s, %d\r\n",__func__,__LINE__);
 			memset(senddata,0,sizeof(senddata));
@@ -338,7 +247,7 @@ void *mjmqtt_client_routin(void *data)
 			unsigned char topic[8 + 1 + 6 * 2 + 1 + 8 * 2 + 1 + 2 + 1 + 10] = {0};
 			//sprintf(topic,"%s,%s,%s,%s","LoRaWAN/",strmacaddr,"/","0123456789ABCDEF");
 			strcpy(topic,"LoRaWAN/Up/");
-			strcat(topic,strmacaddr);
+			strcat(topic,gateway_pragma.macaddress);
 			strcat(topic,"/");
 			strcat(topic,deveui);
 			

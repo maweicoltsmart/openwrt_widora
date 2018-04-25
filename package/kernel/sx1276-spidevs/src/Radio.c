@@ -244,27 +244,8 @@ void RadioRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t
             stRadioCfg_Rx.iqInverted,
             stRadioCfg_Rx.rxContinuous);
         Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
+        Radio.Rx( chip,RADIO_RX_TIMEOUT );
     }
-    else
-    {
-        SX1276SetRxConfig(chip,
-            stRadioCfg_Rx.modem,
-            stRadioCfg_Rx.bandwidth,
-            12,//stRadioCfg_Rx.datarate[chip],
-            stRadioCfg_Rx.coderate,
-            stRadioCfg_Rx.bandwidthAfc,
-            stRadioCfg_Rx.preambleLen,
-            stRadioCfg_Rx.symbTimeout,
-            stRadioCfg_Rx.fixLen,
-            stRadioCfg_Rx.payloadLen,
-            stRadioCfg_Rx.crcOn,
-            stRadioCfg_Rx.freqHopOn,
-            stRadioCfg_Rx.hopPeriod,
-            stRadioCfg_Rx.iqInverted,
-            stRadioCfg_Rx.rxContinuous);
-        Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[25]);
-    }
-    Radio.Rx( chip,RADIO_RX_TIMEOUT );
     DEBUG_OUTPUT_EVENT(chip, EV_RXCOMPLETE);
     printk("%s ,%d\r\n",__func__,chip);
     //DEBUG_OUTPUT_DATA(payload,size);
@@ -297,27 +278,8 @@ void RadioTxDone( int chip )
                 stRadioCfg_Rx.iqInverted,
                 stRadioCfg_Rx.rxContinuous);
         Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
+        Radio.Rx( chip,RADIO_RX_TIMEOUT );
     }
-    else
-    {
-        SX1276SetRxConfig(chip,
-            stRadioCfg_Rx.modem,
-            stRadioCfg_Rx.bandwidth,
-            12,//stRadioCfg_Rx.datarate[chip],
-            stRadioCfg_Rx.coderate,
-            stRadioCfg_Rx.bandwidthAfc,
-            stRadioCfg_Rx.preambleLen,
-            stRadioCfg_Rx.symbTimeout,
-            stRadioCfg_Rx.fixLen,
-            stRadioCfg_Rx.payloadLen,
-            stRadioCfg_Rx.crcOn,
-            stRadioCfg_Rx.freqHopOn,
-            stRadioCfg_Rx.hopPeriod,
-            stRadioCfg_Rx.iqInverted,
-            stRadioCfg_Rx.rxContinuous);
-        Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[25]);
-    }
-    Radio.Rx( chip,RADIO_RX_TIMEOUT );
     DEBUG_OUTPUT_EVENT(chip,EV_TXCOMPLETE);
     printk("%s, %d\r\n",__func__,chip);
     //State = TX;
@@ -345,28 +307,8 @@ void RadioTxTimeout( int chip )
                 stRadioCfg_Rx.iqInverted,
                 stRadioCfg_Rx.rxContinuous);
         Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
+        Radio.Rx( chip,RADIO_RX_TIMEOUT );
     }
-    else
-    {
-        SX1276SetRxConfig(chip,
-            stRadioCfg_Rx.modem,
-            stRadioCfg_Rx.bandwidth,
-            12,//stRadioCfg_Rx.datarate[chip],
-            stRadioCfg_Rx.coderate,
-            stRadioCfg_Rx.bandwidthAfc,
-            stRadioCfg_Rx.preambleLen,
-            stRadioCfg_Rx.symbTimeout,
-            stRadioCfg_Rx.fixLen,
-            stRadioCfg_Rx.payloadLen,
-            stRadioCfg_Rx.crcOn,
-            stRadioCfg_Rx.freqHopOn,
-            stRadioCfg_Rx.hopPeriod,
-            stRadioCfg_Rx.iqInverted,
-            stRadioCfg_Rx.rxContinuous);
-        Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[25]);
-    }
-
-    Radio.Rx( chip,RADIO_RX_TIMEOUT );
 }
 
 void RadioRxTimeout( int chip )
@@ -391,28 +333,8 @@ void RadioRxTimeout( int chip )
                 stRadioCfg_Rx.iqInverted,
                 stRadioCfg_Rx.rxContinuous);
         Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
+        Radio.Rx( chip,RADIO_RX_TIMEOUT );
     }
-    else
-    {
-        SX1276SetRxConfig(chip,
-            stRadioCfg_Rx.modem,
-            stRadioCfg_Rx.bandwidth,
-            12,//stRadioCfg_Rx.datarate[chip],
-            stRadioCfg_Rx.coderate,
-            stRadioCfg_Rx.bandwidthAfc,
-            stRadioCfg_Rx.preambleLen,
-            stRadioCfg_Rx.symbTimeout,
-            stRadioCfg_Rx.fixLen,
-            stRadioCfg_Rx.payloadLen,
-            stRadioCfg_Rx.crcOn,
-            stRadioCfg_Rx.freqHopOn,
-            stRadioCfg_Rx.hopPeriod,
-            stRadioCfg_Rx.iqInverted,
-            stRadioCfg_Rx.rxContinuous);
-        Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[25]);
-    }
-
-    Radio.Rx( chip,RADIO_RX_TIMEOUT );
 }
 
 void RadioRxError( int chip )
@@ -440,28 +362,8 @@ void RadioRxError( int chip )
                 stRadioCfg_Rx.iqInverted,
                 stRadioCfg_Rx.rxContinuous);
         Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
+        Radio.Rx( chip,RADIO_RX_TIMEOUT );
     }
-    else
-    {
-        SX1276SetRxConfig(chip,
-            stRadioCfg_Rx.modem,
-            stRadioCfg_Rx.bandwidth,
-            12,//stRadioCfg_Rx.datarate[chip],
-            stRadioCfg_Rx.coderate,
-            stRadioCfg_Rx.bandwidthAfc,
-            stRadioCfg_Rx.preambleLen,
-            stRadioCfg_Rx.symbTimeout,
-            stRadioCfg_Rx.fixLen,
-            stRadioCfg_Rx.payloadLen,
-            stRadioCfg_Rx.crcOn,
-            stRadioCfg_Rx.freqHopOn,
-            stRadioCfg_Rx.hopPeriod,
-            stRadioCfg_Rx.iqInverted,
-            stRadioCfg_Rx.rxContinuous);
-        Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[25]);
-    }
-
-    Radio.Rx( chip,RADIO_RX_TIMEOUT );
     printk("%s ,%d\r\n",__func__,chip);
 }
 

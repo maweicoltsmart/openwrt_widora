@@ -120,6 +120,7 @@ int LoRaWANRxDataProcess(void *data){
 				case FRAME_TYPE_DATA_UNCONFIRMED_UP:
 				case FRAME_TYPE_DATA_CONFIRMED_UP:
                     stServerMsgUp.Msg.stData2Server.size = 0;
+                    port = 0xff;
 					stFrameDataUp.macHdr.Value = stRadioRxList.stRadioRx.payload[0];
 					stFrameDataUp.frameHdr.DevAddr = *(uint32_t*)&stRadioRxList.stRadioRx.payload[1];
 					stFrameDataUp.frameHdr.Fctrl.Value = stRadioRxList.stRadioRx.payload[1 + 4];
@@ -162,7 +163,8 @@ int LoRaWANRxDataProcess(void *data){
 					}
 					if(stFrameDataUp.frameHdr.Fctrl.Bits.Ack)
 					{
-					    stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].stTxData.needack = false;
+					    //stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].stTxData.needack = false;
+                        printk("Ack :%d\r\n",stFrameDataUp.frameHdr.DevAddr);
 					    //stFrameDataUp.frameHdr.Fctrl.Bits.Ack = false;
 						/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 						memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[stFrameDataUp.frameHdr.DevAddr].stDevNetParameter.DevEUI,8);
@@ -175,6 +177,7 @@ int LoRaWANRxDataProcess(void *data){
 						frameLen = ( stRadioRxList.stRadioRx.size - 4 ) - appPayloadStartIndex;
 						if(frameLen > 0)
 						{
+						    printk("Data :%d\r\n",stFrameDataUp.frameHdr.DevAddr);
 							stServerMsgUp.Msg.stData2Server.payload = payloadTx;
 							
                             if( port == 0 )
@@ -227,6 +230,7 @@ int LoRaWANRxDataProcess(void *data){
 					stServerMsgUp.Msg.stData2Server.fPort = port;
 					stServerMsgUp.Msg.stData2Server.rssi = stRadioRxList.stRadioRx.rssi;
 					stServerMsgUp.Msg.stData2Server.snr = stRadioRxList.stRadioRx.snr;
+                    stServerMsgUp.Msg.stData2Server.sn = stFrameDataUp.frameHdr.Fcnt;
 					stServerMsgUp.Msg.stData2Server.size = frameLen;
 					ServerMsgUpListAdd(&stServerMsgUp);
 
@@ -403,6 +407,7 @@ void LoRaWANDataDownTimer1WorkQueue(struct work_struct *p_work)
     mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
+    #if 0
 	if(stNodeDatabase[pstMyWork->param].stTxData.needack)
 	{
 		stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANDataDownWaitAckTimer2Callback;
@@ -414,6 +419,7 @@ void LoRaWANDataDownTimer1WorkQueue(struct work_struct *p_work)
     {
         stNodeDatabase[pstMyWork->param].stTxData.len = 0;
     }
+    #endif
 }
 
 void LoRaWANDataDownTimer2WorkQueue(struct work_struct *p_work)
@@ -469,7 +475,7 @@ void LoRaWANDataDownTimer2WorkQueue(struct work_struct *p_work)
     mutex_unlock(&RadioChipMutex[3]);
 	//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
-	
+	#if 0
 	if(stNodeDatabase[pstMyWork->param].stTxData.needack)
 	{
 		stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANDataDownWaitAckTimer2Callback;
@@ -481,6 +487,7 @@ void LoRaWANDataDownTimer2WorkQueue(struct work_struct *p_work)
     {
         stNodeDatabase[pstMyWork->param].stTxData.len = 0;
     }
+    #endif
 }
 
 void LoRaWANDataDownWaitAckTimer2WorkQueue(struct work_struct *p_work)
@@ -551,6 +558,7 @@ void LoRaWANDataDownClassCTimer1WorkQueue(struct work_struct *p_work)
     mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
+    #if 0
 	if(stNodeDatabase[pstMyWork->param].stTxData.needack)
 	{
 		stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANDataDownClassCWaitAckTimer2Callback;
@@ -562,6 +570,7 @@ void LoRaWANDataDownClassCTimer1WorkQueue(struct work_struct *p_work)
     {
         stNodeDatabase[pstMyWork->param].stTxData.len = 0;
     }
+    #endif
 }
 
 void LoRaWANDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
@@ -627,7 +636,7 @@ void LoRaWANDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
     mutex_unlock(&RadioChipMutex[3]);
     //stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
-	
+	#if 0
 	if(stNodeDatabase[pstMyWork->param].stTxData.needack)
 	{
 		stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANDataDownClassCWaitAckTimer2Callback;
@@ -639,6 +648,7 @@ void LoRaWANDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
     {
         stNodeDatabase[pstMyWork->param].stTxData.len = 0;
     }
+    #endif
 }
 void LoRaWANRadomDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 {
@@ -704,7 +714,7 @@ void LoRaWANRadomDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
     mutex_unlock(&RadioChipMutex[3]);
     //stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
-	
+	#if 0
 	if(stNodeDatabase[pstMyWork->param].stTxData.needack)
 	{
 		stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANDataDownClassCWaitAckTimer2Callback;
@@ -716,6 +726,7 @@ void LoRaWANRadomDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
     {
         stNodeDatabase[pstMyWork->param].stTxData.len = 0;
     }
+    #endif
 }
 
 void LoRaWANDataDownClassCWaitAckTimer2WorkQueue(struct work_struct *p_work)
@@ -723,6 +734,9 @@ void LoRaWANDataDownClassCWaitAckTimer2WorkQueue(struct work_struct *p_work)
     pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
 	st_ServerMsgUp stServerMsgUp;
 	del_timer(&stNodeDatabase[pstMyWork->param].timer2);
+    //stNodeDatabase[pstMyWork->param].stTxData.needack = false;
+    stNodeDatabase[pstMyWork->param].stTxData.len = 0;
+    #if 0
 	if(stNodeDatabase[pstMyWork->param].stTxData.needack)
 	{
         stNodeDatabase[pstMyWork->param].stTxData.classcjiffies = jiffies;
@@ -736,6 +750,7 @@ void LoRaWANDataDownClassCWaitAckTimer2WorkQueue(struct work_struct *p_work)
     {
         stNodeDatabase[pstMyWork->param].stTxData.len = 0;
     }
+    #endif
 	/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 	memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstMyWork->param].stDevNetParameter.DevEUI,8);
 	stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerNodeNoAck;
