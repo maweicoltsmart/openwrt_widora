@@ -1,14 +1,14 @@
 #!/bin/sh /etc/rc.common
-START=97
+START=99
+NAME=node-manage
 start() {
-	service_start /bin/node-manage
+	/bin/node-manage&
 }
 
 stop() {
-	service_stop /bin/node-manage
+	killall node-manage
 }
-
 restart() {
-	service_stop /bin/node-manage
-	service_start /bin/node-manage
+	killall node-manage
+	/bin/node-manage&
 }
