@@ -1,5 +1,5 @@
 #!/bin/sh /etc/rc.common
 START=99
 start(){
-	/etc/ppp/ppp-on
+	/etc/ppp/ppp-on&
 }
