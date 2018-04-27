@@ -272,7 +272,7 @@ int main(int argc ,char *argv[])
     //ret = pthread_create(&tcp_client_handle, NULL, tcp_client_routin, &fd);
     //ret = pthread_create(&tcp_server_handle, NULL, tcp_server_routin, &fd);
     ret = pthread_create(&mqtt_client_handle, NULL, mjmqtt_client_routin, &fd);
-    ret = pthread_create(&mjcheckfirewarecopy_handle, NULL, mjcheckfirewarecopy_routin, &fd);
+    //ret = pthread_create(&mjcheckfirewarecopy_handle, NULL, mjcheckfirewarecopy_routin, &fd);
 #define RF_FREQUENCY                                470000000 // Hz
     //SX1276SetChannel(0,fd,RF_FREQUENCY);
     //SX1276SetChannel(1,fd,RF_FREQUENCY + FREQ_STEP * 10);

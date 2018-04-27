@@ -21,7 +21,7 @@
 
 bool session = true;
 extern int fd_cdev;
-
+extern unsigned char strwifimacaddr[];
 void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mosquitto_message *message)
 {
 	//int len;
@@ -105,11 +105,20 @@ void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mo
 void my_connect_callback(struct mosquitto *mosq, void *userdata, int result)
 {
     int i;
-    unsigned char topic[8 + 1 + 6 * 2 + 2 + 1 + 10] = {0};
+    unsigned char topic[8 + 1 + 6 * 2 + 2 + 1 + 10 + 10 + 10] = {0};
     if(!result){
+        memset(topic,0,sizeof(topic));
+        
         /* Subscribe to broker information topics on successful connect. */
-        strcpy(topic,"LoRaWAN/Down/");
-        strcat(topic,gateway_pragma.macaddress);
+        if(!strcmp(gateway_pragma.username,"MJ-Modem") && !strcmp(gateway_pragma.password,"www.colt.xin") && !strcmp(gateway_pragma.server_ip,"101.132.97.241") && (gateway_pragma.server_port == 1883))
+        {
+            strcpy(topic,"LoRaWAN/Test/Down/");
+        }
+        else
+        {
+            strcpy(topic,"LoRaWAN/Down/");
+        }
+        strcat(topic,strwifimacaddr);
         strcat(topic,"/#");
         mosquitto_subscribe(mosq, NULL, topic, 2);
         printf("topic = %s\r\n",topic);
@@ -244,10 +253,17 @@ void *mjmqtt_client_routin(void *data)
 			memset(senddata,0,sizeof(senddata));
 			strcpy(senddata,json_object_to_json_string(pragma));
 			/*发布消息*/
-			unsigned char topic[8 + 1 + 6 * 2 + 1 + 8 * 2 + 1 + 2 + 1 + 10] = {0};
+			unsigned char topic[8 + 1 + 6 * 2 + 1 + 8 * 2 + 1 + 2 + 1 + 10 + 10] = {0};
 			//sprintf(topic,"%s,%s,%s,%s","LoRaWAN/",strmacaddr,"/","0123456789ABCDEF");
-			strcpy(topic,"LoRaWAN/Up/");
-			strcat(topic,gateway_pragma.macaddress);
+			if(!strcmp(gateway_pragma.username,"MJ-Modem") && !strcmp(gateway_pragma.password,"www.colt.xin") && !strcmp(gateway_pragma.server_ip,"101.132.97.241") && (gateway_pragma.server_port == 1883))
+            {
+                strcpy(topic,"LoRaWAN/Test/Up/");
+            }
+            else
+            {
+			    strcpy(topic,"LoRaWAN/Up/");
+            }
+			strcat(topic,strwifimacaddr);
 			strcat(topic,"/");
 			strcat(topic,deveui);
 
