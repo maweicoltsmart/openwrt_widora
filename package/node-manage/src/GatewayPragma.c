@@ -54,7 +54,7 @@ void GetGatewayPragma(void)
     {
         pragma = json_object_new_object();
         json_object_object_add(pragma,"SoftWareVersion",json_object_new_string(VERSION_STR));
-        json_object_object_add(pragma,"MacAddress",json_object_new_string(strwifimacaddr));
+        json_object_object_add(pragma,"MacAddress",json_object_new_string(streth0macaddr));
         json_object_object_add(pragma,"UserName",json_object_new_string("MJ-Modem"));
         json_object_object_add(pragma,"Password",json_object_new_string("www.colt.xin"));
         json_object_object_add(pragma,"NetType",json_object_new_string("Private"));

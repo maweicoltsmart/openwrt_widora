@@ -118,7 +118,7 @@ void my_connect_callback(struct mosquitto *mosq, void *userdata, int result)
         {
             strcpy(topic,"LoRaWAN/Down/");
         }
-        strcat(topic,strwifimacaddr);
+        strcat(topic,gateway_pragma.macaddress);
         strcat(topic,"/#");
         mosquitto_subscribe(mosq, NULL, topic, 2);
         printf("topic = %s\r\n",topic);
@@ -263,7 +263,7 @@ void *mjmqtt_client_routin(void *data)
             {
 			    strcpy(topic,"LoRaWAN/Up/");
             }
-			strcat(topic,strwifimacaddr);
+			strcat(topic,gateway_pragma.macaddress);
 			strcat(topic,"/");
 			strcat(topic,deveui);
 

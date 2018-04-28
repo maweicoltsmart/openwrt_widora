@@ -236,34 +236,50 @@ int main(int argc ,char *argv[])
     struct ifreq req;
     int err,i;
     int s=socket(AF_INET,SOCK_DGRAM,0); //internet协议族的数据报类型套接口
+    readwifimacadddr:
+    printf("readwifimacadddr\r\n");
     strcpy(req.ifr_name,device); //将设备名作为输入参数传入
     err=ioctl(s,SIOCGIFHWADDR,&req); //执行取MAC地址操作
-    close(s);
-    if(err != -1)
+    //close(s);
+    if(err < 0)
     {
-         memcpy(macaddr,req.ifr_hwaddr.sa_data,6); //取输出的MAC地址
-         sprintf(&strwifimacaddr[0 * 2],"%02X",macaddr[0]);
-         sprintf(&strwifimacaddr[1 * 2],"%02X",macaddr[1]);
-         sprintf(&strwifimacaddr[2 * 2],"%02X",macaddr[2]);
-         sprintf(&strwifimacaddr[3 * 2],"%02X",macaddr[3]);
-         sprintf(&strwifimacaddr[4 * 2],"%02X",macaddr[4]);
-         sprintf(&strwifimacaddr[5 * 2],"%02X",macaddr[5]);
-         printf("%s\r\n",strwifimacaddr);
+        sleep(1);
+        goto readwifimacadddr;
+         
     }
+    else
+    {
+        memcpy(macaddr,req.ifr_hwaddr.sa_data,6); //取输出的MAC地址
+        sprintf(&strwifimacaddr[0 * 2],"%02X",macaddr[0]);
+        sprintf(&strwifimacaddr[1 * 2],"%02X",macaddr[1]);
+        sprintf(&strwifimacaddr[2 * 2],"%02X",macaddr[2]);
+        sprintf(&strwifimacaddr[3 * 2],"%02X",macaddr[3]);
+        sprintf(&strwifimacaddr[4 * 2],"%02X",macaddr[4]);
+        sprintf(&strwifimacaddr[5 * 2],"%02X",macaddr[5]);
+        printf("%s\r\n",strwifimacaddr);
+    }
+    readeth0macaddr:
+    printf("readeth0macaddr\r\n");
     device="eth0";//"eth0"; //eth0是网卡设备名
     strcpy(req.ifr_name,device); //将设备名作为输入参数传入
     err=ioctl(s,SIOCGIFHWADDR,&req); //执行取MAC地址操作
     close(s);
-    if(err != -1)
+    if(err < 0)
     {
-         memcpy(macaddr,req.ifr_hwaddr.sa_data,6); //取输出的MAC地址
-         sprintf(&streth0macaddr[0 * 2],"%02X",macaddr[0]);
-         sprintf(&streth0macaddr[1 * 2],"%02X",macaddr[1]);
-         sprintf(&streth0macaddr[2 * 2],"%02X",macaddr[2]);
-         sprintf(&streth0macaddr[3 * 2],"%02X",macaddr[3]);
-         sprintf(&streth0macaddr[4 * 2],"%02X",macaddr[4]);
-         sprintf(&streth0macaddr[5 * 2],"%02X",macaddr[5]);
-         printf("%s\r\n",streth0macaddr);
+        sleep(1);
+        goto readeth0macaddr;
+        
+    }
+    else
+    {
+        memcpy(macaddr,req.ifr_hwaddr.sa_data,6); //取输出的MAC地址
+        sprintf(&streth0macaddr[0 * 2],"%02X",macaddr[0]);
+        sprintf(&streth0macaddr[1 * 2],"%02X",macaddr[1]);
+        sprintf(&streth0macaddr[2 * 2],"%02X",macaddr[2]);
+        sprintf(&streth0macaddr[3 * 2],"%02X",macaddr[3]);
+        sprintf(&streth0macaddr[4 * 2],"%02X",macaddr[4]);
+        sprintf(&streth0macaddr[5 * 2],"%02X",macaddr[5]);
+        printf("%s\r\n",streth0macaddr);
     }
     serverpkgformat();
 	LoRaMacInit();

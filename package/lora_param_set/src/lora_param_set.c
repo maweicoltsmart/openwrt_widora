@@ -147,10 +147,17 @@ int main(int argc, char*argv[])
             struct ifreq req;
             int err,i;
             int s=socket(AF_INET,SOCK_DGRAM,0); //internet协议族的数据报类型套接口
+            readwifimacadddr:
             strcpy(req.ifr_name,device); //将设备名作为输入参数传入
             err=ioctl(s,SIOCGIFHWADDR,&req); //执行取MAC地址操作
-            close(s);
-            if(err != -1)
+            //close(s);
+            if(err < 0)
+            {
+                sleep(1);
+                goto readwifimacadddr;
+                 
+            }
+            else
             {
                  memcpy(macaddr,req.ifr_hwaddr.sa_data,6); //取输出的MAC地址
                  sprintf(&strwifimacaddr[0 * 2],"%02X",macaddr[0]);
@@ -161,11 +168,18 @@ int main(int argc, char*argv[])
                  sprintf(&strwifimacaddr[5 * 2],"%02X",macaddr[5]);
                  printf("%s\r\n",strwifimacaddr);
             }
+            readeth0macaddr:
             device="eth0";//"eth0"; //eth0是网卡设备名
             strcpy(req.ifr_name,device); //将设备名作为输入参数传入
             err=ioctl(s,SIOCGIFHWADDR,&req); //执行取MAC地址操作
             close(s);
-            if(err != -1)
+            if(err < 0)
+            {
+                sleep(1);
+                goto readeth0macaddr;
+                
+            }
+            else
             {
                  memcpy(macaddr,req.ifr_hwaddr.sa_data,6); //取输出的MAC地址
                  sprintf(&streth0macaddr[0 * 2],"%02X",macaddr[0]);
@@ -178,7 +192,7 @@ int main(int argc, char*argv[])
             }
             
             json_object_object_add(pragma,"SoftWareVersion",json_object_new_string(VERSION_STR));
-            json_object_object_add(pragma,"MacAddress",json_object_new_string(strwifimacaddr));
+            json_object_object_add(pragma,"MacAddress",json_object_new_string(streth0macaddr));
             json_object_object_add(pragma,"UserName",json_object_new_string("MJ-Modem"));
             json_object_object_add(pragma,"Password",json_object_new_string("www.colt.xin"));
 
