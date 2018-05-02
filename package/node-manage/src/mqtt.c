@@ -52,38 +52,45 @@ void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mo
 				json_object_object_get_ex(pragma,"NetAddr",&obj);
             	if((obj == NULL) && (!json_object_is_type(&obj,json_type_int)))
             	{
+            		json_object_put(pragma);
                     return;
             	}
             	pstServerMsgDown->Msg.stData2Node.DevAddr = json_object_get_int(obj);
 				json_object_object_get_ex(pragma,"Port",&obj);
             	if((obj == NULL) && (!json_object_is_type(&obj,json_type_int)))
             	{
+            		json_object_put(pragma);
                     return;
             	}
             	pstServerMsgDown->Msg.stData2Node.fPort = json_object_get_int(obj);
             	if((pstServerMsgDown->Msg.stData2Node.fPort == 0) || (pstServerMsgDown->Msg.stData2Node.fPort > 223))
             	{
+            		json_object_put(pragma);
                 	return;
             	}
 				json_object_object_get_ex(pragma,"ConfirmRequest",&obj);
 	            if((obj == NULL) && (!json_object_is_type(&obj,json_type_boolean)))
 	            {
+	            	json_object_put(pragma);
 	            	return;
 	            }
 	            pstServerMsgDown->Msg.stData2Node.CtrlBits.AckRequest = json_object_get_boolean(obj);
 				json_object_object_get_ex(pragma,"Confirm",&obj);
 	            if((obj == NULL) && (!json_object_is_type(&obj,json_type_boolean)))
 	            {
+	            	json_object_put(pragma);
 	            	return;
 	            }
 	            pstServerMsgDown->Msg.stData2Node.CtrlBits.Ack = json_object_get_boolean(obj);
 				json_object_object_get_ex(pragma,"Data",&obj);
             	if((obj == NULL) && (!json_object_is_type(&obj,json_type_string)))
             	{
+            		json_object_put(pragma);
                     return;
             	}
                 if(strlen(json_object_get_string(obj)) > 51 * 2)
                 {
+                	json_object_put(pragma);
                     return;
                 }
             	memset(stringformat,0,256 * 2);
@@ -108,7 +115,7 @@ void my_connect_callback(struct mosquitto *mosq, void *userdata, int result)
     unsigned char topic[8 + 1 + 6 * 2 + 2 + 1 + 10 + 10 + 10] = {0};
     if(!result){
         memset(topic,0,sizeof(topic));
-        
+
         /* Subscribe to broker information topics on successful connect. */
         if(!strcmp(gateway_pragma.username,"MJ-Modem") && !strcmp(gateway_pragma.password,"www.colt.xin") && !strcmp(gateway_pragma.server_ip,"101.132.97.241") && (gateway_pragma.server_port == 1883))
         {
