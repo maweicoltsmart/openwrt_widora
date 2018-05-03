@@ -13,7 +13,7 @@
 #include "Radio.h"
 #include "LoRaMac.h"
 
-#define MAX_NODE    2000
+#define MAX_NODE    3000
 
 typedef struct
 {

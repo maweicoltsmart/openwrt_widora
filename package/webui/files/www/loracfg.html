@@ -8,7 +8,7 @@
     <meta name="author" content="">
     <link rel="shortcut icon" href="assets/ico/favicon.ico">
 
-    <title>Colt WIFI SET</title>
+    <title>Widora WIFI SET</title>
 
     <!-- Bootstrap core CSS -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -91,6 +91,15 @@
    }
 
 
+  function setDatarateAfterChannel(channelObj){
+   	var channelIndex=channelObj.name.split('_')[1];
+   	var channelvalue=channelObj.value;
+   	var channelMode=channelvalue %6;
+   	
+   	$("#datarate_"+channelIndex).text("DR_"+channelMode);
+   	
+  }
+
 
    function widoraset(){
 
@@ -106,10 +115,12 @@
     //check_channel($("#channel_2"));
 
     if(isLegal){
-    var init_info='{"NetType":"Private","APPKEY":"2B7E151628AED2A6ABF7158809CF4F3C","NetID":"789ABC","serverip":"192.168.1.100","serverport":32500,"radio":[{"index":0,"channel":0,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"},{"index":0,"channel":2,"datarate":"DR_0"}]}';
+    var init_info='{"SoftWareVersion":"Version 1.2 (Apr 24 2018 14:09:23)","MacAddress":"001122334455","UserName":"MJ-Modem","Password":"www.colt.xin","NetType":"Private","APPKEY":"2B7E151628AED2A6ABF7158809CF4F3C","NetID":"789ABC","serverip":"192.168.1.100","serverport":32500,"radio":[{"index":0,"channel":0,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"},{"index":0,"channel":2,"datarate":"DR_0"}]}';
 
     var init_info_json =JSON.parse(init_info);
 
+    init_info_json.UserName =$("#UserName").val(); 
+    init_info_json.Password =$("#Password").val(); 
    	init_info_json.NetType =$("#NetType").val();
    	init_info_json.APPKEY =$("#APPKEY").val();
    	init_info_json.NetID =$("#NetID").val();
@@ -120,7 +131,8 @@
    	for(var i=0;i<radioArray.length;i++){
    		 radioArray[i].index = $("#index_"+i).text();
    		 radioArray[i].channel =$("#channel_"+i).val();
-   		 radioArray[i].datarate=$("#datarate_"+i).val();
+   		 //radioArray[i].datarate=$("#datarate_"+i).val();
+   		 radioArray[i].datarate=$("#datarate_"+i).text();
     }
 
 
@@ -143,6 +155,40 @@
     }
    	//alert(JSON.stringify(init_info_json) );
   }
+   
+    function factory_reset(){
+     	
+     	$.ajax({
+          type: "GET",
+          url: '/cgi-bin/lora_factory_reset',
+          dataType: "json",
+          contentType: "application/json; charset=utf-8",
+          success: function(data) {
+              alert('恢复成功');
+          },
+          error: function(XMLHttpRequest, textStatus, errorThrown) {
+            alert("恢复出错" + error.responseText);
+             //alert('readyState:'+XMLHttpRequest.readyState + 'status:'+XMLHttpRequest.status + 'responseText:'+XMLHttpRequest.responseText);
+          }
+        });
+    }
+     
+    function node_clean(){
+     	
+     	$.ajax({
+          type: "GET",
+          url: '/cgi-bin/lora_node_clean',
+          dataType: "json",
+          contentType: "application/json; charset=utf-8",
+          success: function(data) {
+              alert('清除成功');
+          },
+          error: function(XMLHttpRequest, textStatus, errorThrown) {
+            alert("清除出错" + error.responseText);
+             //alert('readyState:'+XMLHttpRequest.readyState + 'status:'+XMLHttpRequest.status + 'responseText:'+XMLHttpRequest.responseText);
+          }
+        });
+    }
 
  	</script>
   </head>
@@ -153,6 +199,27 @@
 
             <fieldset>
               <legend>LoRa设置</legend>
+                
+              <div class="form-group">
+                <label for="SoftWareVersion">SoftWareVersion：</label>
+                <span id="SoftWareVersion" name="SoftWareVersion"></span>
+              </div> 
+               
+              <div class="form-group">
+                <label for="MacAddress">MacAddress：</label>
+                <span id="MacAddress" name="MacAddress"></span>
+              </div>
+               
+              <div class="form-group">
+                <label for="UserName">UserName</label>
+                <input id="UserName" type="text" name="UserName" class="form-control"/>
+              </div> 
+               
+              <div class="form-group">
+                <label for="Password">Password</label>
+                <input id="Password" type="text" name="Password" class="form-control"/>
+              </div> 
+              
 
                <div class="form-group">
                 <label for="NetType">NetType</label>
@@ -195,58 +262,53 @@
 	          <tbody>
 		          <tr>
 			           <td id="index_0"> </td>
-			           <td><input id="channel_0" type="text" name="channel_0" class="form-control" /></td>
-			           <td><select id="datarate_0" name="datarate_0" class="form-control" data-live-search="true">
+			           <td><input id="channel_0" type="text" name="channel_0" class="form-control" onblur="setDatarateAfterChannel(this);"/></td>
+			           <!-- <td><select id="datarate_0" name="datarate_0" class="form-control" data-live-search="true">
                   <option value="DR_0">DR_0</option>
                   <option value="DR_1">DR_1</option>
                   <option value="DR_2">DR_2</option>
                   <option value="DR_3">DR_3</option>
                   <option value="DR_4">DR_4</option>
                   <option value="DR_5">DR_5</option>
-                </select></td>
+                </select></td> -->
+                 
+                <td id="datarate_0"></td>
+                   	
+
 		          </tr>
 
-		            <tr>
+		         <tr>
 			           <td id="index_1"> </td>
-			           <td><input id="channel_1" type="text" name="channel_1" class="form-control" /></td>
-			           <td><select id="datarate_1" name="datarate_1" class="form-control" data-live-search="true">
-                  <option value="DR_0">DR_0</option>
-                  <option value="DR_1">DR_1</option>
-                  <option value="DR_2">DR_2</option>
-                  <option value="DR_3">DR_3</option>
-                  <option value="DR_4">DR_4</option>
-                  <option value="DR_5">DR_5</option>
-                </select></td>
+			           <td><input id="channel_1" type="text" name="channel_1" class="form-control" onblur="setDatarateAfterChannel(this);"/></td>
+			           <td id="datarate_1"> </td>
 		          </tr>
 
-		            <tr>
+		          <tr>
 			           <td id="index_2"> </td>
-			           <td><input id="channel_2" type="text" name="channel_2" class="form-control" /></td>
-			           <td><select id="datarate_2" name="datarate_2" class="form-control" data-live-search="true">
-                  <option value="DR_0">DR_0</option>
-                  <option value="DR_1">DR_1</option>
-                  <option value="DR_2">DR_2</option>
-                  <option value="DR_3">DR_3</option>
-                  <option value="DR_4">DR_4</option>
-                  <option value="DR_5">DR_5</option>
-                </select></td>
+			           <td><input id="channel_2" type="text" name="channel_2" class="form-control" onblur="setDatarateAfterChannel(this);"/></td>
+			           <td id="datarate_2"> </td>
+		          </tr>
+		           
+		          <tr>
+			           <td id="index_3">3</td>
+			            <td id="channel_3">25</td> 
+			           <td id="datarate_3">DR_0</td>
 		          </tr>
 
-                <tr>
-                 <td id="index_3">3</td>
-                 <td><label> 25</label>
-                  <p> </p></td>
-                 <td><label> DR_0</label>
-                  <p> </p></td>
-              </tr>
 
 	          </tbody>
            </table>
 
 
               <div style="margin: 20px 0;">
+               	&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;
                 <button type="button" class="btn btn-primary" onclick="widoraset();" >提交修改</button>
-              </div>
+                 &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;
+                <button type="button" class="btn btn-primary" onclick="factory_reset();" >恢复出厂设置</button>
+                 &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;
+                <button type="button" class="btn btn-primary" onclick="node_clean();" >清除节点信息</button>
+              </div> 
+               
             </fieldset>
           </form>
         </div>
@@ -266,8 +328,12 @@
         url: "/cgi-bin/lora_param_set",
         dataType: "json",
         contentType: "application/json; charset=utf-8",
-        success: function(json) {
-
+        success: function(json) {	
+         	
+         	  $("#SoftWareVersion").html(json.SoftWareVersion) ; 
+         	  $("#MacAddress").html(json.MacAddress) ;
+            $("#UserName").val(json.UserName) ;
+            $("#Password").val(json.Password) ;
 
 
            	$("#NetType").val(json.NetType) ;
@@ -279,13 +345,15 @@
 
            	var radioArray=json.radio;
            	for(var i=0;i<radioArray.length;i++){
-           		$("#index_"+i).text(radioArray[i].index);
+           		$("#index_"+i).text(radioArray[i].index);;
            		$("#channel_"+i).val(radioArray[i].channel);
-           		$("#datarate_"+i).val(radioArray[i].datarate);
+           	  //$("#datarate_"+i).val(radioArray[i].datarate);
+           	  $("#datarate_"+i).text('DR_'+radioArray[i].channel%6);
            	}
         },
         error: function(error) {
           //alert("调用出错" + error.responseText);
+           
         }
       });
 
