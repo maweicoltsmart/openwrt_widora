@@ -81,10 +81,11 @@ void NodeDatabaseReload(void)
     len = vfs_read(fp,(char *)stNodeInfoToSave, sizeof(st_NodeInfoToSave) * node_cnt, &pos);
 	filp_close(fp,NULL);
     set_fs(fs);
-    if((len < sizeof(st_NodeInfoToSave) * node_cnt) || (crc != Crc16((uint8_t *)stNodeInfoToSave,sizeof(st_NodeInfoToSave) * node_cnt)))
+    return;
+    //if((len < sizeof(st_NodeInfoToSave) * node_cnt) || (crc != Crc16((uint8_t *)stNodeInfoToSave,sizeof(st_NodeInfoToSave) * node_cnt)))
     {
-    	printk("%s ,%d ,%d\r\n",__func__,len,sizeof(st_NodeInfoToSave) * node_cnt);
-		printk("%s ,%d ,%d\r\n",__func__,crc,Crc16((uint8_t *)stNodeInfoToSave,sizeof(st_NodeInfoToSave) * node_cnt));
+    	//printk("%s ,%d ,%d\r\n",__func__,len,sizeof(st_NodeInfoToSave) * node_cnt);
+		//printk("%s ,%d ,%d\r\n",__func__,crc,Crc16((uint8_t *)stNodeInfoToSave,sizeof(st_NodeInfoToSave) * node_cnt));
 resetdatabase:
     	node_cnt = 0;
     	memset(stNodeInfoToSave,0,sizeof(stNodeInfoToSave));
@@ -109,7 +110,7 @@ void NodeDatabaseRestore(uint32_t addr)
     set_fs(KERNEL_DS);
 
     pos = 0;
-	crc = Crc16((uint8_t *)stNodeInfoToSave,sizeof(st_NodeInfoToSave) * node_cnt);
+	crc = 0;//Crc16((uint8_t *)stNodeInfoToSave,sizeof(st_NodeInfoToSave) * node_cnt);
     len = vfs_write(fp,(char *)&crc, sizeof(crc), &pos);
     if(len < sizeof(crc))
     {

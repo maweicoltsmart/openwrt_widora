@@ -205,7 +205,7 @@ int main(int argc, char*argv[])
             Hex2Str(gateway_pragma.NetID,byte,3);
             json_object_object_add(pragma,"NetID",json_object_new_string(byte));
             json_object_object_add(pragma,"serverip",json_object_new_string("101.132.97.241"));
-            json_object_object_add(pragma,"serverport",json_object_new_string("32500"));
+            json_object_object_add(pragma,"serverport",json_object_new_string("1883"));
 
             json_object_object_add(pragma,"radio",array = json_object_new_array());
             const char* drname[] = {"DR_0","DR_1","DR_2","DR_3","DR_4","DR_5"};
@@ -213,8 +213,8 @@ int main(int argc, char*argv[])
             {
                 json_object_array_add(array,chip=json_object_new_object());
                 json_object_object_add(chip,"index",json_object_new_int(loop));
-                json_object_object_add(chip,"channel",json_object_new_int(loop));
-                json_object_object_add(chip,"datarate",json_object_new_string(drname[loop]));
+                json_object_object_add(chip,"channel",json_object_new_int(loop * 6));
+                json_object_object_add(chip,"datarate",json_object_new_string(drname[0]));
             }
             json_object_to_file(GATEWAY_PRAGMA_FILE_PATH,pragma);
             system("/etc/init.d/lora restart");
