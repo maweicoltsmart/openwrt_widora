@@ -1,4 +1,4 @@
-﻿
+
 <html lang="en">
   <head>
     <meta charset="utf-8">
@@ -101,60 +101,7 @@
   }
 
 
-   function widoraset(){
-
-    var isLegal=true;
-
-    isLegal=check_APPKEY();
-    if(isLegal){
-     	 isLegal=check_NetID();
-    }
-
-    //check_channel($("#channel_0"));
-    //check_channel($("#channel_1"));
-    //check_channel($("#channel_2"));
-
-    if(isLegal){
-    var init_info='{"SoftWareVersion":"Version 1.2 (Apr 24 2018 14:09:23)","MacAddress":"001122334455","UserName":"MJ-Modem","Password":"www.colt.xin","NetType":"Private","APPKEY":"2B7E151628AED2A6ABF7158809CF4F3C","NetID":"789ABC","serverip":"192.168.1.100","serverport":32500,"radio":[{"index":0,"channel":0,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"},{"index":0,"channel":2,"datarate":"DR_0"}]}';
-
-    var init_info_json =JSON.parse(init_info);
-
-    init_info_json.UserName =$("#UserName").val(); 
-    init_info_json.Password =$("#Password").val(); 
-   	init_info_json.NetType =$("#NetType").val();
-   	init_info_json.APPKEY =$("#APPKEY").val();
-   	init_info_json.NetID =$("#NetID").val();
-   	init_info_json.serverip =$("#serverip").val();
-   	init_info_json.serverport =$("#serverport").val();
-
-   	var radioArray = init_info_json.radio;
-   	for(var i=0;i<radioArray.length;i++){
-   		 radioArray[i].index = $("#index_"+i).text();
-   		 radioArray[i].channel =$("#channel_"+i).val();
-   		 //radioArray[i].datarate=$("#datarate_"+i).val();
-   		 radioArray[i].datarate=$("#datarate_"+i).text();
-    }
-
-
-   	//alert(init_info_json.NetType);
-
-   	$.ajax({
-          type: "POST",
-          url: '/cgi-bin/lora_param_set',
-          dataType: "xml",
-          data:JSON.stringify(init_info_json),
-          contentType: "application/json; charset=utf-8",
-          success: function(data) {
-              alert('修改成功');
-          },
-          error: function(XMLHttpRequest, textStatus, errorThrown) {
-            alert("修改出错" + error.responseText);
-             //alert('readyState:'+XMLHttpRequest.readyState + 'status:'+XMLHttpRequest.status + 'responseText:'+XMLHttpRequest.responseText);
-          }
-        });
-    }
-   	//alert(JSON.stringify(init_info_json) );
-  }
+   
    
     function factory_reset(){
      	
@@ -358,6 +305,66 @@
       });
 
     });
+    
+    
+    function widoraset(){
+
+    var isLegal=true;
+
+    isLegal=check_APPKEY();
+    if(isLegal){
+     	 isLegal=check_NetID();
+    }
+
+    //check_channel($("#channel_0"));
+    //check_channel($("#channel_1"));
+    //check_channel($("#channel_2"));
+
+    if(isLegal){
+    var init_info='{"SoftWareVersion":"Version 1.2 (Apr 24 2018 14:09:23)","MacAddress":"001122334455","UserName":"MJ-Modem","Password":"www.colt.xin","NetType":"Private","APPKEY":"2B7E151628AED2A6ABF7158809CF4F3C","NetID":"789ABC","serverip":"192.168.1.100","serverport":32500,"radio":[{"index":0,"channel":0,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"},{"index":0,"channel":2,"datarate":"DR_0"}]}';
+
+    var init_info_json =JSON.parse(init_info);
+    
+    init_info_json.SoftWareVersion=$("#SoftWareVersion").text();
+    init_info_json.MacAddress=$("#MacAddress").text();
+
+    init_info_json.UserName =$("#UserName").val(); 
+    init_info_json.Password =$("#Password").val(); 
+   	init_info_json.NetType =$("#NetType").val();
+   	init_info_json.APPKEY =$("#APPKEY").val();
+   	init_info_json.NetID =$("#NetID").val();
+   	init_info_json.serverip =$("#serverip").val();
+   	init_info_json.serverport =$("#serverport").val();
+
+   	var radioArray = init_info_json.radio;
+   	for(var i=0;i<radioArray.length;i++){
+   		 radioArray[i].index = $("#index_"+i).text();
+   		 radioArray[i].channel =$("#channel_"+i).val();
+   		 //radioArray[i].datarate=$("#datarate_"+i).val();
+   		 radioArray[i].datarate=$("#datarate_"+i).text();
+    }
+
+
+   	//alert(init_info_json.NetType);
+
+   	$.ajax({
+          type: "POST",
+          url: '/cgi-bin/lora_param_set',
+          dataType: "xml",
+          data:JSON.stringify(init_info_json),
+          contentType: "application/json; charset=utf-8",
+          success: function(data) {
+              alert('修改成功');
+          },
+          error: function(XMLHttpRequest, textStatus, errorThrown) {
+            alert("修改出错" + error.responseText);
+             //alert('readyState:'+XMLHttpRequest.readyState + 'status:'+XMLHttpRequest.status + 'responseText:'+XMLHttpRequest.responseText);
+          }
+        });
+    }
+   	//alert(JSON.stringify(init_info_json) );
+  }
+  
   </script>
 
 </html>

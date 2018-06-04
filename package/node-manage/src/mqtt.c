@@ -117,11 +117,11 @@ void my_connect_callback(struct mosquitto *mosq, void *userdata, int result)
         memset(topic,0,sizeof(topic));
 
         /* Subscribe to broker information topics on successful connect. */
-        if(!strcmp(gateway_pragma.username,"MJ-Modem") && !strcmp(gateway_pragma.password,"www.colt.xin") && !strcmp(gateway_pragma.server_ip,"101.132.97.241") && (gateway_pragma.server_port == 1883))
+        /*if(!strcmp(gateway_pragma.username,"MJ-Modem") && !strcmp(gateway_pragma.password,"www.colt.xin") && !strcmp(gateway_pragma.server_ip,"101.132.97.241") && (gateway_pragma.server_port == 1883))
         {
             strcpy(topic,"LoRaWAN/Test/Down/");
         }
-        else
+        else*/
         {
             strcpy(topic,"LoRaWAN/Down/");
         }
@@ -262,11 +262,11 @@ void *mjmqtt_client_routin(void *data)
 			/*发布消息*/
 			unsigned char topic[8 + 1 + 6 * 2 + 1 + 8 * 2 + 1 + 2 + 1 + 10 + 10] = {0};
 			//sprintf(topic,"%s,%s,%s,%s","LoRaWAN/",strmacaddr,"/","0123456789ABCDEF");
-			if(!strcmp(gateway_pragma.username,"MJ-Modem") && !strcmp(gateway_pragma.password,"www.colt.xin") && !strcmp(gateway_pragma.server_ip,"101.132.97.241") && (gateway_pragma.server_port == 1883))
+			/*if(!strcmp(gateway_pragma.username,"MJ-Modem") && !strcmp(gateway_pragma.password,"www.colt.xin") && !strcmp(gateway_pragma.server_ip,"101.132.97.241") && (gateway_pragma.server_port == 1883))
             {
                 strcpy(topic,"LoRaWAN/Test/Up/");
             }
-            else
+            else*/
             {
 			    strcpy(topic,"LoRaWAN/Up/");
             }
