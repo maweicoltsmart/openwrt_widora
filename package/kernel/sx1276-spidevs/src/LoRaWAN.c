@@ -797,7 +797,7 @@ void LoRaWANJoinAccept(uint32_t addr)
 	//stNodeDatabase[addr].stTxData.buf = (uint8_t *)kmalloc(1 + 3 + 3 + 4 + 1 + 1 + 4,GFP_KERNEL);
 	stNodeDatabase[addr].stTxData.buf[0] = macHdr.Value;
 	LoRaMacJoinComputeMic(acceptbuf,13,stGatewayParameter.AppKey,(uint32_t *)(acceptbuf + 1 + 3 + 3 + 4 + 1 + 1));
-	*(uint32_t *)(acceptbuf + 1 + 3 + 3 + 4 + 1 + 1) += stNodeInfoToSave[addr].stDevNetParameter.DevNonce;
+	*(uint32_t *)(acceptbuf + 1 + 3 + 3 + 4 + 1 + 1) += 0;//stNodeInfoToSave[addr].stDevNetParameter.DevNonce;
     LoRaMacJoinDecrypt(acceptbuf + 1,1 + 3 + 3 + 4 + 1 + 1 + 4 - 1,stGatewayParameter.AppKey,stNodeDatabase[addr].stTxData.buf + 1);
 	stNodeDatabase[addr].timer1.function = LoRaWANJoinTimer1Callback;
 	stNodeDatabase[addr].timer1.data = addr;
