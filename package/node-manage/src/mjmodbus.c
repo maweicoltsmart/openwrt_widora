@@ -23,6 +23,7 @@
 #include "GatewayPragma.h"
 #include "Server.h"
 
+modbus_mapping_t *mb_mapping = NULL;
 unsigned char streth0ipaddr[16 + 1] = {0};
 
 int get_eth0_ip_address(void)
@@ -70,7 +71,6 @@ void *mjmodbus_server_routin(void *data)
 
 	int socket;
     modbus_t *ctx;
-    modbus_mapping_t *mb_mapping;
 
     int loop;
 
@@ -119,6 +119,7 @@ createctx:
     printf("Quit the loop: %s\n", modbus_strerror(errno));
 
     modbus_mapping_free(mb_mapping);
+    mb_mapping = NULL;
     modbus_close(ctx);
     modbus_free(ctx);
     close(socket);
