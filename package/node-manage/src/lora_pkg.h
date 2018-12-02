@@ -31,6 +31,7 @@ typedef struct{
 	uint16_t minite;
 	uint16_t second;
 	pthread_t datadownprocess;
+	pthread_attr_t attr;
 }st_MjDevInfo,*pst_MjDevInfo;
 
 typedef struct{
@@ -65,8 +66,9 @@ typedef struct{
 	uint16_t crc;
 }st_MjLoraPkgDownV2,*pst_MjLoraPkgDownV2;
 
-st_MjDevInfo stMjDevInfo[];
+extern st_MjDevInfo stMjDevInfo[];
 
 void *mjlora_pkg_routin(void *data);
+void *mjlora_data_down_routin(void *data);
 
 #endif

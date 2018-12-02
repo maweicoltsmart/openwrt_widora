@@ -71,7 +71,7 @@ void *mjmodbus_server_routin(void *data)
 
 	int socket;
     modbus_t *ctx;
-
+    modbus_mapping_t *mb_mapping_server = NULL;
     int loop;
 
 createctx:
@@ -83,8 +83,8 @@ createctx:
     ctx = modbus_new_tcp(streth0ipaddr, 502);
     /* modbus_set_debug(ctx, TRUE); */
 
-    mb_mapping = modbus_mapping_new(10000, 10000, 10000, 10000);
-    if (mb_mapping == NULL) {
+    mb_mapping_server = modbus_mapping_new(10000, 10000, 10000, 10000);
+    if (mb_mapping_server == NULL) {
         fprintf(stderr, "Failed to allocate the mapping: %s\n",
                 modbus_strerror(errno));
         modbus_free(ctx);
@@ -94,8 +94,8 @@ createctx:
     }
     for(loop = 0;loop < 10000;loop ++)
     {
-    	mb_mapping->tab_input_registers[loop] = 30000 + loop;
-    	mb_mapping->tab_registers[loop] = loop;
+    	mb_mapping_server->tab_input_registers[loop] = 30000 + loop;
+    	mb_mapping_server->tab_registers[loop] = loop;
     }
     modbus_set_debug(ctx, TRUE);
 	printf("listen!\r\n");
@@ -105,11 +105,11 @@ createctx:
     for (;;) {
         uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
         int rc;
-
+        mb_mapping = mb_mapping_server;
         rc = modbus_receive(ctx, query);
         if (rc != -1) {
             /* rc is the query size */
-            modbus_reply(ctx, query, rc, mb_mapping);
+            modbus_reply(ctx, query, rc, mb_mapping_server);
         } else {
             /* Connection closed by the client or error */
             break;
@@ -117,9 +117,9 @@ createctx:
     }
     //sleep(1);
     printf("Quit the loop: %s\n", modbus_strerror(errno));
-
-    modbus_mapping_free(mb_mapping);
     mb_mapping = NULL;
+    modbus_mapping_free(mb_mapping_server);
+    
     modbus_close(ctx);
     modbus_free(ctx);
     close(socket);
