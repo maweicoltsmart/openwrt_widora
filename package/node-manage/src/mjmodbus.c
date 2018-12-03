@@ -60,15 +60,6 @@ int get_eth0_ip_address(void)
 
 void *mjmodbus_server_routin(void *data)
 {
-	uint8_t stringformat[256 * 2];
-	int len;
-    struct json_object *pragma = NULL;
-	uint8_t readbuffer[256 + sizeof(st_ServerMsgUp)];
-	pst_ServerMsgUp pstServerMsgUp = (pst_ServerMsgUp)readbuffer;
-
-	uint8_t deveui[8 * 2 + 1] = {0};
-	uint8_t senddata[1024] = {0};
-
 	int socket;
     modbus_t *ctx;
     modbus_mapping_t *mb_mapping_server = NULL;
@@ -123,6 +114,65 @@ createctx:
     modbus_close(ctx);
     modbus_free(ctx);
     close(socket);
+    goto createctx;
+    //system("/sbin/reboot");
+    return 0;
+}
+
+void *mjmodbus_slave_routin(void *data)
+{
+    modbus_t *ctx;
+    modbus_mapping_t *mb_mapping_server = NULL;
+    int loop;
+
+createctx:
+    ctx = modbus_new_rtu("/dev/ttyS2", 115200, 'N', 8, 1);
+    /* modbus_set_debug(ctx, TRUE); */
+    modbus_set_debug(ctx, TRUE);
+    modbus_set_slave(ctx, SERVER_ID);
+    mb_mapping_server = modbus_mapping_new(10000, 10000, 10000, 10000);
+    if (mb_mapping_server == NULL) {
+        fprintf(stderr, "Failed to allocate the mapping: %s\n",
+                modbus_strerror(errno));
+        modbus_free(ctx);
+        //return -1;
+        sleep(1);
+        goto createctx;
+    }
+    for(loop = 0;loop < 10000;loop ++)
+    {
+    	mb_mapping_server->tab_input_registers[loop] = 20000 + loop;
+    	mb_mapping_server->tab_registers[loop] = loop;
+    }
+    if (modbus_connect(ctx) == -1) {
+        fprintf(stderr, "Connection failed: %s\n",
+                modbus_strerror(errno));
+        modbus_mapping_free(mb_mapping_server);
+        modbus_free(ctx);
+        printf("connection failed\r\n");
+        goto createctx;
+    }
+    printf("receive & reply\r\n");
+    for (;;) {
+        uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
+        int rc;
+        mb_mapping = mb_mapping_server;
+        rc = modbus_receive(ctx, query);
+        if (rc != -1) {
+            /* rc is the query size */
+            modbus_reply(ctx, query, rc, mb_mapping_server);
+        } else {
+            /* Connection closed by the client or error */
+            break;
+        }
+    }
+    //sleep(1);
+    printf("Quit the loop: %s\n", modbus_strerror(errno));
+    mb_mapping = NULL;
+    modbus_mapping_free(mb_mapping_server);
+    
+    modbus_close(ctx);
+    modbus_free(ctx);
     goto createctx;
     //system("/sbin/reboot");
     return 0;
