@@ -70,10 +70,25 @@ int LoRaWANRxDataProcess(void *data){
     uint8_t port = 0xFF;
     uint8_t frameLen = 0;
 	int32_t addr = 0;
-	
-	stRadioRxList.stRadioRx.payload = payloadRx;
+    int err;
+    bool watchdog = false;
+
+    stRadioRxList.stRadioRx.payload = payloadRx;
+    err = gpio_request(WDT_REED_PIN, "WDT_REED_PIN");
+    if(err)
+    {
+        printk("watchdog pin request error\r\n");
+    }
+    err = gpio_direction_output(WDT_REED_PIN,watchdog);
+    if(err)
+    {
+        printk("watchdog pin output error\r\n");
+    }
+    gpio_set_value(WDT_REED_PIN,watchdog);
     while (true)
     {
+        watchdog = !watchdog;
+        gpio_set_value(WDT_REED_PIN,watchdog);
         if( kthread_should_stop())
         {
             return -1;

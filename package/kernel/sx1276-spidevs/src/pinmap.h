@@ -30,4 +30,5 @@
 #define    SX1278_4_DIO1_PIN             4 // GPIO19
 #define    SX1278_4_DIO2_PIN             5 // GPIO11
 
+#define    WDT_REED_PIN                 37 // watchdog feed
 #endif
