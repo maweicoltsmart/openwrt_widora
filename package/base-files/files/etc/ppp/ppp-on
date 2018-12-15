@@ -36,18 +36,7 @@ echo out > /sys/class/gpio/gpio2/direction
 dns1="119.75.217.109"
 dns2="101.132.97.241"
 
-echo "sim800c power down"
-echo 0 > /sys/class/gpio/gpio2/value
-sleep 1
-echo "sim800c power on"
-echo 1 > /sys/class/gpio/gpio2/value
-sleep 2
-echo 0 > /sys/class/gpio/gpio2/value
-echo "wait 5 seconds"
-sleep 5
 echo "start ppp0"
-exec /usr/sbin/pppd call gprs&
-sleep 20
 while true
 do
        echo "ping DNS1"
@@ -71,8 +60,8 @@ do
 		echo 1 > /sys/class/gpio/gpio2/value
 		sleep 2
 		echo 0 > /sys/class/gpio/gpio2/value
-		echo "wait 5 seconds"
-		sleep 5
+		echo "wait 13 seconds"
+		sleep 13
 		echo "start ppp0"
 		/usr/sbin/pppd call gprs&
 
