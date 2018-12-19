@@ -126,7 +126,7 @@ void *mjmodbus_slave_routin(void *data)
     int loop;
 
 createctx:
-    ctx = modbus_new_rtu("/dev/ttyUSB0", 115200, 'N', 8, 1);
+    ctx = modbus_new_rtu("/dev/ttyS2", 115200, 'N', 8, 1);
     /* modbus_set_debug(ctx, TRUE); */
     modbus_set_debug(ctx, TRUE);
     modbus_set_slave(ctx, SERVER_ID);

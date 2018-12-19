@@ -65,7 +65,7 @@ do
 		echo "start ppp0"
 		/usr/sbin/pppd call gprs&
 
-              sleep 20
+              sleep 5
               #               ……等待12秒
            else
               sleep 60

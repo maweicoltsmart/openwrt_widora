@@ -35,22 +35,35 @@ typedef struct{
 }st_MjDevInfo,*pst_MjDevInfo;
 
 typedef struct{
-	uint16_t devid;
-	uint8_t cmd;
-	uint16_t Temperature;
-	uint16_t humidity;
 	uint16_t crc;
+	uint16_t Voltage;
+	uint16_t humidity;
+	uint16_t Temperature;
+	uint8_t cmd;
+	uint16_t devid;
 }st_MjLoraPkgUpV1,*pst_MjLoraPkgUpV1;
 
 typedef struct{
-	uint16_t devid;
-	uint8_t cmd;
-	uint16_t Temperature[2];
-	uint16_t humidity[2];
-	uint16_t pressure[10];
-	uint16_t reserve[2];
-	uint16_t Voltage;
 	uint16_t crc;
+	uint16_t Voltage;
+	uint16_t reserve2;
+	uint16_t reserve1;
+	uint16_t pressure10;
+	uint16_t pressure9;
+	uint16_t pressure8;
+	uint16_t pressure7;
+	uint16_t pressure6;
+	uint16_t pressure5;
+	uint16_t pressure4;
+	uint16_t pressure3;
+	uint16_t pressure2;
+	uint16_t pressure1;
+	uint16_t humidity2;
+	uint16_t humidity1;
+	uint16_t Temperature2;
+	uint16_t Temperature1;
+	uint8_t cmd;
+	uint16_t devid;
 }st_MjLoraPkgUpV2,*pst_MjLoraPkgUpV2;
 
 typedef struct{
