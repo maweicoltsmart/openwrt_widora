@@ -209,8 +209,8 @@ int main(int argc, char*argv[])
             
             json_object_object_add(pragma,"SoftWareVersion",json_object_new_string(VERSION_STR));
             json_object_object_add(pragma,"MacAddress",json_object_new_string(streth0macaddr));
-            json_object_object_add(pragma,"UserName",json_object_new_string("MJ-Modem"));
-            json_object_object_add(pragma,"Password",json_object_new_string("www.colt.xin"));
+            json_object_object_add(pragma,"UserName",json_object_new_string("MJ-LoRaWAN-Gateway"));
+            json_object_object_add(pragma,"Password",json_object_new_string("www.coltsmart.com"));
 
             json_object_object_add(pragma,"NetType",json_object_new_string("Modbus"));
             json_object_object_add(pragma,"SlaveID",json_object_new_int(0));

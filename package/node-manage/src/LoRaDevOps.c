@@ -146,7 +146,7 @@ open_dev:
     stRadioCfg.symbTimeout = 24;
     stRadioCfg.payloadLen = 0;
     stRadioCfg.rxContinuous = true;
-    stRadioCfg.isPublic = gateway_pragma.NetType;
+    stRadioCfg.isPublic = 0;
 
     write(fd_proc_cfg_rx,&stRadioCfg,sizeof(st_RadioCfg));
 
@@ -173,7 +173,7 @@ open_dev:
     stRadioCfg.symbTimeout = 24;
     stRadioCfg.payloadLen = 0;
     stRadioCfg.rxContinuous = true;
-    stRadioCfg.isPublic = gateway_pragma.NetType;
+    stRadioCfg.isPublic = 0;
 
     write(fd_proc_cfg_tx,&stRadioCfg,sizeof(st_RadioCfg));
 
