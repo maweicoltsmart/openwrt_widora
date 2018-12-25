@@ -126,10 +126,10 @@ createctx:
         int rc;
         mb_mapping = mb_mapping_server;
         rc = modbus_receive(ctx, query);
-        if (rc != -1) {
+        if (rc > 0) {
             /* rc is the query size */
             modbus_reply(ctx, query, rc, mb_mapping_server);
-        } else {
+        }  else if (rc == -1) {
             /* Connection closed by the client or error */
             break;
         }
@@ -210,14 +210,14 @@ createctx:
     }
     printf("receive & reply\r\n");
     for (;;) {
-        uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
+        uint8_t query[MODBUS_RTU_MAX_ADU_LENGTH];
         int rc;
         mb_mapping = mb_mapping_server;
         rc = modbus_receive(ctx, query);
-        if (rc != -1) {
+        if (rc > 0) {
             /* rc is the query size */
             modbus_reply(ctx, query, rc, mb_mapping_server);
-        } else {
+        }  else if (rc == -1) {
             /* Connection closed by the client or error */
             break;
         }
@@ -297,14 +297,14 @@ createctx:
     }
     printf("receive & reply\r\n");
     for (;;) {
-        uint8_t query[MODBUS_TCP_MAX_ADU_LENGTH];
+        uint8_t query[MODBUS_RTU_MAX_ADU_LENGTH];
         int rc;
         mb_mapping = mb_mapping_server;
         rc = modbus_receive(ctx, query);
-        if (rc != -1) {
+        if (rc > 0) {
             /* rc is the query size */
             modbus_reply(ctx, query, rc, mb_mapping_server);
-        } else {
+        } else if (rc == -1){
             /* Connection closed by the client or error */
             break;
         }

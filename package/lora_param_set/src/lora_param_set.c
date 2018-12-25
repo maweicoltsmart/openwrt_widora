@@ -86,7 +86,7 @@ int main(int argc, char*argv[])
     }
     if (strcasecmp(pRequestMethod,"POST")==0)
     {
-        system("touch /usr/posthtml");
+        //system("touch /usr/posthtml");
         p = getenv("CONTENT_LENGTH");     //从环境变量CONTENT_LENGTH中得到数据长度
         if (p!=NULL)
         {
@@ -128,7 +128,7 @@ int main(int argc, char*argv[])
     }
     else if (strcasecmp(pRequestMethod,"GET")==0)
     {
-        system("touch /usr/gethtml");
+        //system("touch /usr/gethtml");
         p = getenv("QUERY_STRING");     //从环境变量QUERY_STRING中得到Form数据
         if   (p!=NULL)
         {
