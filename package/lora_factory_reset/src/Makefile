@@ -1,5 +1,5 @@
 # build testio executable when user executes "make"
-
+JSONC_LDFLAGS = -lm -ljson-c
 appreg: lora_factory_reset.o
 	$(CC) $(JSONC_CFLAGS) $(LDFLAGS) $(JSONC_LDFLAGS) lora_factory_reset.o -o lora_factory_reset
 

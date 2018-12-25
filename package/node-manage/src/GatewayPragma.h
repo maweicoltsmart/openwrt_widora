@@ -6,6 +6,9 @@
 typedef struct
 {
 	bool NetType;
+    uint16_t slaveid;
+    uint32_t baud;
+    uint8_t parity;
     uint8_t softversion[64];
     uint8_t macaddress[6 * 2 + 1];
     uint8_t username[16 + 1];

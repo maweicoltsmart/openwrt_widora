@@ -43,6 +43,7 @@
 #include "mqtt.h"
 #include "mjmodbus.h"
 #include "lora_pkg.h"
+#include "GatewayPragma.h"
 
 unsigned char streth0macaddr[6 * 2 + 1] = {0};
 unsigned char strwifimacaddr[6 * 2 + 1] = {0};
@@ -228,7 +229,7 @@ int main(int argc ,char *argv[])
     int flag;
     int ret;
     int fd;
-    pthread_t tcp_client_handle,tcp_server_handle,radio_routin_handle,mqtt_client_handle,mjcheckfirewarecopy_handle,mjmodbus_server_handle,mjmodbus_slave_handle,mjlora_pkg_handle;
+    pthread_t tcp_client_handle,tcp_server_handle,radio_routin_handle,mqtt_client_handle,mjcheckfirewarecopy_handle,mjmodbus_server_handle,mjmodbus_slave485_handle,mjmodbus_slave232_handle,mjlora_pkg_handle;
     int msgid = -1;
     //struct msg_st data;
     int len;
@@ -289,10 +290,17 @@ int main(int argc ,char *argv[])
     //ret = pthread_create(&radio_routin_handle, NULL, Radio_routin, &fd);
     //ret = pthread_create(&tcp_client_handle, NULL, tcp_client_routin, &fd);
     //ret = pthread_create(&tcp_server_handle, NULL, tcp_server_routin, &fd);
-    //ret = pthread_create(&mqtt_client_handle, NULL, mjmqtt_client_routin, &fd);
-    ret = pthread_create(&mjmodbus_server_handle, NULL, mjmodbus_server_routin, &fd);
-    ret = pthread_create(&mjmodbus_slave_handle, NULL, mjmodbus_slave_routin, &fd);
-    ret = pthread_create(&mjlora_pkg_handle, NULL, mjlora_pkg_routin, &fd);
+    if(gateway_pragma.NetType)
+    {
+        ret = pthread_create(&mqtt_client_handle, NULL, mjmqtt_client_routin, &fd);
+    }
+    else
+    {
+        ret = pthread_create(&mjlora_pkg_handle, NULL, mjlora_pkg_routin, &fd);
+        ret = pthread_create(&mjmodbus_server_handle, NULL, mjmodbus_server_routin, &fd);
+        ret = pthread_create(&mjmodbus_slave485_handle, NULL, mjmodbus_slave485_routin, &fd);
+        ret = pthread_create(&mjmodbus_slave232_handle, NULL, mjmodbus_slave232_routin, &fd);
+    }
     //ret = pthread_create(&mjcheckfirewarecopy_handle, NULL, mjcheckfirewarecopy_routin, &fd);
 #define RF_FREQUENCY                                470000000 // Hz
     //SX1276SetChannel(0,fd,RF_FREQUENCY);

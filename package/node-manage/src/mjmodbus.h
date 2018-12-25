@@ -4,6 +4,7 @@
 #define SERVER_ID		1
 
 void *mjmodbus_server_routin(void *data);
-void *mjmodbus_slave_routin(void *data);
+void *mjmodbus_slave485_routin(void *data);
+void *mjmodbus_slave232_routin(void *data);
 
 #endif

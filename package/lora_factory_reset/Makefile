@@ -16,7 +16,7 @@ include $(INCLUDE_DIR)/package.mk
 define Package/lora_factory_reset
 	SECTION:=utils
 	CATEGORY:=Utilities
-	DEPENDS:=
+	DEPENDS:=+libjson-c
 	TITLE:=lora_factory_reset  factory reset from webui
 endef
 

@@ -28,6 +28,19 @@ int main(int argc, char*argv[])
     system("rm /usr/gatewaypragma.cfg");
     system("sync");
     system("/etc/init.d/lora restart");
+    struct json_object *pragma = NULL;
+    pragma = json_object_from_file(GATEWAY_PRAGMA_FILE_PATH);
+    if(pragma == NULL)
+    {
+        //found = false;
+    }
+    else
+    {
+        printf("%s",json_object_to_json_string(pragma));
+        fflush(stdout);
+        json_object_put(pragma);
+        //found = json_object_object_get_ex(pragma, "NetType", &obj);
+    }
     return   0;
 }
 

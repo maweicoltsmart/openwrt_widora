@@ -66,8 +66,47 @@
 
            return true;
         }
+        
+        
+    function check_SlaveID(){
+    	var obj_SlaveID =document.getElementById("SlaveID") ;
+      var str = obj_SlaveID.value;
+            
+      var reg=/^[0-9]*$/;
+      if(reg.test(str)){
+     		var paraInt=parseInt(str) ;
+   	    //alert(paraInt);
+   	    if(paraInt<1 || paraInt>247){
+   	   	     alert('必须为1-247的整数');
+   	   	     obj_SlaveID.focus();
+   	   	     return false;
+   	   	}
+     	}else{
+     		alert('必须为1-247的整数');
+   	   	obj_SlaveID.focus();
+   	   	return false;
 
-    function check_channel(paraObj){
+     	}
+     	
+     	return true;
+    }
+    
+    function check_Baud(){
+    	var obj_Baud =document.getElementById("Baud") ;
+      var str = obj_Baud.value;
+            
+      var reg=/^[0-9]*$/;
+      if(!reg.test(str)){
+      	alert('必须为整数');
+   	   	obj_Baud.focus();
+   	   	return false;
+     	}
+     	return true;
+    }
+
+    function check_channel(paraObjID){
+    	var paraObj = document.getElementById(paraObjID) ;
+    	
      	var reg=/^[0-9]*$/;
 
      	var paraStr=paraObj.value;
@@ -88,6 +127,7 @@
 
      	}
 
+      return true;
    }
 
 
@@ -171,10 +211,30 @@
                <div class="form-group">
                 <label for="NetType">NetType</label>
                 <select id="NetType" name="NetType" class="form-control" data-live-search="true">
-                  <option value="Private">中国移动</option>
-                  <option value="Public">中国联通</option>
+                  <option value="MQTT">MQTT</option>
+                  <option value="Modbus">Modbus</option>
                 </select>
               </div>
+              
+              <div class="form-group">
+                <label for="SlaveID">SlaveID</label>
+                <input id="SlaveID" type="text" name="SlaveID" class="form-control"/>
+              </div>
+              
+              <div class="form-group">
+                <label for="Baud">Baud</label>
+                <input id="Baud" type="text" name="Baud" class="form-control"/>
+              </div>
+              
+              <div class="form-group">
+                <label for="Parity">Parity</label>
+                <select id="Parity" name="Parity" class="form-control" data-live-search="true">
+                  <option value="8N1">8N1</option>
+                  <option value="8E1">8E1</option>
+                  <option value="8O1">8O1</option>
+                </select>
+              </div>
+              
 
               <div class="form-group">
                 <label for="APPKEY">APPKEY</label>
@@ -284,6 +344,9 @@
 
 
            	$("#NetType").val(json.NetType) ;
+           	$("#SlaveID").val(json.SlaveID) ;
+           	$("#Baud").val(json.Baud) ;
+           	$("#Parity").val(json.Parity) ;
 
            	$("#APPKEY").val(json.APPKEY);
            	$("#NetID").val(json.NetID);
@@ -315,15 +378,39 @@
     if(isLegal){
      	 isLegal=check_NetID();
     }
-
-    //check_channel($("#channel_0"));
-    //check_channel($("#channel_1"));
-    //check_channel($("#channel_2"));
+    
+    if(isLegal){
+     	 isLegal=check_SlaveID();
+    }
+    
+    if(isLegal){
+     	 isLegal=check_Baud();
+    }
+    
+    
+    if(isLegal){
+     	 isLegal=check_channel("channel_0");
+    }
+    
+    
+    if(isLegal){
+     	 isLegal=check_channel("channel_1");
+    }
+    
+    
+    if(isLegal){
+     	 isLegal=check_channel("channel_2");
+    }
+    
+    
 
     if(isLegal){
-    var init_info='{"SoftWareVersion":"Version 1.2 (Apr 24 2018 14:09:23)","MacAddress":"001122334455","UserName":"MJ-Modem","Password":"www.colt.xin","NetType":"Private","APPKEY":"2B7E151628AED2A6ABF7158809CF4F3C","NetID":"789ABC","serverip":"192.168.1.100","serverport":32500,"radio":[{"index":0,"channel":0,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"},{"index":0,"channel":2,"datarate":"DR_0"}]}';
+    var init_info='{"SoftWareVersion":"Version 1.2 (Apr 24 2018 14:09:23)","MacAddress":"001122334455","UserName":"MJ-Modem","Password":"www.colt.xin","NetType":"MQTT","SlaveID":0,"Baud":9600,"Parity":"8N1","APPKEY":"2B7E151628AED2A6ABF7158809CF4F3C","NetID":"789ABC","serverip":"192.168.1.100","serverport":32500,"radio":[{"index":0,"channel":0,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"},{"index":0,"channel":2,"datarate":"DR_0"}]}';
+
 
     var init_info_json =JSON.parse(init_info);
+    
+    console.log(init_info_json);
     
     init_info_json.SoftWareVersion=$("#SoftWareVersion").text();
     init_info_json.MacAddress=$("#MacAddress").text();
@@ -331,10 +418,18 @@
     init_info_json.UserName =$("#UserName").val(); 
     init_info_json.Password =$("#Password").val(); 
    	init_info_json.NetType =$("#NetType").val();
+   	init_info_json.SlaveID =$("#SlaveID").val();
+   	init_info_json.Baud =$("#Baud").val();
+   	init_info_json.Parity =$("#Parity").val();
+   	
+   	console.log(init_info_json);
+   	
    	init_info_json.APPKEY =$("#APPKEY").val();
    	init_info_json.NetID =$("#NetID").val();
    	init_info_json.serverip =$("#serverip").val();
    	init_info_json.serverport =$("#serverport").val();
+   	
+   	console.log(init_info_json);
 
    	var radioArray = init_info_json.radio;
    	for(var i=0;i<radioArray.length;i++){
@@ -345,7 +440,8 @@
     }
 
 
-   	//alert(init_info_json.NetType);
+   	//alert("校验通过，开始提交");
+   	//alert(JSON.stringify(init_info_json));
 
    	$.ajax({
           type: "POST",

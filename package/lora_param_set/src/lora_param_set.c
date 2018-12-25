@@ -86,6 +86,7 @@ int main(int argc, char*argv[])
     }
     if (strcasecmp(pRequestMethod,"POST")==0)
     {
+        system("touch /usr/posthtml");
         p = getenv("CONTENT_LENGTH");     //从环境变量CONTENT_LENGTH中得到数据长度
         if (p!=NULL)
         {
@@ -111,9 +112,23 @@ int main(int argc, char*argv[])
         ContentLength   =   i;
         DecodeAndProcessData(InputBuffer);                 //具体译码和处理数据，该函数代码略
         //execl("/etc/init.d/lora","lora","restart",NULL);
+        struct json_object *pragma = NULL;
+        pragma = json_object_from_file(GATEWAY_PRAGMA_FILE_PATH);
+        if(pragma == NULL)
+        {
+            //found = false;
+        }
+        else
+        {
+            printf("%s",json_object_to_json_string(pragma));
+            fflush(stdout);
+            json_object_put(pragma);
+            //found = json_object_object_get_ex(pragma, "NetType", &obj);
+        }
     }
     else if (strcasecmp(pRequestMethod,"GET")==0)
     {
+        system("touch /usr/gethtml");
         p = getenv("QUERY_STRING");     //从环境变量QUERY_STRING中得到Form数据
         if   (p!=NULL)
         {
@@ -139,6 +154,7 @@ int main(int argc, char*argv[])
         {
             found = json_object_object_get_ex(pragma, "NetType", &obj);
         }
+
         if(!found)
         {
             pragma = json_object_new_object();
@@ -196,8 +212,11 @@ int main(int argc, char*argv[])
             json_object_object_add(pragma,"UserName",json_object_new_string("MJ-Modem"));
             json_object_object_add(pragma,"Password",json_object_new_string("www.colt.xin"));
 
-            json_object_object_add(pragma,"NetType",json_object_new_string("Private"));
-
+            json_object_object_add(pragma,"NetType",json_object_new_string("Modbus"));
+            json_object_object_add(pragma,"SlaveID",json_object_new_int(0));
+            json_object_object_add(pragma,"Baud",json_object_new_int(115200));
+            json_object_object_add(pragma,"Parity",json_object_new_string("8N1"));
+        
             memset(byte,0,100);
             Hex2Str(gateway_pragma.APPKEY,byte,16);
             json_object_object_add(pragma,"APPKEY",json_object_new_string(byte));
@@ -219,7 +238,6 @@ int main(int argc, char*argv[])
             json_object_to_file(GATEWAY_PRAGMA_FILE_PATH,pragma);
             system("/etc/init.d/lora restart");
         }
-
         printf("%s",json_object_to_json_string(pragma));
         fflush(stdout);
         json_object_put(pragma);

@@ -57,8 +57,11 @@ void GetGatewayPragma(void)
         json_object_object_add(pragma,"MacAddress",json_object_new_string(streth0macaddr));
         json_object_object_add(pragma,"UserName",json_object_new_string("MJ-Modem"));
         json_object_object_add(pragma,"Password",json_object_new_string("www.colt.xin"));
-        json_object_object_add(pragma,"NetType",json_object_new_string("Private"));
-
+        json_object_object_add(pragma,"NetType",json_object_new_string("Modbus"));
+        json_object_object_add(pragma,"SlaveID",json_object_new_int(1));
+        json_object_object_add(pragma,"Baud",json_object_new_int(115200));
+        json_object_object_add(pragma,"Parity",json_object_new_string("8N1"));
+        
         memset(byte,0,100);
         Hex2Str(gateway_pragma.APPKEY,byte,16);
         json_object_object_add(pragma,"APPKEY",json_object_new_string(byte));
@@ -93,20 +96,29 @@ void GetGatewayPragma(void)
     memset(gateway_pragma.password,0,16 + 1);
     strcpy(gateway_pragma.password,json_object_get_string(obj));
     
-    const char *nettype[2] = {"Private","Public"};
+    const char *nettype[2] = {"Modbus","MQTT"};
 
     json_object_object_get_ex(pragma,"NetType",&obj);
     memset(byte,0,100);
     strcpy(byte,json_object_get_string(obj));
-    gateway_pragma.NetType = 0;
+    
     if(strcmp(byte,nettype[0]) == 0)
     {
-        //gateway_pragma.NetType = 0;
+        gateway_pragma.NetType = 0;
     }
     else
     {
-    //    gateway_pragma.NetType = 1;
+        gateway_pragma.NetType = 1;
     }
+    json_object_object_get_ex(pragma,"SlaveID",&obj);
+    gateway_pragma.slaveid = json_object_get_int(obj);
+    json_object_object_get_ex(pragma,"Baud",&obj);
+    gateway_pragma.baud = json_object_get_int(obj);
+    json_object_object_get_ex(pragma,"Parity",&obj);
+    memset(byte,0,100);
+    strcpy(byte,json_object_get_string(obj));
+    gateway_pragma.parity = byte[1];
+    
 	json_object_object_get_ex(pragma,"APPKEY",&obj);
 	memset(byte,0,100);
     strcpy(byte,json_object_get_string(obj));
