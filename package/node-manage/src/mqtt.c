@@ -50,14 +50,14 @@ void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mo
 				pstServerMsgDown->enMsgDownFramType = en_MsgDownFramDataSend;
 				pstServerMsgDown->Msg.stData2Node.payload = writebuf + sizeof(st_ServerMsgDown);
 				json_object_object_get_ex(pragma,"NetAddr",&obj);
-            	if((obj == NULL) && (!json_object_is_type(&obj,json_type_int)))
+            	if((obj == NULL) && (!json_object_is_type(obj,json_type_int)))
             	{
             		json_object_put(pragma);
                     return;
             	}
             	pstServerMsgDown->Msg.stData2Node.DevAddr = json_object_get_int(obj);
 				json_object_object_get_ex(pragma,"Port",&obj);
-            	if((obj == NULL) && (!json_object_is_type(&obj,json_type_int)))
+            	if((obj == NULL) && (!json_object_is_type(obj,json_type_int)))
             	{
             		json_object_put(pragma);
                     return;
@@ -69,21 +69,21 @@ void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mo
                 	return;
             	}
 				json_object_object_get_ex(pragma,"ConfirmRequest",&obj);
-	            if((obj == NULL) && (!json_object_is_type(&obj,json_type_boolean)))
+	            if((obj == NULL) && (!json_object_is_type(obj,json_type_boolean)))
 	            {
 	            	json_object_put(pragma);
 	            	return;
 	            }
 	            pstServerMsgDown->Msg.stData2Node.CtrlBits.AckRequest = json_object_get_boolean(obj);
 				json_object_object_get_ex(pragma,"Confirm",&obj);
-	            if((obj == NULL) && (!json_object_is_type(&obj,json_type_boolean)))
+	            if((obj == NULL) && (!json_object_is_type(obj,json_type_boolean)))
 	            {
 	            	json_object_put(pragma);
 	            	return;
 	            }
 	            pstServerMsgDown->Msg.stData2Node.CtrlBits.Ack = json_object_get_boolean(obj);
 				json_object_object_get_ex(pragma,"Data",&obj);
-            	if((obj == NULL) && (!json_object_is_type(&obj,json_type_string)))
+            	if((obj == NULL) && (!json_object_is_type(obj,json_type_string)))
             	{
             		json_object_put(pragma);
                     return;

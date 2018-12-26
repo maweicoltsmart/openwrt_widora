@@ -286,8 +286,8 @@ void *mjlora_data_down_routin(void *data)
 	{
 		pstServerMsgDown->Msg.stData2Node.size = 5;
 		pstServerMsgDown->Msg.stData2Node.payload[0] = 0x06;
-		pstServerMsgDown->Msg.stData2Node.payload[1] = (uint8_t)mb_mapping->tab_registers[1 + devid * 25 - 1] >> 8;
-		pstServerMsgDown->Msg.stData2Node.payload[2] = (uint8_t)(mb_mapping->tab_registers[1 + devid * 25 - 1] & 0xff);
+		pstServerMsgDown->Msg.stData2Node.payload[1] = mb_mapping->tab_registers[1 + devid * 25 - 1] >> 8;
+		pstServerMsgDown->Msg.stData2Node.payload[2] = (mb_mapping->tab_registers[1 + devid * 25 - 1] & 0xff);
 		crccode = crc_16(pstServerMsgDown->Msg.stData2Node.payload,pstServerMsgDown->Msg.stData2Node.size - 2);
 		pstServerMsgDown->Msg.stData2Node.payload[3] = crccode >> 8; // crc
 		pstServerMsgDown->Msg.stData2Node.payload[4] = crccode; // crc
@@ -297,14 +297,14 @@ void *mjlora_data_down_routin(void *data)
 	{
 		pstServerMsgDown->Msg.stData2Node.size = 11;
 		pstServerMsgDown->Msg.stData2Node.payload[0] = 0x10;
-		pstServerMsgDown->Msg.stData2Node.payload[1] = (uint8_t)mb_mapping->tab_registers[1 + devid * 25 - 1] >> 8;
-		pstServerMsgDown->Msg.stData2Node.payload[2] = (uint8_t)(mb_mapping->tab_registers[1 + devid * 25 - 1] & 0xff);
-		pstServerMsgDown->Msg.stData2Node.payload[3] = (uint8_t)mb_mapping->tab_registers[2 + devid * 25 - 1] >> 8;
-		pstServerMsgDown->Msg.stData2Node.payload[4] = (uint8_t)(mb_mapping->tab_registers[2 + devid * 25 - 1] & 0xff);
-		pstServerMsgDown->Msg.stData2Node.payload[5] = (uint8_t)mb_mapping->tab_registers[3 + devid * 25 - 1] >> 8;
-		pstServerMsgDown->Msg.stData2Node.payload[6] = (uint8_t)(mb_mapping->tab_registers[3 + devid * 25 - 1] & 0xff);
-		pstServerMsgDown->Msg.stData2Node.payload[7] = (uint8_t)mb_mapping->tab_registers[4 + devid * 25 - 1] >> 8;
-		pstServerMsgDown->Msg.stData2Node.payload[8] = (uint8_t)(mb_mapping->tab_registers[4 + devid * 25 - 1] & 0xff);
+		pstServerMsgDown->Msg.stData2Node.payload[1] = mb_mapping->tab_registers[1 + devid * 25 - 1] >> 8;
+		pstServerMsgDown->Msg.stData2Node.payload[2] = (mb_mapping->tab_registers[1 + devid * 25 - 1] & 0xff);
+		pstServerMsgDown->Msg.stData2Node.payload[3] = mb_mapping->tab_registers[2 + devid * 25 - 1] >> 8;
+		pstServerMsgDown->Msg.stData2Node.payload[4] = (mb_mapping->tab_registers[2 + devid * 25 - 1] & 0xff);
+		pstServerMsgDown->Msg.stData2Node.payload[5] = mb_mapping->tab_registers[3 + devid * 25 - 1] >> 8;
+		pstServerMsgDown->Msg.stData2Node.payload[6] = (mb_mapping->tab_registers[3 + devid * 25 - 1] & 0xff);
+		pstServerMsgDown->Msg.stData2Node.payload[7] = mb_mapping->tab_registers[4 + devid * 25 - 1] >> 8;
+		pstServerMsgDown->Msg.stData2Node.payload[8] = (mb_mapping->tab_registers[4 + devid * 25 - 1] & 0xff);
 		crccode = crc_16(pstServerMsgDown->Msg.stData2Node.payload,pstServerMsgDown->Msg.stData2Node.size - 2);
 		pstServerMsgDown->Msg.stData2Node.payload[9] = crccode >> 8; // crc
 		pstServerMsgDown->Msg.stData2Node.payload[10] = crccode; // crc
