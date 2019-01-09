@@ -40,6 +40,7 @@
  * LoRaMac maximum number of channels
  */
 #define CN470_MAX_NB_CHANNELS                        96
+#define CN433_MAX_NB_CHANNELS                        24
 
 /*!
  * Minimal datarate that can be used by the node

@@ -31,8 +31,8 @@ extern void LoRaWANJoinAccept(uint32_t addr);
 
 void LoRaWANInit(void)
 {
-    LoRaMacParams.JoinAcceptDelay1 = 5 * HZ - 11 - 3;
-    LoRaMacParams.JoinAcceptDelay2 = 6 * HZ - 3 - 3;
+    LoRaMacParams.JoinAcceptDelay1 = 1 * HZ - 11 - 3;
+    LoRaMacParams.JoinAcceptDelay2 = 2 * HZ - 3 - 3;
     LoRaMacParams.ReceiveDelay1 = 1 * HZ - 11 - 3;
     LoRaMacParams.ReceiveDelay2 = 2 * HZ - 3 - 3;
 	memcpy(stGatewayParameter.AppKey,stMacCfg.APPKEY,16);

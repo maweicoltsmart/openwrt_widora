@@ -115,19 +115,19 @@ open_dev:
     LoRaMacParams.JoinAcceptDelay2 = LoRaMacParamsDefaults.JoinAcceptDelay2;
     LoRaMacParams.ChannelsNbRep = LoRaMacParamsDefaults.ChannelsNbRep;
 
-    for( i = 0; i < CN470_MAX_NB_CHANNELS; i++ )
+    for( i = 0; i < CN433_MAX_NB_CHANNELS; i++ )
     {
-        stRadioCfg.freq_rx[i] = ( uint32_t )( ( double )(470300000 + i * 200000) / ( double )FREQ_STEP );
+        stRadioCfg.freq_rx[i] = ( uint32_t )( ( double )(410000000 + i * 1000000) / ( double )FREQ_STEP );
     }
-    for( i = 0; i < 48; i++ )
+    for( i = 0; i < CN433_MAX_NB_CHANNELS; i++ )
     {
-        stRadioCfg.freq_tx[i] = ( uint32_t )( ( double )(CN470_FIRST_RX1_CHANNEL + ( i ) * CN470_STEPWIDTH_RX1_CHANNEL) / ( double )FREQ_STEP );
+        stRadioCfg.freq_tx[i] = ( uint32_t )( ( double )(410000000 + 24 * 1000000 + ( i ) * 1000000) / ( double )FREQ_STEP );
     }
     stRadioCfg.dr_range = (DR_5 << 16) | DR_0;
     stRadioCfg.modem = MODEM_LORA;
     stRadioCfg.power = 20;
     stRadioCfg.fdev = 0;
-    stRadioCfg.bandwidth = 0;
+    stRadioCfg.bandwidth = 2;
     stRadioCfg.datarate[0] = gateway_pragma.radio[0].datarate;
     stRadioCfg.datarate[1] = gateway_pragma.radio[1].datarate;
     stRadioCfg.datarate[2] = gateway_pragma.radio[2].datarate;
@@ -154,20 +154,20 @@ open_dev:
     stRadioCfg.modem = MODEM_LORA;
     stRadioCfg.power = 20;
     stRadioCfg.fdev = 0;
-    stRadioCfg.bandwidth = 0;
+    stRadioCfg.bandwidth = 2;
     stRadioCfg.datarate[0] = gateway_pragma.radio[0].datarate;
     stRadioCfg.datarate[1] = gateway_pragma.radio[1].datarate;
     stRadioCfg.datarate[2] = gateway_pragma.radio[2].datarate;
-    stRadioCfg.channel[0] = gateway_pragma.radio[0].channel % 48;
-    stRadioCfg.channel[1] = gateway_pragma.radio[1].channel % 48;
-    stRadioCfg.channel[2] = gateway_pragma.radio[2].channel % 48;
+    stRadioCfg.channel[0] = gateway_pragma.radio[0].channel;
+    stRadioCfg.channel[1] = gateway_pragma.radio[1].channel;
+    stRadioCfg.channel[2] = gateway_pragma.radio[2].channel;
     stRadioCfg.coderate = 1;
     stRadioCfg.preambleLen = 8;
     stRadioCfg.fixLen = false;
-    stRadioCfg.crcOn = false;
+    stRadioCfg.crcOn = true;
     stRadioCfg.freqHopOn = 0;
     stRadioCfg.hopPeriod = 0;
-    stRadioCfg.iqInverted = true;
+    stRadioCfg.iqInverted = false;
     stRadioCfg.timeout = 3000;
     stRadioCfg.bandwidthAfc = 0;
     stRadioCfg.symbTimeout = 24;
