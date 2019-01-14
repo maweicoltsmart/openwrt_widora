@@ -2,7 +2,7 @@
 #define __GATEWAY_PRAGMA_H__
 #include "nodedatabase.h"
 
-#define MAX_IP_STRING_LENTH		(3 * 4 + 3 + 1)
+#define MAX_IP_STRING_LENTH		(100)
 typedef struct
 {
 	bool NetType;

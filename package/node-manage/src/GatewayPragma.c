@@ -13,6 +13,11 @@
 #include "GatewayPragma.h"
 #include "nodedatabase.h"
 #include "utilities.h"
+#include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/types.h>
+#include <sys/socket.h>
 
 #define LORAWAN_APPLICATION_KEY                     { 0x2B, 0x7E, 0x15, 0x16, 0x28, 0xAE, 0xD2, 0xA6, 0xAB, 0xF7, 0x15, 0x88, 0x09, 0xCF, 0x4F, 0x3C }
 #define GATEWAY_PRAGMA_FILE_PATH    "/usr/gatewaypragma.cfg"
@@ -26,6 +31,23 @@ gateway_pragma_t gateway_pragma = {
 
 extern unsigned char streth0macaddr[];
 extern unsigned char strwifimacaddr[];
+
+//根据域名获取ip
+int get_ip_by_domain(const char *domain, char *ip) {
+    char **pptr;
+    struct hostent *hptr;
+    hptr = gethostbyname(domain);
+    if (NULL == hptr) {
+        printf("gethostbyname error for host:%s/n", domain);
+        return -1;
+    }
+    for (pptr = hptr->h_addr_list; *pptr != NULL; pptr++) {
+        if (NULL != inet_ntop(hptr->h_addrtype, *pptr, ip, INET_ADDRSTRLEN)) {
+            return 0; // 只获取第一个 ip
+        }
+    }
+    return -1;
+}
 
 void GetGatewayPragma(void)
 {
@@ -55,9 +77,9 @@ void GetGatewayPragma(void)
         pragma = json_object_new_object();
         json_object_object_add(pragma,"SoftWareVersion",json_object_new_string(VERSION_STR));
         json_object_object_add(pragma,"MacAddress",json_object_new_string(streth0macaddr));
-        json_object_object_add(pragma,"UserName",json_object_new_string("MJ-LoRaWAN-Gateway"));
-        json_object_object_add(pragma,"Password",json_object_new_string("www.coltsmart.com"));
-        json_object_object_add(pragma,"NetType",json_object_new_string("Modbus"));
+        json_object_object_add(pragma,"UserName",json_object_new_string("jtfjEhQGaoMVGviKiXR8"));
+        json_object_object_add(pragma,"Password",json_object_new_string(";'[08gn=#"));
+        json_object_object_add(pragma,"NetType",json_object_new_string("MQTT"));
         json_object_object_add(pragma,"SlaveID",json_object_new_int(1));
         json_object_object_add(pragma,"Baud",json_object_new_int(115200));
         json_object_object_add(pragma,"Parity",json_object_new_string("8N1"));
@@ -68,7 +90,7 @@ void GetGatewayPragma(void)
         memset(byte,0,100);
         Hex2Str(gateway_pragma.NetID,byte,3);
         json_object_object_add(pragma,"NetID",json_object_new_string(byte));
-        json_object_object_add(pragma,"serverip",json_object_new_string("101.132.97.241"));
+        json_object_object_add(pragma,"serverip",json_object_new_string("thingsboard.coltsmart.com"));
         json_object_object_add(pragma,"serverport",json_object_new_string("1883"));
 
         json_object_object_add(pragma,"radio",array = json_object_new_array());
@@ -132,7 +154,20 @@ void GetGatewayPragma(void)
 	json_object_object_get_ex(pragma,"serverip",&obj);
 	memset(gateway_pragma.server_ip,0,MAX_IP_STRING_LENTH);
     strcpy(gateway_pragma.server_ip,json_object_get_string(obj));
-
+    unsigned long  ipadd = inet_addr(gateway_pragma.server_ip);
+    if (ipadd == INADDR_NONE)
+    {
+        printf("get ip by name \r\n");
+        memset(byte,0,100);
+        while(get_ip_by_domain(gateway_pragma.server_ip,byte) < 0)
+        {
+            sleep(1);
+            memset(byte,0,100);
+        }
+        printf("domain is: %s,ip is: %s\r\n",gateway_pragma.server_ip,byte);
+        strcpy(gateway_pragma.server_ip,byte);
+    }
+    printf("ip is: %s\r\n",gateway_pragma.server_ip);
 	json_object_object_get_ex(pragma,"serverport",&obj);
 	memset(byte,0,100);
     strcpy(byte,json_object_get_string(obj));
