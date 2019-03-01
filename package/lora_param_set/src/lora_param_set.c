@@ -37,7 +37,7 @@ typedef struct
     uint8_t APPKEY[16];
     uint8_t AppNonce[3];
     uint8_t NetID[3];
-    uint8_t server_ip[100];
+    uint8_t server_ip[4];
     uint16_t server_port;
 }gateway_pragma_t;
 
@@ -209,10 +209,10 @@ int main(int argc, char*argv[])
             
             json_object_object_add(pragma,"SoftWareVersion",json_object_new_string(VERSION_STR));
             json_object_object_add(pragma,"MacAddress",json_object_new_string(streth0macaddr));
-            json_object_object_add(pragma,"UserName",json_object_new_string("jtfjEhQGaoMVGviKiXR8"));
-            json_object_object_add(pragma,"Password",json_object_new_string(";'[08gn=#"));
+            json_object_object_add(pragma,"UserName",json_object_new_string("MJ-LoRaWAN-Gateway"));
+            json_object_object_add(pragma,"Password",json_object_new_string("www.coltsmart.com"));
 
-            json_object_object_add(pragma,"NetType",json_object_new_string("MQTT"));
+            json_object_object_add(pragma,"NetType",json_object_new_string("Modbus"));
             json_object_object_add(pragma,"SlaveID",json_object_new_int(0));
             json_object_object_add(pragma,"Baud",json_object_new_int(115200));
             json_object_object_add(pragma,"Parity",json_object_new_string("8N1"));
@@ -223,7 +223,7 @@ int main(int argc, char*argv[])
             memset(byte,0,100);
             Hex2Str(gateway_pragma.NetID,byte,3);
             json_object_object_add(pragma,"NetID",json_object_new_string(byte));
-            json_object_object_add(pragma,"serverip",json_object_new_string("thingsboard.coltsmart.com"));
+            json_object_object_add(pragma,"serverip",json_object_new_string("101.132.97.241"));
             json_object_object_add(pragma,"serverport",json_object_new_string("1883"));
 
             json_object_object_add(pragma,"radio",array = json_object_new_array());

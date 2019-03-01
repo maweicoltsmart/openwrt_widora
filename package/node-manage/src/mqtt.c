@@ -166,7 +166,7 @@ void *mjmqtt_client_routin(void *data)
 	//libmosquitto 库初始化
 	mosquitto_lib_init();
 	//创建mosquitto客户端
-	mosq = mosquitto_new("01-unpwd-set", true, NULL);
+	mosq = mosquitto_new(NULL,session,NULL);
 	if(!mosq){
 		printf("create client failed..\n");
 		mosquitto_lib_cleanup();
@@ -179,8 +179,7 @@ void *mjmqtt_client_routin(void *data)
 	mosquitto_connect_callback_set(mosq, my_connect_callback);
 	mosquitto_message_callback_set(mosq, my_message_callback);
 	//mosquitto_subscribe_callback_set(mosq, my_subscribe_callback);
-	//mosquitto_username_pw_set(mosq,gateway_pragma.username,gateway_pragma.password);
-	mosquitto_username_pw_set(mosq,"DHT11_DEMO_TOKEN",";'[08gn=#");
+	mosquitto_username_pw_set(mosq,gateway_pragma.username,gateway_pragma.password);
 	//printf("%s, %d\r\n",__func__,__LINE__);
 	//连接服务器
 	if(mosquitto_connect(mosq, gateway_pragma.server_ip, gateway_pragma.server_port, KEEP_ALIVE)){
@@ -206,16 +205,14 @@ void *mjmqtt_client_routin(void *data)
 	//printf("%s, %d\r\n",__func__,__LINE__);
 	while(1)
 	{
-
-		#if 0
 		//printf("%s, %d\r\n",__func__,__LINE__);
 		if((len = read(fd_cdev,readbuffer,sizeof(readbuffer))) > 0)
 		{
-			printf("%s, %d\r\n",__func__,__LINE__);
+			//printf("%s, %d\r\n",__func__,__LINE__);
 			pragma = json_object_new_object();
 			if(pstServerMsgUp->enMsgUpFramType == en_MsgUpFramDataReceive)
 			{
-				printf("%s, %d\r\n",__func__,__LINE__);
+				//printf("%s, %d\r\n",__func__,__LINE__);
 				pstServerMsgUp->Msg.stData2Server.payload = &readbuffer[sizeof(st_ServerMsgUp)];
                 json_object_object_add(pragma,"Sn",json_object_new_int(pstServerMsgUp->Msg.stData2Server.sn));
 				switch(pstServerMsgUp->Msg.stData2Server.ClassType)
@@ -235,9 +232,6 @@ void *mjmqtt_client_routin(void *data)
 				memcpy(deveui,stringformat,8 * 2);
 				memset(stringformat,0,256 * 2);
 				Hex2Str(pstServerMsgUp->Msg.stData2Server.AppEUI,stringformat,8);
-				json_object_object_add(pragma,"serialNumber",json_object_new_string(deveui));//(gateway_pragma.macaddress));
-				json_object_object_add(pragma,"model",json_object_new_string(gateway_pragma.macaddress));//(deveui));
-				json_object_object_add(pragma,"temperature",json_object_new_double(42.2));
 				json_object_object_add(pragma,"NetAddr",json_object_new_int(pstServerMsgUp->Msg.stData2Server.DevAddr));
 				json_object_object_add(pragma,"AppEUI",json_object_new_string(stringformat));
 				json_object_object_add(pragma,"Port",json_object_new_int(pstServerMsgUp->Msg.stData2Server.fPort));
@@ -262,7 +256,7 @@ void *mjmqtt_client_routin(void *data)
 				printf("%s ,%d\r\n",__func__,__LINE__);
 			    return;
 			}
-			printf("%s, %d\r\n",__func__,__LINE__);
+			//printf("%s, %d\r\n",__func__,__LINE__);
 			memset(senddata,0,sizeof(senddata));
 			strcpy(senddata,json_object_to_json_string(pragma));
 			/*发布消息*/
@@ -274,13 +268,13 @@ void *mjmqtt_client_routin(void *data)
             }
             else*/
             {
-			    strcpy(topic,"sensors");
+			    strcpy(topic,"LoRaWAN/Up/");
             }
-			//strcat(topic,gateway_pragma.macaddress);
-			//strcat(topic,"/");
-			//strcat(topic,deveui);
+			strcat(topic,gateway_pragma.macaddress);
+			strcat(topic,"/");
+			strcat(topic,deveui);
 
-			printf("topic = %s\r\n",topic);
+			//printf("topic = %s\r\n",topic);
 			mosquitto_publish(mosq,NULL,topic,strlen(senddata)+1,senddata,0,0);
 			json_object_put(pragma);
 		}
@@ -288,38 +282,6 @@ void *mjmqtt_client_routin(void *data)
 		{
 			usleep(100000);
 		}
-		#endif
-		unsigned char topic[8 + 1 + 6 * 2 + 1 + 8 * 2 + 1 + 2 + 1 + 10 + 10] = {0};
-		strcpy(topic,"v1/devices/me/telemetry");
-		pragma = json_object_new_object();
-		int x,y;double value;
-		x = 25;
-		y = 35;
-		value = rand()%(y-x+1)+x;
-		json_object_object_add(pragma,"Snr",json_object_new_int(value));
-		x = -122;
-		y = -100;
-		value = rand()%(y-x+1)+x;
-		json_object_object_add(pragma,"Rssi",json_object_new_int(value));
-		x = -1;
-		y = 5;
-		value = rand()%(y-x+1)+x;
-		json_object_object_add(pragma,"temperature",json_object_new_int(value));
-		x = 48;
-		y = 55;
-		value = rand()%(y-x+1)+x;
-		json_object_object_add(pragma,"humidity",json_object_new_double(value));
-		json_object_object_add(pragma,"active",json_object_new_boolean(false));
-		
-		memset(senddata,0,sizeof(senddata));
-
-		strcpy(senddata,json_object_to_json_string(pragma));
-		printf("%s, %s\r\n",topic,senddata);
-		mosquitto_publish(mosq,NULL,topic,strlen(senddata),senddata,0,0);
-
-		json_object_put(pragma);
-		sleep(2);
-		//break;
 	}
 	mosquitto_destroy(mosq);
 	mosquitto_lib_cleanup();
