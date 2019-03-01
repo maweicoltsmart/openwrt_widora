@@ -131,7 +131,7 @@ createctx:
             modbus_reply(ctx, query, rc, mb_mapping_server);
         }  else if (rc == -1) {
             /* Connection closed by the client or error */
-            break;
+            // break;
         }
     }
     //sleep(1);
@@ -219,7 +219,7 @@ createctx:
             modbus_reply(ctx, query, rc, mb_mapping_server);
         }  else if (rc == -1) {
             /* Connection closed by the client or error */
-            break;
+            // break;
         }
     }
     //sleep(1);
@@ -306,7 +306,7 @@ createctx:
             modbus_reply(ctx, query, rc, mb_mapping_server);
         } else if (rc == -1){
             /* Connection closed by the client or error */
-            break;
+            // break;
         }
     }
     //sleep(1);
