@@ -156,7 +156,7 @@ void *mjmodbus_slave485_routin(void *data)
 createctx:
     ctx = modbus_new_rtu("/dev/ttyUSB0", gateway_pragma.baud, gateway_pragma.parity, 8, 1);
     /* modbus_set_debug(ctx, TRUE); */
-    modbus_set_debug(ctx, TRUE);
+    modbus_set_debug(ctx, false);
     modbus_set_slave(ctx, gateway_pragma.slaveid);
     printf("SlaveID is %d\r\n",gateway_pragma.slaveid);
     mb_mapping_server = modbus_mapping_new(10000, 10000, 10000, 10000);
@@ -219,7 +219,7 @@ createctx:
             modbus_reply(ctx, query, rc, mb_mapping_server);
         }  else if (rc == -1) {
             /* Connection closed by the client or error */
-            break;
+            // break;
         }
     }
     //sleep(1);
@@ -243,7 +243,7 @@ void *mjmodbus_slave232_routin(void *data)
 createctx:
     ctx = modbus_new_rtu("/dev/ttyS2", gateway_pragma.baud, gateway_pragma.parity, 8, 1);
     /* modbus_set_debug(ctx, TRUE); */
-    modbus_set_debug(ctx, TRUE);
+    modbus_set_debug(ctx, false);
     modbus_set_slave(ctx, gateway_pragma.slaveid);
     printf("SlaveID is %d\r\n",gateway_pragma.slaveid);
     mb_mapping_server = modbus_mapping_new(10000, 10000, 10000, 10000);
@@ -306,7 +306,7 @@ createctx:
             modbus_reply(ctx, query, rc, mb_mapping_server);
         } else if (rc == -1){
             /* Connection closed by the client or error */
-            break;
+            // break;
         }
     }
     //sleep(1);
