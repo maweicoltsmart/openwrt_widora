@@ -24,7 +24,7 @@ typedef struct
     	uint16_t index;
     	uint16_t channel;
     	uint16_t datarate;
-    }radio[3];
+    }radio[4];
 }gateway_pragma_t;
 
 extern gateway_pragma_t gateway_pragma;

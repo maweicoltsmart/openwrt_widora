@@ -131,9 +131,11 @@ open_dev:
     stRadioCfg.datarate[0] = gateway_pragma.radio[0].datarate;
     stRadioCfg.datarate[1] = gateway_pragma.radio[1].datarate;
     stRadioCfg.datarate[2] = gateway_pragma.radio[2].datarate;
+    stRadioCfg.datarate[3] = gateway_pragma.radio[3].datarate;
     stRadioCfg.channel[0] = gateway_pragma.radio[0].channel;
     stRadioCfg.channel[1] = gateway_pragma.radio[1].channel;
     stRadioCfg.channel[2] = gateway_pragma.radio[2].channel;
+    stRadioCfg.channel[3] = gateway_pragma.radio[3].channel;
     stRadioCfg.coderate = 1;
     stRadioCfg.preambleLen = 8;
     stRadioCfg.fixLen = false;
@@ -158,9 +160,11 @@ open_dev:
     stRadioCfg.datarate[0] = gateway_pragma.radio[0].datarate;
     stRadioCfg.datarate[1] = gateway_pragma.radio[1].datarate;
     stRadioCfg.datarate[2] = gateway_pragma.radio[2].datarate;
+    stRadioCfg.datarate[3] = gateway_pragma.radio[3].datarate;
     stRadioCfg.channel[0] = gateway_pragma.radio[0].channel;
     stRadioCfg.channel[1] = gateway_pragma.radio[1].channel;
     stRadioCfg.channel[2] = gateway_pragma.radio[2].channel;
+    stRadioCfg.channel[3] = gateway_pragma.radio[3].channel;
     stRadioCfg.coderate = 1;
     stRadioCfg.preambleLen = 8;
     stRadioCfg.fixLen = false;

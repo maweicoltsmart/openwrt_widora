@@ -566,6 +566,7 @@ bool SX1276CheckRfFrequency( int chip,uint32_t frequency )
 
 void SX1276IoFree(int chip)
 {
+    gpio_free(WDT_REED_PIN);
     switch(chip)
     {
         case 0:

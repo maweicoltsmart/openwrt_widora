@@ -152,5 +152,9 @@ void GetGatewayPragma(void)
         gateway_pragma.radio[i].datarate = 12 - (dataratename[3] - '0');
         printf("channel = %d; datarate = %d\r\n",gateway_pragma.radio[i].channel,gateway_pragma.radio[i].datarate);
     }
+    gateway_pragma.radio[2].channel = gateway_pragma.radio[0].channel;
+    gateway_pragma.radio[2].datarate = gateway_pragma.radio[0].datarate;
+    gateway_pragma.radio[3].channel = gateway_pragma.radio[1].channel;
+    gateway_pragma.radio[3].datarate = gateway_pragma.radio[1].datarate;
     json_object_put(pragma);
 }

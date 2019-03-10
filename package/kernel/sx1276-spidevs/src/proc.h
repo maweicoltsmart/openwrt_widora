@@ -19,8 +19,8 @@ typedef struct
 	uint32_t freq_tx[48];
 	uint32_t freq_rx[96];
 	uint32_t dr_range;
-	uint32_t datarate[3];
-	uint32_t channel[3];
+	uint32_t datarate[4];
+	uint32_t channel[4];
 	RadioModems_t modem;
     int8_t power;
     uint32_t fdev;
