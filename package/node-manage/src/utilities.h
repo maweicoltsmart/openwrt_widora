@@ -101,5 +101,5 @@ void Str2Hex( const char *sSrc,  char *sDest, int nSrcLen );
 
 TimerTime_t TimerGetElapsedTime( TimerTime_t savedTime );
 void hexdump(const unsigned char *buf, const int num);
-
+void reverse (uint8_t* dst, const uint8_t* src, uint8_t len);
 #endif // __UTILITIES_H__

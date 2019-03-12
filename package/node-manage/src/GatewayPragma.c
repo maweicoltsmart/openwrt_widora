@@ -63,6 +63,7 @@ void GetGatewayPragma(void)
         json_object_object_add(pragma,"Parity",json_object_new_string("8N1"));
         
         memset(byte,0,100);
+        reverse(gateway_pragma.APPKEY,gateway_pragma.APPKEY,16);
         Hex2Str(gateway_pragma.APPKEY,byte,16);
         json_object_object_add(pragma,"APPKEY",json_object_new_string(byte));
         memset(byte,0,100);
@@ -123,6 +124,7 @@ void GetGatewayPragma(void)
 	memset(byte,0,100);
     strcpy(byte,json_object_get_string(obj));
 	Str2Hex(byte,gateway_pragma.APPKEY,2 * 16);
+    reverse(gateway_pragma.APPKEY,gateway_pragma.APPKEY,16);
 
 	json_object_object_get_ex(pragma,"NetID",&obj);
 	memset(byte,0,100);

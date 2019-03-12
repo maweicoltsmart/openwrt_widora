@@ -67,6 +67,17 @@ void Hex2Str( const char *sSrc,  char *sDest, int nSrcLen )
     //sDest[i * 2] = '\0';
     return ;
 }
+
+void reverse (uint8_t* dst, const uint8_t* src, uint8_t len) {
+    // works in-place (but not arbitrarily overlapping)
+    uint8_t i,x,j;
+    for(i=0, j=len-1; i < j; i++, j--) {
+    x = src[i];
+    dst[i] = src[j];
+    dst[j] = x;
+    }
+}
+
 int main(int argc, char*argv[])
 {
     int   ContentLength;   /*数据长度*/
@@ -218,6 +229,7 @@ int main(int argc, char*argv[])
             json_object_object_add(pragma,"Parity",json_object_new_string("8N1"));
         
             memset(byte,0,100);
+            reverse(gateway_pragma.APPKEY,gateway_pragma.APPKEY,16);
             Hex2Str(gateway_pragma.APPKEY,byte,16);
             json_object_object_add(pragma,"APPKEY",json_object_new_string(byte));
             memset(byte,0,100);

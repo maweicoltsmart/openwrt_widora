@@ -131,3 +131,13 @@ void hexdump(const unsigned char *buf, const int num)
     printf("\r\n");
     return;
 }
+
+void reverse (uint8_t* dst, const uint8_t* src, uint8_t len) {
+    // works in-place (but not arbitrarily overlapping)
+    uint8_t i,x,j;
+    for(i=0, j=len-1; i < j; i++, j--) {
+    x = src[i];
+    dst[i] = src[j];
+    dst[j] = x;
+    }
+}
