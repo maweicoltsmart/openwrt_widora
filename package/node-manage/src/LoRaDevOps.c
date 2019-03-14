@@ -117,17 +117,17 @@ open_dev:
 
     for( i = 0; i < CN433_MAX_NB_CHANNELS; i++ )
     {
-        stRadioCfg.freq_rx[i] = ( uint32_t )( ( double )(410000000 + i * 1000000) / ( double )FREQ_STEP );
+        stRadioCfg.freq_rx[i] = ( uint32_t )( ( double )(410000000 + i * 200000) / ( double )FREQ_STEP );
     }
     for( i = 0; i < CN433_MAX_NB_CHANNELS; i++ )
     {
-        stRadioCfg.freq_tx[i] = ( uint32_t )( ( double )(410000000 + 24 * 1000000 + ( i ) * 1000000) / ( double )FREQ_STEP );
+        stRadioCfg.freq_tx[i] = ( uint32_t )( ( double )(410000000 + 24 * 200000 + ( i ) * 200000) / ( double )FREQ_STEP );
     }
     stRadioCfg.dr_range = (DR_5 << 16) | DR_0;
     stRadioCfg.modem = MODEM_LORA;
     stRadioCfg.power = 20;
     stRadioCfg.fdev = 0;
-    stRadioCfg.bandwidth = 2;
+    stRadioCfg.bandwidth = 0;
     stRadioCfg.datarate[0] = gateway_pragma.radio[0].datarate;
     stRadioCfg.datarate[1] = gateway_pragma.radio[1].datarate;
     stRadioCfg.datarate[2] = gateway_pragma.radio[2].datarate;
@@ -156,7 +156,7 @@ open_dev:
     stRadioCfg.modem = MODEM_LORA;
     stRadioCfg.power = 20;
     stRadioCfg.fdev = 0;
-    stRadioCfg.bandwidth = 2;
+    stRadioCfg.bandwidth = 0;
     stRadioCfg.datarate[0] = gateway_pragma.radio[0].datarate;
     stRadioCfg.datarate[1] = gateway_pragma.radio[1].datarate;
     stRadioCfg.datarate[2] = gateway_pragma.radio[2].datarate;

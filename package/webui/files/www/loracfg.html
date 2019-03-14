@@ -76,13 +76,13 @@
       if(reg.test(str)){
      		var paraInt=parseInt(str) ;
    	    //alert(paraInt);
-   	    if(paraInt<1 || paraInt>247){
-   	   	     alert('必须为1-247的整数');
+   	    if(paraInt<0 || paraInt>247){
+   	   	     alert('必须为0-247的整数');
    	   	     obj_SlaveID.focus();
    	   	     return false;
    	   	}
      	}else{
-     		alert('必须为1-247的整数');
+     		alert('必须为0-247的整数');
    	   	obj_SlaveID.focus();
    	   	return false;
 
@@ -114,14 +114,14 @@
      	if(reg.test(paraStr)){
      		var paraInt=parseInt(paraStr) ;
    	    //alert(paraInt);
-   	    if(paraInt<0 || paraInt>95 || paraInt==25){
-   	   	     alert('必须为除25以外0-95的整数');
+   	    if(paraInt<0 || paraInt>23){
+   	   	     alert('必须为0-23的整数');
    	   	     paraObj .focus();
    	   	     return false;
    	   	}
 
      	}else{
-     		alert('必须为除25以外0-95的整数');
+     		alert('必须为0-23的整数');
    	   	paraObj.focus();
    	   	return false;
 
@@ -136,7 +136,13 @@
    	var channelvalue=channelObj.value;
    	var channelMode=channelvalue %6;
    	
-   	$("#datarate_"+channelIndex).text("DR_"+channelMode);
+   	//$("#datarate_"+channelIndex).text("DR_"+channelMode);
+    
+    //channelIndexOther = parseInt(channelIndex)+2;
+    //alert(channelIndexOther);
+    //$("#channel_"+channelIndexOther).text(parseInt(channelvalue)+24);
+    $("#datarate_"+channelIndex).text("DR_0");
+    //$("#datarate_"+channelIndexOther).text("DR_0");
    	
   }
 
@@ -268,7 +274,7 @@
 	            </thead>
 	          <tbody>
 		          <tr>
-			           <td id="index_0"> </td>
+			           <td id="index_0">0 </td>
 			           <td><input id="channel_0" type="text" name="channel_0" class="form-control" onblur="setDatarateAfterChannel(this);"/></td>
 			           <!-- <td><select id="datarate_0" name="datarate_0" class="form-control" data-live-search="true">
                   <option value="DR_0">DR_0</option>
@@ -285,22 +291,28 @@
 		          </tr>
 
 		         <tr>
-			           <td id="index_1"> </td>
+			           <td id="index_1">1</td>
 			           <td><input id="channel_1" type="text" name="channel_1" class="form-control" onblur="setDatarateAfterChannel(this);"/></td>
 			           <td id="datarate_1"> </td>
 		          </tr>
 
-		          <tr>
+		          <!-- <tr>
 			           <td id="index_2"> </td>
 			           <td><input id="channel_2" type="text" name="channel_2" class="form-control" onblur="setDatarateAfterChannel(this);"/></td>
 			           <td id="datarate_2"> </td>
+		          </tr> 
+		          
+		          <tr>
+			           <td id="index_2">2 </td>
+			           <td id="channel_2"></td> 
+			           <td id="datarate_2"></td>
 		          </tr>
 		           
 		          <tr>
 			           <td id="index_3">3</td>
-			            <td id="channel_3">25</td> 
-			           <td id="datarate_3">DR_0</td>
-		          </tr>
+			            <td id="channel_3"></td> 
+			           <td id="datarate_3"></td>
+		          </tr>  -->
 
 
 	          </tbody>
@@ -357,8 +369,8 @@
            	for(var i=0;i<radioArray.length;i++){
            		$("#index_"+i).text(radioArray[i].index);;
            		$("#channel_"+i).val(radioArray[i].channel);
-           	  //$("#datarate_"+i).val(radioArray[i].datarate);
-           	  $("#datarate_"+i).text('DR_'+radioArray[i].channel%6);
+           	  $("#datarate_"+i).text(radioArray[i].datarate);
+           	  //$("#datarate_"+i).text('DR_'+radioArray[i].channel%6);
            	}
         },
         error: function(error) {
@@ -398,14 +410,10 @@
     }
     
     
-    if(isLegal){
-     	 isLegal=check_channel("channel_2");
-    }
-    
     
 
     if(isLegal){
-    var init_info='{"SoftWareVersion":"Version 1.2 (Apr 24 2018 14:09:23)","MacAddress":"001122334455","UserName":"MJ-Modem","Password":"www.colt.xin","NetType":"MQTT","SlaveID":0,"Baud":9600,"Parity":"8N1","APPKEY":"2B7E151628AED2A6ABF7158809CF4F3C","NetID":"789ABC","serverip":"192.168.1.100","serverport":32500,"radio":[{"index":0,"channel":0,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"},{"index":0,"channel":2,"datarate":"DR_0"}]}';
+    var init_info='{"SoftWareVersion":"Version 1.2 (Apr 24 2018 14:09:23)","MacAddress":"001122334455","UserName":"MJ-Modem","Password":"www.colt.xin","NetType":"MQTT","SlaveID":0,"Baud":9600,"Parity":"8N1","APPKEY":"2B7E151628AED2A6ABF7158809CF4F3C","NetID":"789ABC","serverip":"192.168.1.100","serverport":32500,"radio":[{"index":0,"channel":0,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"}]}';
 
 
     var init_info_json =JSON.parse(init_info);
