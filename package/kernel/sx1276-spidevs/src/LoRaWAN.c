@@ -272,8 +272,8 @@ void LoRaWANJoinTimer1WorkQueue(struct work_struct *p_work)
 		/*stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANJoinTimer2Callback;
 		stNodeDatabase[pstMyWork->param].timer2.data = pstMyWork->param;
 		stNodeDatabase[pstMyWork->param].timer2.expires = stNodeDatabase[pstMyWork->param].jiffies + LoRaMacParams.JoinAcceptDelay2;
-		add_timer(&stNodeDatabase[pstMyWork->param].timer2);
-		printk("no accept ,1 ,%d\r\n",pstMyWork->param);*/
+		add_timer(&stNodeDatabase[pstMyWork->param].timer2);*/
+		printk("no accept ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
 	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip) == RF_TX_RUNNING)
@@ -281,17 +281,17 @@ void LoRaWANJoinTimer1WorkQueue(struct work_struct *p_work)
 		/*stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANJoinTimer2Callback;
 		stNodeDatabase[pstMyWork->param].timer2.data = pstMyWork->param;
 		stNodeDatabase[pstMyWork->param].timer2.expires = stNodeDatabase[pstMyWork->param].jiffies + LoRaMacParams.JoinAcceptDelay2;
-		add_timer(&stNodeDatabase[pstMyWork->param].timer2);
-		printk("accept busy ,1 ,%d\r\n",pstMyWork->param);*/
+		add_timer(&stNodeDatabase[pstMyWork->param].timer2);*/
+		printk("accept busy ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-	if(time_before(stNodeDatabase[pstMyWork->param].jiffies + LoRaMacParams.JoinAcceptDelay1 + 25,jiffies))
+	if(time_before(stNodeDatabase[pstMyWork->param].jiffies + LoRaMacParams.JoinAcceptDelay1 + 50,jiffies))
 	{
 		/*stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANJoinTimer2Callback;
 		stNodeDatabase[pstMyWork->param].timer2.data = pstMyWork->param;
 		stNodeDatabase[pstMyWork->param].timer2.expires = stNodeDatabase[pstMyWork->param].jiffies + LoRaMacParams.JoinAcceptDelay2;
-		add_timer(&stNodeDatabase[pstMyWork->param].timer2);
-		printk("accept delay ,1 ,%d\r\n",pstMyWork->param);*/
+		add_timer(&stNodeDatabase[pstMyWork->param].timer2);*/
+		printk("accept delay ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
     mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
@@ -379,8 +379,8 @@ void LoRaWANDataDownTimer1WorkQueue(struct work_struct *p_work)
 		/*stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANDataDownTimer2Callback;
 		stNodeDatabase[pstMyWork->param].timer2.data = pstMyWork->param;
 		stNodeDatabase[pstMyWork->param].timer2.expires = stNodeDatabase[pstMyWork->param].jiffies + LoRaMacParams.ReceiveDelay2;
-		add_timer(&stNodeDatabase[pstMyWork->param].timer2);
-		printk("no data ,1 ,%d\r\n",pstMyWork->param);*/
+		add_timer(&stNodeDatabase[pstMyWork->param].timer2);*/
+		printk("no data ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
 	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip + 2) == RF_TX_RUNNING)
@@ -388,17 +388,17 @@ void LoRaWANDataDownTimer1WorkQueue(struct work_struct *p_work)
 		/*stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANDataDownTimer2Callback;
 		stNodeDatabase[pstMyWork->param].timer2.data = pstMyWork->param;
 		stNodeDatabase[pstMyWork->param].timer2.expires = stNodeDatabase[pstMyWork->param].jiffies + LoRaMacParams.ReceiveDelay2;
-		add_timer(&stNodeDatabase[pstMyWork->param].timer2);
-		printk("data busy ,1 ,%d\r\n",pstMyWork->param);*/
+		add_timer(&stNodeDatabase[pstMyWork->param].timer2);*/
+		printk("data busy ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-	if(time_before(stNodeDatabase[pstMyWork->param].jiffies + LoRaMacParams.ReceiveDelay1 + 25,(unsigned long)jiffies))
+	if(time_before(stNodeDatabase[pstMyWork->param].jiffies + LoRaMacParams.ReceiveDelay1 + 50,(unsigned long)jiffies))
 	{
 		/*stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANDataDownTimer2Callback;
 		stNodeDatabase[pstMyWork->param].timer2.data = pstMyWork->param;
 		stNodeDatabase[pstMyWork->param].timer2.expires = stNodeDatabase[pstMyWork->param].jiffies + LoRaMacParams.ReceiveDelay2;
-		add_timer(&stNodeDatabase[pstMyWork->param].timer2);
-		printk("data delay ,1 ,%d\r\n",pstMyWork->param);*/
+		add_timer(&stNodeDatabase[pstMyWork->param].timer2);*/
+		printk("data delay ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
 	mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
