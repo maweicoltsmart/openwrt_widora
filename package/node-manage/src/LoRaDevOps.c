@@ -117,11 +117,11 @@ open_dev:
 
     for( i = 0; i < CN433_MAX_NB_CHANNELS; i++ )
     {
-        stRadioCfg.freq_rx[i] = ( uint32_t )( ( double )(410000000 + i * 200000) / ( double )FREQ_STEP );
+        stRadioCfg.freq_rx[i] = ( uint32_t )( ( double )(410000000 + i * 1000000) / ( double )FREQ_STEP );
     }
     for( i = 0; i < CN433_MAX_NB_CHANNELS; i++ )
     {
-        stRadioCfg.freq_tx[i] = ( uint32_t )( ( double )(410000000 + 24 * 200000 + ( i ) * 200000) / ( double )FREQ_STEP );
+        stRadioCfg.freq_tx[i] = ( uint32_t )( ( double )(410000000 + 24 * 1000000 + ( i ) * 1000000) / ( double )FREQ_STEP );
     }
     stRadioCfg.dr_range = (DR_5 << 16) | DR_0;
     stRadioCfg.modem = MODEM_LORA;
