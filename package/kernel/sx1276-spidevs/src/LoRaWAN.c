@@ -804,6 +804,11 @@ void LoRaWANJoinAccept(uint32_t addr)
 	acceptbuf[0] = macHdr.Value;
     
 	memcpy(acceptbuf + 1,stGatewayParameter.AppNonce,3);
+	stGatewayParameter.NetID[0] = 0x00;
+	stGatewayParameter.NetID[1] = 0x00;
+	stGatewayParameter.NetID[2] = 0x00;
+	stGatewayParameter.NetID[stRadioCfg_Rx.channel[0] / 8] |= (1 << (stRadioCfg_Rx.channel[0] % 8));
+	stGatewayParameter.NetID[stRadioCfg_Rx.channel[1] / 8] |= (1 << (stRadioCfg_Rx.channel[1] % 8));
 	memcpy(acceptbuf + 1 + 3,stGatewayParameter.NetID,3);
 	*(uint32_t *)(acceptbuf + 1 + 3 + 3) = stNodeInfoToSave[addr].stDevNetParameter.DevAddr;
 	acceptbuf[1 + 3 + 3 + 4]= 0;

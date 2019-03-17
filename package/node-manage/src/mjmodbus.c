@@ -206,6 +206,7 @@ createctx:
         modbus_mapping_free(mb_mapping_server);
         modbus_free(ctx);
         printf("connection failed\r\n");
+        sleep(2);
         goto createctx;
     }
     printf("receive & reply\r\n");
@@ -293,6 +294,7 @@ createctx:
         modbus_mapping_free(mb_mapping_server);
         modbus_free(ctx);
         printf("connection failed\r\n");
+        sleep(2);
         goto createctx;
     }
     printf("receive & reply\r\n");
