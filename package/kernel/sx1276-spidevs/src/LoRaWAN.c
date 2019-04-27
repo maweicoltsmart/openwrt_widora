@@ -276,7 +276,7 @@ void LoRaWANJoinTimer1WorkQueue(struct work_struct *p_work)
 		printk("no accept ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip) == RF_TX_RUNNING)
+	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip + 2) == RF_TX_RUNNING)
 	{
 		/*stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANJoinTimer2Callback;
 		stNodeDatabase[pstMyWork->param].timer2.data = pstMyWork->param;
