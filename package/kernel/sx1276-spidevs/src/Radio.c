@@ -141,6 +141,7 @@ void RadioInit(void)
             stRadioCfg_Rx.rxContinuous);
     Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
     Radio.Rx( chip,0 );
+    Radio.Sleep(chip);
     chip = 3;
     mutex_init(&RadioChipMutex[chip]);
     Radio.Init(chip,&RadioEvent);
@@ -177,6 +178,7 @@ void RadioInit(void)
             stRadioCfg_Rx.rxContinuous);
     Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[25]);
     Radio.Rx( chip,0 );
+    Radio.Sleep(chip);
     return;
 }
 

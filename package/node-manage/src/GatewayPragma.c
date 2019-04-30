@@ -57,7 +57,7 @@ void GetGatewayPragma(void)
         json_object_object_add(pragma,"MacAddress",json_object_new_string(streth0macaddr));
         json_object_object_add(pragma,"UserName",json_object_new_string("MJ-LoRaWAN-Gateway"));
         json_object_object_add(pragma,"Password",json_object_new_string("www.coltsmart.com"));
-        json_object_object_add(pragma,"NetType",json_object_new_string("Modbus"));
+        json_object_object_add(pragma,"NetType",json_object_new_string("MQTT"));
         json_object_object_add(pragma,"SlaveID",json_object_new_int(1));
         json_object_object_add(pragma,"Baud",json_object_new_int(115200));
         json_object_object_add(pragma,"Parity",json_object_new_string("8N1"));
