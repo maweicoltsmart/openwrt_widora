@@ -141,7 +141,7 @@ void RadioInit(void)
             stRadioCfg_Rx.rxContinuous);
     Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
     Radio.Rx( chip,0 );
-    Radio.Sleep(chip);
+    //Radio.Sleep(chip);
     chip = 3;
     mutex_init(&RadioChipMutex[chip]);
     Radio.Init(chip,&RadioEvent);
@@ -176,9 +176,9 @@ void RadioInit(void)
             stRadioCfg_Rx.hopPeriod,
             stRadioCfg_Rx.iqInverted,
             stRadioCfg_Rx.rxContinuous);
-    Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[25]);
+    Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
     Radio.Rx( chip,0 );
-    Radio.Sleep(chip);
+    //Radio.Sleep(chip);
     return;
 }
 
@@ -228,7 +228,7 @@ void RadioRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t
         return;
     }*/
     Radio.Sleep( chip);
-    if(chip < 2)
+    //if(chip < 2)
     {
         SX1276SetRxConfig(chip,
             stRadioCfg_Rx.modem,
@@ -262,7 +262,7 @@ void RadioTxDone( int chip )
         return;
     }*/
     Radio.Sleep( chip);
-    /*if(chip < 3)
+    //if(chip < 3)
     {
         SX1276SetRxConfig(chip,
                 stRadioCfg_Rx.modem,
@@ -281,7 +281,7 @@ void RadioTxDone( int chip )
                 stRadioCfg_Rx.rxContinuous);
         Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
         Radio.Rx( chip,RADIO_RX_TIMEOUT );
-    }*/
+    }
     DEBUG_OUTPUT_EVENT(chip,EV_TXCOMPLETE);
     printk("%s, %d\r\n",__func__,chip);
     //State = TX;
@@ -291,7 +291,7 @@ void RadioTxTimeout( int chip )
 {
     printk("%s , %d\r\n",__func__,chip);
 	Radio.Sleep( chip);
-    /*if(chip < 2)
+    //if(chip < 2)
     {
         SX1276SetRxConfig(chip,
                 stRadioCfg_Rx.modem,
@@ -310,14 +310,14 @@ void RadioTxTimeout( int chip )
                 stRadioCfg_Rx.rxContinuous);
         Radio.SetChannel(chip,stRadioCfg_Rx.freq_rx[stRadioCfg_Rx.channel[chip]]);
         Radio.Rx( chip,RADIO_RX_TIMEOUT );
-    }*/
+    }
 }
 
 void RadioRxTimeout( int chip )
 {
     printk("%s , %d\r\n",__func__,chip);
     Radio.Sleep( chip);
-    if(chip < 2)
+    //if(chip < 2)
     {
         SX1276SetRxConfig(chip,
                 stRadioCfg_Rx.modem,
@@ -346,7 +346,7 @@ void RadioRxError( int chip )
         return;
     }*/
     Radio.Sleep( chip);
-    if(chip < 2)
+    //if(chip < 2)
     {
         SX1276SetRxConfig(chip,
                 stRadioCfg_Rx.modem,

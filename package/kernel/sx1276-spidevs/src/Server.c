@@ -121,6 +121,7 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 	LoRaMacFrameCtrl_t fCtrl;
 	uint8_t LoRaMacBufferPktLen;
 	uint32_t mic;
+	//printk("%s, %d\r\n", __func__, __LINE__);
 	if(pstServerMsgDown->enMsgDownFramType == en_MsgDownFramDataSend)
 	{
 		if(!NodeDatabaseVerifyNetAddr(pstServerMsgDown->Msg.stData2Node.DevAddr))
@@ -129,6 +130,7 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
 			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerOffline;
 			ServerMsgUpListAdd(&stServerMsgUp);*/
+			//printk("%s, %d\r\n", __func__, __LINE__);
 			return;
 		}
         if(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].state == enStateJoinning)
@@ -144,6 +146,7 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 			    memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
 			    stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerOffline;
 			    ServerMsgUpListAdd(&stServerMsgUp);*/
+			    //printk("%s, %d\r\n", __func__, __LINE__);
 			    return;
             }
 		}
@@ -161,6 +164,7 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
 			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerTooLong;
 			ServerMsgUpListAdd(&stServerMsgUp);*/
+			//printk("%s, %d\r\n", __func__, __LINE__);
 			return;
 		}
 		if((pstServerMsgDown->Msg.stData2Node.fPort > 233) || (pstServerMsgDown->Msg.stData2Node.fPort < 1))
@@ -169,52 +173,21 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
 			stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerPortNotAllow;
 			ServerMsgUpListAdd(&stServerMsgUp);*/
+			//printk("%s, %d\r\n", __func__, __LINE__);
 			return;
 		}
-		if(stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].classtype == CLASS_A)
-		{
-			if(time_before(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].jiffies + LoRaMacParams.ReceiveDelay2 + 25,jiffies))
-			{
-				printk("%d rx off\r\n",pstServerMsgDown->Msg.stData2Node.DevAddr);
-				/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
-				memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
-				stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerNodeNotOnRxWindow;
-				ServerMsgUpListAdd(&stServerMsgUp);*/
-				//return;
-			}
-			else
-			{
-				printk("%d rx on\r\n",pstServerMsgDown->Msg.stData2Node.DevAddr);
-			}
-		}
-		else if(stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].classtype == CLASS_C)
-		{
-			stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.classcjiffies = jiffies;
-			if(time_before(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].jiffies + LoRaMacParams.ReceiveDelay2 - 1,jiffies))
-			{
-				del_timer(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer1);
-				del_timer(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2);
-				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len = 0;
-				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2.function = LoRaWANRadomDataDownClassCTimer2Callback;
-				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2.data = pstServerMsgDown->Msg.stData2Node.DevAddr;
-				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2.expires = jiffies + 100;
-				add_timer(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2);
-			}
-		}
-		else
-		{
-		}
+		
 		if(pstServerMsgDown->Msg.stData2Node.CtrlBits.AckRequest)
     	{
         	macHdr.Bits.MType = FRAME_TYPE_DATA_CONFIRMED_DOWN;
 			//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.needack = true;
     	}
-
     	else
     	{
         	macHdr.Bits.MType = FRAME_TYPE_DATA_UNCONFIRMED_DOWN;
 			//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.needack = false;
     	}
+    	//printk("%s, %d\r\n", __func__, __LINE__);
 		fCtrl.Value = 0;
 		fCtrl.Bits.FPending = false;
 		fCtrl.Bits.Ack = pstServerMsgDown->Msg.stData2Node.CtrlBits.Ack;
@@ -226,6 +199,7 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 		if(pstServerMsgDown->Msg.stData2Node.size > 0)
 		{
 			*(uint8_t *)(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf + 1 + 4 + 1 + 2) = pstServerMsgDown->Msg.stData2Node.fPort;
+			stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].chip = pstServerMsgDown->Msg.stData2Node.fPort - 1;
 			LoRaMacBufferPktLen = 1 + 4 + 1 + 2 + 1;
 			LoRaMacPayloadEncrypt( pstServerMsgDown->Msg.stData2Node.payload, pstServerMsgDown->Msg.stData2Node.size, stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.AppSKey, pstServerMsgDown->Msg.stData2Node.DevAddr, DOWN_LINK, stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].sequence_down,&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf[LoRaMacBufferPktLen]);
 			LoRaMacBufferPktLen += pstServerMsgDown->Msg.stData2Node.size;
@@ -242,6 +216,43 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 	    LoRaMacBufferPktLen += LORAMAC_MFR_LEN;
 		stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len = LoRaMacBufferPktLen;
 		stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].sequence_down ++;
+
+		if(stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].classtype == CLASS_A)
+		{
+			if(time_before(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].jiffies + LoRaMacParams.ReceiveDelay2 + 25,jiffies))
+			{
+				printk("%d rx off\r\n",pstServerMsgDown->Msg.stData2Node.DevAddr);
+				/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
+				memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);
+				stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerNodeNotOnRxWindow;
+				ServerMsgUpListAdd(&stServerMsgUp);*/
+				//return;
+				//printk("%s, %d\r\n", __func__, __LINE__);
+			}
+			else
+			{
+				printk("%d rx on\r\n",pstServerMsgDown->Msg.stData2Node.DevAddr);
+			}
+		}
+		else if(stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].classtype == CLASS_C)
+		{
+			stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.classcjiffies = jiffies;
+			//if(time_before(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].jiffies + LoRaMacParams.ReceiveDelay2 - 1,jiffies))
+			{
+				/*del_timer(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer1);
+				del_timer(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2);
+				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.len = 0;
+				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2.function = LoRaWANRadomDataDownClassCTimer2Callback;
+				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2.data = pstServerMsgDown->Msg.stData2Node.DevAddr;
+				stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2.expires = jiffies + 100;
+				add_timer(&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].timer2);*/
+				LoRaWANRadomDataDownClassCTimer2Callback( pstServerMsgDown->Msg.stData2Node.DevAddr );
+				//printk("%s, %d\r\n", __func__, __LINE__);
+			}
+		}
+		else
+		{
+		}
 
 	}
 	else if(pstServerMsgDown->enMsgDownFramType == en_MsgDownFramConfirm)

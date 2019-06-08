@@ -167,10 +167,10 @@ int LoRaWANRxDataProcess(void *data){
 					}
 					else if(stNodeInfoToSave[stFrameDataUp.frameHdr.DevAddr].classtype == CLASS_C)
 					{
-						stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer1.function = LoRaWANDataDownClassCTimer1Callback;
+						/*stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer1.function = LoRaWANDataDownClassCTimer1Callback;
 						stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer1.data = stFrameDataUp.frameHdr.DevAddr;
 						stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer1.expires = stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].jiffies + LoRaMacParams.ReceiveDelay1;
-						add_timer(&stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer1);
+						add_timer(&stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer1);*/
 					}
 					else
 					{
@@ -276,7 +276,7 @@ void LoRaWANJoinTimer1WorkQueue(struct work_struct *p_work)
 		printk("no accept ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip + 2) == RF_TX_RUNNING)
+	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip) == RF_TX_RUNNING)
 	{
 		/*stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANJoinTimer2Callback;
 		stNodeDatabase[pstMyWork->param].timer2.data = pstMyWork->param;
@@ -294,14 +294,14 @@ void LoRaWANJoinTimer1WorkQueue(struct work_struct *p_work)
 		printk("accept delay ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-    mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
-	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip + 2);
-	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip + 2,
+    mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
+	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip);
+	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip,
 		stRadioCfg_Tx.modem,
 		stRadioCfg_Tx.power,
 		stRadioCfg_Tx.fdev,
 		stRadioCfg_Tx.bandwidth,
-		stRadioCfg_Tx.datarate[stNodeDatabase[pstMyWork->param].chip + 2],
+		stRadioCfg_Tx.datarate[stNodeDatabase[pstMyWork->param].chip],
 		stRadioCfg_Tx.coderate,
 		stRadioCfg_Tx.preambleLen,
 		stRadioCfg_Tx.fixLen,
@@ -310,20 +310,21 @@ void LoRaWANJoinTimer1WorkQueue(struct work_struct *p_work)
 		stRadioCfg_Tx.hopPeriod,
 		stRadioCfg_Tx.iqInverted,
 		stRadioCfg_Tx.timeout);
-	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip + 2,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip + 2]]);
-	Radio.Send(stNodeDatabase[pstMyWork->param].chip + 2,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
-    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
+	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip]]);
+	Radio.Send(stNodeDatabase[pstMyWork->param].chip,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
+    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	//stNodeDatabase[pstMyWork->param].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
+	//printk("%s,chip = %d\r\n",__func__,stNodeDatabase[pstMyWork->param].chip);
 }
-
+#if 0
 void LoRaWANJoinTimer2WorkQueue(struct work_struct *p_work)
 {
     pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
 	//tasklet_kill(&stNodeDatabase[index].tasklet);
 	del_timer(&stNodeDatabase[pstMyWork->param].timer2);
-	//if(Radio.GetStatus(stNodeInfoToSave[pstMyWork->param].chip + 2) == RF_TX_RUNNING)
+	//if(Radio.GetStatus(stNodeInfoToSave[pstMyWork->param].chip) == RF_TX_RUNNING)
 
 	if(stNodeDatabase[pstMyWork->param].stTxData.len == 0)
 	{
@@ -331,7 +332,7 @@ void LoRaWANJoinTimer2WorkQueue(struct work_struct *p_work)
 		printk("no accept ,2 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip + 2) == RF_TX_RUNNING)
+	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip) == RF_TX_RUNNING)
 	{
 		stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 		printk("accept busy ,2 ,%d\r\n",pstMyWork->param);
@@ -343,14 +344,14 @@ void LoRaWANJoinTimer2WorkQueue(struct work_struct *p_work)
 		printk("accept delay ,2 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-    mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
-	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip + 2);
-	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip + 2,
+    mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
+	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip);
+	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip,
 		stRadioCfg_Tx.modem,
 		stRadioCfg_Tx.power,
 		stRadioCfg_Tx.fdev,
 		stRadioCfg_Tx.bandwidth,
-		stRadioCfg_Tx.datarate[stNodeDatabase[pstMyWork->param].chip + 2],
+		stRadioCfg_Tx.datarate[stNodeDatabase[pstMyWork->param].chip],
 		stRadioCfg_Tx.coderate,
 		stRadioCfg_Tx.preambleLen,
 		stRadioCfg_Tx.fixLen,
@@ -359,14 +360,14 @@ void LoRaWANJoinTimer2WorkQueue(struct work_struct *p_work)
 		stRadioCfg_Tx.hopPeriod,
 		stRadioCfg_Tx.iqInverted,
 		stRadioCfg_Tx.timeout);
-	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip + 2,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip + 2]]);
-	Radio.Send(stNodeDatabase[pstMyWork->param].chip + 2,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
-    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
+	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip]]);
+	Radio.Send(stNodeDatabase[pstMyWork->param].chip,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
+    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	//stNodeDatabase[pstMyWork->param].state = enStateJoined;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
 }
-
+#endif
 void LoRaWANDataDownTimer1WorkQueue(struct work_struct *p_work)
 {
     pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
@@ -383,7 +384,7 @@ void LoRaWANDataDownTimer1WorkQueue(struct work_struct *p_work)
 		printk("no data ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip + 2) == RF_TX_RUNNING)
+	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip) == RF_TX_RUNNING)
 	{
 		/*stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANDataDownTimer2Callback;
 		stNodeDatabase[pstMyWork->param].timer2.data = pstMyWork->param;
@@ -401,14 +402,14 @@ void LoRaWANDataDownTimer1WorkQueue(struct work_struct *p_work)
 		printk("data delay ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-	mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
-	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip + 2);
-	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip + 2,
+	mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
+	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip);
+	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip,
 		stRadioCfg_Tx.modem,
 		stRadioCfg_Tx.power,
 		stRadioCfg_Tx.fdev,
 		stRadioCfg_Tx.bandwidth,
-		stRadioCfg_Tx.datarate[stNodeDatabase[pstMyWork->param].chip + 2],
+		stRadioCfg_Tx.datarate[stNodeDatabase[pstMyWork->param].chip],
 		stRadioCfg_Tx.coderate,
 		stRadioCfg_Tx.preambleLen,
 		stRadioCfg_Tx.fixLen,
@@ -417,9 +418,9 @@ void LoRaWANDataDownTimer1WorkQueue(struct work_struct *p_work)
 		stRadioCfg_Tx.hopPeriod,
 		stRadioCfg_Tx.iqInverted,
 		stRadioCfg_Tx.timeout);
-	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip + 2,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip + 2]]);
-	Radio.Send(stNodeDatabase[pstMyWork->param].chip + 2,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
-    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
+	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip]]);
+	Radio.Send(stNodeDatabase[pstMyWork->param].chip,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
+    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
     #if 0
@@ -436,20 +437,20 @@ void LoRaWANDataDownTimer1WorkQueue(struct work_struct *p_work)
     }
     #endif
 }
-
+#if 0
 void LoRaWANDataDownTimer2WorkQueue(struct work_struct *p_work)
 {
     pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
 	st_ServerMsgUp stServerMsgUp;
 	//tasklet_kill(&stNodeDatabase[pstMyWork->param].tasklet);
 	del_timer(&stNodeDatabase[pstMyWork->param].timer2);
-	//if(Radio.GetStatus(stNodeInfoToSave[pstMyWork->param].chip + 2) == RF_TX_RUNNING)
+	//if(Radio.GetStatus(stNodeInfoToSave[pstMyWork->param].chip) == RF_TX_RUNNING)
 	if(stNodeDatabase[pstMyWork->param].stTxData.len == 0)
 	{
 		printk("no data ,2 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip + 2) == RF_TX_RUNNING)
+	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip) == RF_TX_RUNNING)
 	{
 		//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 		printk("data busy ,2 ,%d\r\n",pstMyWork->param);		
@@ -469,14 +470,14 @@ void LoRaWANDataDownTimer2WorkQueue(struct work_struct *p_work)
 		ServerMsgUpListAdd(&stServerMsgUp);*/
 		return;
 	}
-    mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
-	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip + 2);
-	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip + 2,
+    mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
+	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip);
+	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip,
 		stRadioCfg_Tx.modem,
 		stRadioCfg_Tx.power,
 		stRadioCfg_Tx.fdev,
 		stRadioCfg_Tx.bandwidth,
-		stRadioCfg_Tx.datarate[stNodeDatabase[pstMyWork->param].chip + 2],
+		stRadioCfg_Tx.datarate[stNodeDatabase[pstMyWork->param].chip],
 		stRadioCfg_Tx.coderate,
 		stRadioCfg_Tx.preambleLen,
 		stRadioCfg_Tx.fixLen,
@@ -485,9 +486,9 @@ void LoRaWANDataDownTimer2WorkQueue(struct work_struct *p_work)
 		stRadioCfg_Tx.hopPeriod,
 		stRadioCfg_Tx.iqInverted,
 		stRadioCfg_Tx.timeout);
-	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip + 2,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip + 2]]);
-	Radio.Send(stNodeDatabase[pstMyWork->param].chip + 2,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
-    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
+	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip]]);
+	Radio.Send(stNodeDatabase[pstMyWork->param].chip,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
+    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
 	#if 0
@@ -534,7 +535,7 @@ void LoRaWANDataDownClassCTimer1WorkQueue(struct work_struct *p_work)
 		printk("no data ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip + 2) == RF_TX_RUNNING)
+	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip) == RF_TX_RUNNING)
 	{
 		stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANDataDownClassCTimer2Callback;
 		stNodeDatabase[pstMyWork->param].timer2.data = pstMyWork->param;
@@ -552,14 +553,14 @@ void LoRaWANDataDownClassCTimer1WorkQueue(struct work_struct *p_work)
 		printk("data delay ,1 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-	mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
-	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip + 2);
-	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip + 2,
+	mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
+	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip);
+	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip,
 		stRadioCfg_Tx.modem,
 		stRadioCfg_Tx.power,
 		stRadioCfg_Tx.fdev,
 		stRadioCfg_Tx.bandwidth,
-		stRadioCfg_Tx.datarate[stNodeDatabase[pstMyWork->param].chip + 2],
+		stRadioCfg_Tx.datarate[stNodeDatabase[pstMyWork->param].chip],
 		stRadioCfg_Tx.coderate,
 		stRadioCfg_Tx.preambleLen,
 		stRadioCfg_Tx.fixLen,
@@ -568,9 +569,9 @@ void LoRaWANDataDownClassCTimer1WorkQueue(struct work_struct *p_work)
 		stRadioCfg_Tx.hopPeriod,
 		stRadioCfg_Tx.iqInverted,
 		stRadioCfg_Tx.timeout);
-	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip + 2,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip + 2]]);
-	Radio.Send(stNodeDatabase[pstMyWork->param].chip + 2,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
-    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
+	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip]]);
+	Radio.Send(stNodeDatabase[pstMyWork->param].chip,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
+    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	//stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
     #if 0
@@ -587,20 +588,21 @@ void LoRaWANDataDownClassCTimer1WorkQueue(struct work_struct *p_work)
     }
     #endif
 }
-
+#endif
+#if 0
 void LoRaWANDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 {
     pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
 	st_ServerMsgUp stServerMsgUp;
 	//tasklet_kill(&stNodeDatabase[pstMyWork->param].tasklet);
 	del_timer(&stNodeDatabase[pstMyWork->param].timer2);
-	//if(Radio.GetStatus(stNodeInfoToSave[pstMyWork->param].chip + 2) == RF_TX_RUNNING)
+	//if(Radio.GetStatus(stNodeInfoToSave[pstMyWork->param].chip) == RF_TX_RUNNING)
 	if(stNodeDatabase[pstMyWork->param].stTxData.len == 0)
 	{
 		printk("no data ,2 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip + 2) == RF_TX_RUNNING)
+	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip) == RF_TX_RUNNING)
 	{
         stNodeDatabase[pstMyWork->param].stTxData.classcjiffies = jiffies;
         stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANRadomDataDownClassCTimer2Callback;
@@ -630,14 +632,14 @@ void LoRaWANDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 		ServerMsgUpListAdd(&stServerMsgUp);*/
 		return;
 	}
-    mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
-	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip + 2);
-	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip + 2,
+    mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
+	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip);
+	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip,
 		stRadioCfg_Tx.modem,
 		stRadioCfg_Tx.power,
 		stRadioCfg_Tx.fdev,
 		stRadioCfg_Tx.bandwidth,
-		stRadioCfg_Tx.datarate[stNodeDatabase[pstMyWork->param].chip + 2],
+		stRadioCfg_Tx.datarate[stNodeDatabase[pstMyWork->param].chip],
 		stRadioCfg_Tx.coderate,
 		stRadioCfg_Tx.preambleLen,
 		stRadioCfg_Tx.fixLen,
@@ -646,9 +648,9 @@ void LoRaWANDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 		stRadioCfg_Tx.hopPeriod,
 		stRadioCfg_Tx.iqInverted,
 		stRadioCfg_Tx.timeout);
-	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip + 2,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip + 2]]);
-	Radio.Send(stNodeDatabase[pstMyWork->param].chip + 2,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
-    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
+	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip]]);
+	Radio.Send(stNodeDatabase[pstMyWork->param].chip,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
+    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
     //stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
 	#if 0
@@ -665,19 +667,22 @@ void LoRaWANDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
     }
     #endif
 }
+#endif
 void LoRaWANRadomDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 {
     pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
 	st_ServerMsgUp stServerMsgUp;
+	//printk("%s, %d\r\n", __func__, __LINE__);
 	//tasklet_kill(&stNodeDatabase[pstMyWork->param].tasklet);
 	del_timer(&stNodeDatabase[pstMyWork->param].timer2);
-	//if(Radio.GetStatus(stNodeInfoToSave[pstMyWork->param].chip + 2) == RF_TX_RUNNING)
+	//if(Radio.GetStatus(stNodeInfoToSave[pstMyWork->param].chip) == RF_TX_RUNNING)
 	if(stNodeDatabase[pstMyWork->param].stTxData.len == 0)
 	{
 		printk("no data ,2 ,%d\r\n",pstMyWork->param);
 		return;
 	}
-	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip + 2) == RF_TX_RUNNING)
+	//printk("%s, %d\r\n", __func__, __LINE__);
+	if(Radio.GetStatus(stNodeDatabase[pstMyWork->param].chip) == RF_TX_RUNNING)
 	{
 		/*stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 		printk("data busy ,2 ,%d\r\n",pstMyWork->param);		
@@ -687,12 +692,14 @@ void LoRaWANRadomDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 		ServerMsgUpListAdd(&stServerMsgUp);
 		*/
 		
-		stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANRadomDataDownClassCTimer2Callback;
+		/*stNodeDatabase[pstMyWork->param].timer2.function = LoRaWANRadomDataDownClassCTimer2Callback;
 		stNodeDatabase[pstMyWork->param].timer2.data = pstMyWork->param;
 		stNodeDatabase[pstMyWork->param].timer2.expires = jiffies + 1000;
-		add_timer(&stNodeDatabase[pstMyWork->param].timer2);
+		add_timer(&stNodeDatabase[pstMyWork->param].timer2);*/
+		//printk("%s, %d\r\n", __func__, __LINE__);
 		return;
 	}
+	#if 0
 	if(time_before(stNodeDatabase[pstMyWork->param].stTxData.classcjiffies + LoRaMacParams.ReceiveDelay2 + 100 + 3000,(unsigned long)jiffies))
 	{
 	    stNodeDatabase[pstMyWork->param].stTxData.classcjiffies = jiffies;
@@ -708,14 +715,16 @@ void LoRaWANRadomDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 		ServerMsgUpListAdd(&stServerMsgUp);*/
 		return;
 	}
-    mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
-	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip + 2);
-	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip + 2,
+	#endif
+	//printk("%s, %d\r\n", __func__, __LINE__);
+    mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
+	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip);
+	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip,
 		stRadioCfg_Tx.modem,
 		stRadioCfg_Tx.power,
 		stRadioCfg_Tx.fdev,
 		stRadioCfg_Tx.bandwidth,
-		stRadioCfg_Tx.datarate[stNodeDatabase[pstMyWork->param].chip + 2],
+		stRadioCfg_Tx.datarate[stNodeDatabase[pstMyWork->param].chip],
 		stRadioCfg_Tx.coderate,
 		stRadioCfg_Tx.preambleLen,
 		stRadioCfg_Tx.fixLen,
@@ -724,9 +733,10 @@ void LoRaWANRadomDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 		stRadioCfg_Tx.hopPeriod,
 		stRadioCfg_Tx.iqInverted,
 		stRadioCfg_Tx.timeout);
-	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip + 2,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip + 2]]);
-	Radio.Send(stNodeDatabase[pstMyWork->param].chip + 2,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
-    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip + 2]);
+	Radio.SetChannel(stNodeDatabase[pstMyWork->param].chip,stRadioCfg_Tx.freq_tx[stRadioCfg_Tx.channel[stNodeDatabase[pstMyWork->param].chip]]);
+	Radio.Send(stNodeDatabase[pstMyWork->param].chip,stNodeDatabase[pstMyWork->param].stTxData.buf,stNodeDatabase[pstMyWork->param].stTxData.len);
+    mutex_unlock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
+    //printk("%s, %d\r\n", __func__, __LINE__);
     //stNodeDatabase[pstMyWork->param].stTxData.len = 0;
 	DEBUG_OUTPUT_INFO("%s\r\n",__func__);
 	#if 0
@@ -743,7 +753,7 @@ void LoRaWANRadomDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
     }
     #endif
 }
-
+#if 0
 void LoRaWANDataDownClassCWaitAckTimer2WorkQueue(struct work_struct *p_work)
 {
     pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
@@ -771,7 +781,7 @@ void LoRaWANDataDownClassCWaitAckTimer2WorkQueue(struct work_struct *p_work)
 	stServerMsgUp.Msg.stConfirm2Server.enConfirm2Server = en_Confirm2ServerNodeNoAck;
 	ServerMsgUpListAdd(&stServerMsgUp);*/
 }
-
+#endif
 void LoRaWANAddWorkQueue(unsigned long addr,pdotasklet do_work)
 {
 	//tasklet_kill(&stNodeDatabase[addr].tasklet);
@@ -784,13 +794,13 @@ void LoRaWANJoinTimer1Callback( unsigned long index )
 	LoRaWANAddWorkQueue(index,LoRaWANJoinTimer1WorkQueue);
 	//LoRaWANJoinTimer1Tasklet(index);
 }
-
+#if 0
 void LoRaWANJoinTimer2Callback( unsigned long index )
 {
 	LoRaWANAddWorkQueue(index,LoRaWANJoinTimer2WorkQueue);
 	//LoRaWANJoinTimer2Tasklet(index);
 }
-
+#endif
 void LoRaWANJoinAccept(uint32_t addr)
 {
 	uint8_t acceptbuf[128] = {0};
@@ -831,7 +841,7 @@ void LoRaWANDataDownTimer1Callback( unsigned long index )
 	LoRaWANAddWorkQueue(index,LoRaWANDataDownTimer1WorkQueue);
 	//LoRaWANDataDownTimer1Tasklet(index);
 }
-
+#if 0
 void LoRaWANDataDownTimer2Callback( unsigned long index )
 {
 	LoRaWANAddWorkQueue(index,LoRaWANDataDownTimer2WorkQueue);
@@ -849,7 +859,8 @@ void LoRaWANDataDownClassCTimer1Callback( unsigned long index )
 	LoRaWANAddWorkQueue(index,LoRaWANDataDownClassCTimer1WorkQueue);
 	//LoRaWANDataDownClassCTimer1Tasklet(index);
 }
-
+#endif
+#if 0
 void LoRaWANDataDownClassCTimer2Callback( unsigned long index )
 {
 	LoRaWANAddWorkQueue(index,LoRaWANDataDownClassCTimer2WorkQueue);
@@ -861,7 +872,7 @@ void LoRaWANDataDownClassCWaitAckTimer2Callback( unsigned long index )
 	LoRaWANAddWorkQueue(index,LoRaWANDataDownClassCWaitAckTimer2WorkQueue);
 	//LoRaWANDataDownClassCWaitAckTimer2Tasklet(index);
 }
-
+#endif
 void LoRaWANRadomDataDownClassCTimer2Callback( unsigned long index )
 {
 	LoRaWANAddWorkQueue(index,LoRaWANRadomDataDownClassCTimer2WorkQueue);

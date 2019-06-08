@@ -240,7 +240,7 @@ int main(int argc, char*argv[])
 
             json_object_object_add(pragma,"radio",array = json_object_new_array());
             const char* drname[] = {"DR_0","DR_1","DR_2","DR_3","DR_4","DR_5"};
-            for(loop = 0;loop < 3;loop++)
+            for(loop = 0;loop < 4;loop++)
             {
                 json_object_array_add(array,chip=json_object_new_object());
                 json_object_object_add(chip,"index",json_object_new_int(loop));

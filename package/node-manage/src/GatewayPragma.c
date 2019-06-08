@@ -74,10 +74,11 @@ void GetGatewayPragma(void)
 
         json_object_object_add(pragma,"radio",array = json_object_new_array());
         const char* drname[] = {"DR_0","DR_1","DR_2","DR_3","DR_4","DR_5"};
-        for(loop = 0;loop < 3;loop++)
+        for(loop = 0;loop < 4;loop++)
         {
             json_object_array_add(array,chip=json_object_new_object());
             json_object_object_add(chip,"index",json_object_new_int(loop));
+            printf("index = %d\n", loop);
             json_object_object_add(chip,"channel",json_object_new_int(loop * 6));
             json_object_object_add(chip,"datarate",json_object_new_string(drname[0]));
         }
@@ -154,9 +155,9 @@ void GetGatewayPragma(void)
         gateway_pragma.radio[i].datarate = 12 - (dataratename[3] - '0');
         printf("channel = %d; datarate = %d\r\n",gateway_pragma.radio[i].channel,gateway_pragma.radio[i].datarate);
     }
-    gateway_pragma.radio[2].channel = gateway_pragma.radio[0].channel;
+    /*gateway_pragma.radio[2].channel = gateway_pragma.radio[0].channel;
     gateway_pragma.radio[2].datarate = gateway_pragma.radio[0].datarate;
     gateway_pragma.radio[3].channel = gateway_pragma.radio[1].channel;
-    gateway_pragma.radio[3].datarate = gateway_pragma.radio[1].datarate;
+    gateway_pragma.radio[3].datarate = gateway_pragma.radio[1].datarate;*/
     json_object_put(pragma);
 }
