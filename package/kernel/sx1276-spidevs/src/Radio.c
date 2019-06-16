@@ -37,6 +37,7 @@ void RadioInit(void)
     mutex_init(&RadioChipMutex[chip]);
     Radio.Init(chip,&RadioEvent);
     Radio.Sleep(chip);
+    Radio.SetMaxPayloadLength(chip,MODEM_LORA,0xff);
     Radio.SetPublicNetwork(chip,stRadioCfg_Rx.isPublic);
     Radio.SetTxConfig(chip,
             stRadioCfg_Tx.modem,
@@ -73,6 +74,7 @@ void RadioInit(void)
     mutex_init(&RadioChipMutex[chip]);
     Radio.Init(chip,&RadioEvent);
     Radio.Sleep(chip);
+    Radio.SetMaxPayloadLength(chip,MODEM_LORA,0xff);
     Radio.SetPublicNetwork(chip,stRadioCfg_Rx.isPublic);
     Radio.SetTxConfig(chip,
             stRadioCfg_Tx.modem,
@@ -109,6 +111,7 @@ void RadioInit(void)
     mutex_init(&RadioChipMutex[chip]);
     Radio.Init(chip,&RadioEvent);
     Radio.Sleep(chip);
+    Radio.SetMaxPayloadLength(chip,MODEM_LORA,0xff);
     Radio.SetPublicNetwork(chip,stRadioCfg_Rx.isPublic);
     Radio.SetTxConfig(chip,
             stRadioCfg_Tx.modem,
@@ -146,6 +149,7 @@ void RadioInit(void)
     mutex_init(&RadioChipMutex[chip]);
     Radio.Init(chip,&RadioEvent);
     Radio.Sleep(chip);
+    Radio.SetMaxPayloadLength(chip,MODEM_LORA,0xff);
     Radio.SetPublicNetwork(chip,stRadioCfg_Rx.isPublic);
     Radio.SetTxConfig(chip,
             stRadioCfg_Tx.modem,
@@ -228,6 +232,7 @@ void RadioRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t
         return;
     }*/
     Radio.Sleep( chip);
+    Radio.SetMaxPayloadLength(chip,MODEM_LORA,0xff);
     //if(chip < 2)
     {
         SX1276SetRxConfig(chip,
@@ -250,6 +255,7 @@ void RadioRxDone( int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_t
     }
     DEBUG_OUTPUT_EVENT(chip, EV_RXCOMPLETE);
     printk("%s ,%d\r\n",__func__,chip);
+
     //DEBUG_OUTPUT_DATA(payload,size);
     rx_done = true;
     wake_up(&lora_wait);
@@ -262,6 +268,7 @@ void RadioTxDone( int chip )
         return;
     }*/
     Radio.Sleep( chip);
+    Radio.SetMaxPayloadLength(chip,MODEM_LORA,0xff);
     //if(chip < 3)
     {
         SX1276SetRxConfig(chip,
@@ -291,6 +298,7 @@ void RadioTxTimeout( int chip )
 {
     printk("%s , %d\r\n",__func__,chip);
 	Radio.Sleep( chip);
+    Radio.SetMaxPayloadLength(chip,MODEM_LORA,0xff);
     //if(chip < 2)
     {
         SX1276SetRxConfig(chip,
@@ -317,6 +325,7 @@ void RadioRxTimeout( int chip )
 {
     printk("%s , %d\r\n",__func__,chip);
     Radio.Sleep( chip);
+    Radio.SetMaxPayloadLength(chip,MODEM_LORA,0xff);
     //if(chip < 2)
     {
         SX1276SetRxConfig(chip,
@@ -346,6 +355,7 @@ void RadioRxError( int chip )
         return;
     }*/
     Radio.Sleep( chip);
+    Radio.SetMaxPayloadLength(chip,MODEM_LORA,0xff);
     //if(chip < 2)
     {
         SX1276SetRxConfig(chip,
@@ -387,6 +397,10 @@ int RadioRxListAdd(int chip,uint8_t *payload, uint16_t size, int16_t rssi, int8_
     new->stRadioRx.size = size;
     new->stRadioRx.rssi = rssi;
     new->stRadioRx.snr = snr;
+    if(size > (200 + 13))
+    {
+        size = (200 + 13);
+    }
     memcpy(new->stRadioRx.payload,payload,size);
     list_add_tail(&(new->list), &stRadioRxListHead.list);
     return 0;

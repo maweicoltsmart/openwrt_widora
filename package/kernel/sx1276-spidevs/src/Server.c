@@ -158,7 +158,7 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 			ServerMsgUpListAdd(&stServerMsgUp);*/
 			//return;
 		}
-		if(pstServerMsgDown->Msg.stData2Node.size > 51)
+		if(pstServerMsgDown->Msg.stData2Node.size > 200)
 		{
 			/*stServerMsgUp.enMsgUpFramType = en_MsgUpFramConfirm;
 			memcpy(stServerMsgUp.Msg.stConfirm2Server.DevEUI,stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.DevEUI,8);

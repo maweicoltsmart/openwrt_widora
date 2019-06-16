@@ -69,7 +69,7 @@ void GetGatewayPragma(void)
         memset(byte,0,100);
         Hex2Str(gateway_pragma.NetID,byte,3);
         json_object_object_add(pragma,"NetID",json_object_new_string(byte));
-        json_object_object_add(pragma,"serverip",json_object_new_string("101.132.97.241"));
+        json_object_object_add(pragma,"serverip",json_object_new_string("39.100.123.34"));
         json_object_object_add(pragma,"serverport",json_object_new_string("1883"));
 
         json_object_object_add(pragma,"radio",array = json_object_new_array());
@@ -80,7 +80,7 @@ void GetGatewayPragma(void)
             json_object_object_add(chip,"index",json_object_new_int(loop));
             printf("index = %d\n", loop);
             json_object_object_add(chip,"channel",json_object_new_int(loop * 6));
-            json_object_object_add(chip,"datarate",json_object_new_string(drname[0]));
+            json_object_object_add(chip,"datarate",json_object_new_string(drname[5]));
         }
         json_object_to_file(GATEWAY_PRAGMA_FILE_PATH,pragma);
     }

@@ -35,7 +35,7 @@ typedef struct
 
 typedef struct
 {
-    uint8_t buf[51];
+    uint8_t buf[200 + 13];
     uint8_t len;
 	//bool needack;
 	unsigned long classcjiffies;

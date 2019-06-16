@@ -88,7 +88,7 @@ void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mo
             		json_object_put(pragma);
                     return;
             	}
-                if(strlen(json_object_get_string(obj)) > 51 * 2)
+                if(strlen(json_object_get_string(obj)) > 200 * 2)
                 {
                 	json_object_put(pragma);
                     return;
@@ -100,7 +100,6 @@ void my_message_callback(struct mosquitto *mosq, void *userdata, const struct mo
             	Str2Hex( &stringformat[0],  pstServerMsgDown->Msg.stData2Node.payload, strlen(stringformat) );
 
             json_object_put(pragma);
-
             write(fd_cdev,writebuf,sendlen);
         }
     }else{

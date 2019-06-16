@@ -719,6 +719,7 @@ void LoRaWANRadomDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 	//printk("%s, %d\r\n", __func__, __LINE__);
     mutex_lock(&RadioChipMutex[stNodeDatabase[pstMyWork->param].chip]);
 	Radio.Sleep(stNodeDatabase[pstMyWork->param].chip);
+	Radio.SetMaxPayloadLength(stNodeDatabase[pstMyWork->param].chip,MODEM_LORA,0xff);
 	Radio.SetTxConfig(stNodeDatabase[pstMyWork->param].chip,
 		stRadioCfg_Tx.modem,
 		stRadioCfg_Tx.power,

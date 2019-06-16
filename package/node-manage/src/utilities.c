@@ -107,7 +107,7 @@ void Str2Hex( const char *sSrc,  char *sDest, int nSrcLen )
     int  i;
     char szTmp[3];
 
-    for( i = 0; i < nSrcLen; i++ )
+    for( i = 0; i < (nSrcLen / 2); i++ )
     {
         sscanf( (unsigned char*) &sSrc[i * 2], "%02X", &sDest[i] );
     }
