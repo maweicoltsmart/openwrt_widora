@@ -245,7 +245,7 @@ int main(int argc, char*argv[])
                 json_object_array_add(array,chip=json_object_new_object());
                 json_object_object_add(chip,"index",json_object_new_int(loop));
                 json_object_object_add(chip,"channel",json_object_new_int(loop * 6));
-                json_object_object_add(chip,"datarate",json_object_new_string(drname[5]));
+                json_object_object_add(chip,"datarate",json_object_new_string(drname[0]));
             }
             json_object_to_file(GATEWAY_PRAGMA_FILE_PATH,pragma);
             system("/etc/init.d/lora restart");

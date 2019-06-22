@@ -199,7 +199,7 @@ void ServerMsgDownListAdd(pst_ServerMsgDown pstServerMsgDown){
 		if(pstServerMsgDown->Msg.stData2Node.size > 0)
 		{
 			*(uint8_t *)(stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf + 1 + 4 + 1 + 2) = pstServerMsgDown->Msg.stData2Node.fPort;
-			stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].chip = pstServerMsgDown->Msg.stData2Node.fPort - 1;
+			//stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].chip = pstServerMsgDown->Msg.stData2Node.fPort - 1;
 			LoRaMacBufferPktLen = 1 + 4 + 1 + 2 + 1;
 			LoRaMacPayloadEncrypt( pstServerMsgDown->Msg.stData2Node.payload, pstServerMsgDown->Msg.stData2Node.size, stNodeInfoToSave[pstServerMsgDown->Msg.stData2Node.DevAddr].stDevNetParameter.AppSKey, pstServerMsgDown->Msg.stData2Node.DevAddr, DOWN_LINK, stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].sequence_down,&stNodeDatabase[pstServerMsgDown->Msg.stData2Node.DevAddr].stTxData.buf[LoRaMacBufferPktLen]);
 			LoRaMacBufferPktLen += pstServerMsgDown->Msg.stData2Node.size;

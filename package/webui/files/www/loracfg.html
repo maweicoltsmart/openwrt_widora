@@ -295,16 +295,7 @@
 			           <td><input id="channel_1" type="text" name="channel_1" class="form-control" onblur="setDatarateAfterChannel(this);"/></td>
 			           <td id="datarate_1"> </td>
 		          </tr>
-              <tr>
-                 <td id="index_2">1</td>
-                 <td><input id="channel_2" type="text" name="channel_2" class="form-control" onblur="setDatarateAfterChannel(this);"/></td>
-                 <td id="datarate_2"> </td>
-              </tr>
-              <tr>
-                 <td id="index_3">1</td>
-                 <td><input id="channel_3" type="text" name="channel_3" class="form-control" onblur="setDatarateAfterChannel(this);"/></td>
-                 <td id="datarate_3"> </td>
-              </tr>
+
 		          <!-- <tr>
 			           <td id="index_2"> </td>
 			           <td><input id="channel_2" type="text" name="channel_2" class="form-control" onblur="setDatarateAfterChannel(this);"/></td>
@@ -417,20 +408,12 @@
     if(isLegal){
      	 isLegal=check_channel("channel_1");
     }
-
-    if(isLegal){
-       isLegal=check_channel("channel_2");
-    }
     
-    
-    if(isLegal){
-       isLegal=check_channel("channel_3");
-    }
     
     
 
     if(isLegal){
-    var init_info='{"SoftWareVersion":"Version 1.2 (Apr 24 2018 14:09:23)","MacAddress":"001122334455","UserName":"MJ-Modem","Password":"www.colt.xin","NetType":"MQTT","SlaveID":0,"Baud":9600,"Parity":"8N1","APPKEY":"2B7E151628AED2A6ABF7158809CF4F3C","NetID":"789ABC","serverip":"192.168.1.100","serverport":32500,"radio":[{"index":0,"channel":0,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"}]}';
+    var init_info='{"SoftWareVersion":"Version 1.2 (Apr 24 2018 14:09:23)","MacAddress":"001122334455","UserName":"MJ-Modem","Password":"www.colt.xin","NetType":"MQTT","SlaveID":0,"Baud":9600,"Parity":"8N1","APPKEY":"2B7E151628AED2A6ABF7158809CF4F3C","NetID":"789ABC","serverip":"192.168.1.100","serverport":32500,"radio":[{"index":0,"channel":0,"datarate":"DR_0"},{"index":0,"channel":1,"datarate":"DR_0"}]}';
 
 
     var init_info_json =JSON.parse(init_info);
