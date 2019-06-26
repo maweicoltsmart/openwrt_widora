@@ -370,6 +370,7 @@ void LoRaWANJoinTimer2WorkQueue(struct work_struct *p_work)
 void LoRaWANDataDownTimer1WorkQueue(struct work_struct *p_work)
 {
     pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
+    stNodeDatabase[pstMyWork->param].chip = stNodeInfoToSave[pstMyWork->param].stDevNetParameter.DevEUI[7] % 2;
 	//tasklet_kill(&stNodeDatabase[pstMyWork->param].tasklet);
 	del_timer(&stNodeDatabase[pstMyWork->param].timer1);
 	del_timer(&stNodeDatabase[pstMyWork->param].timer2);
@@ -521,6 +522,7 @@ void LoRaWANDataDownWaitAckTimer2WorkQueue(struct work_struct *p_work)
 void LoRaWANDataDownClassCTimer1WorkQueue(struct work_struct *p_work)
 {
     pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
+    stNodeDatabase[pstMyWork->param].chip = stNodeInfoToSave[pstMyWork->param].stDevNetParameter.DevEUI[7] % 2;
 	//tasklet_kill(&stNodeDatabase[pstMyWork->param].tasklet);
 	del_timer(&stNodeDatabase[pstMyWork->param].timer1);
 	del_timer(&stNodeDatabase[pstMyWork->param].timer2);
@@ -668,6 +670,7 @@ void LoRaWANDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 void LoRaWANRadomDataDownClassCTimer2WorkQueue(struct work_struct *p_work)
 {
     pst_MyWork pstMyWork = container_of(p_work, st_MyWork, save);
+    stNodeDatabase[pstMyWork->param].chip = stNodeInfoToSave[pstMyWork->param].stDevNetParameter.DevEUI[7] % 2;
 	st_ServerMsgUp stServerMsgUp;
 	//tasklet_kill(&stNodeDatabase[pstMyWork->param].tasklet);
 	del_timer(&stNodeDatabase[pstMyWork->param].timer2);
