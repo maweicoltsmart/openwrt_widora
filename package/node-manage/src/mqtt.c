@@ -274,7 +274,7 @@ void *mjmqtt_client_routin(void *data)
 			strcat(topic,deveui);
 
 			//printf("topic = %s\r\n",topic);
-			mosquitto_publish(mosq,NULL,topic,strlen(senddata)+1,senddata,0,0);
+			mosquitto_publish(mosq,NULL,topic,strlen(senddata),senddata,0,0);
 			json_object_put(pragma);
 		}
 		else
