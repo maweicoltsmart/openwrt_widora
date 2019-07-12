@@ -170,7 +170,7 @@ int LoRaWANRxDataProcess(void *data){
 						stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer1.function = LoRaWANDataDownClassCTimer1Callback;
 						stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer1.data = stFrameDataUp.frameHdr.DevAddr;
 						stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer1.expires = stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].jiffies + LoRaMacParams.ReceiveDelay1;
-						add_timer(&stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer1);
+						//add_timer(&stNodeDatabase[stFrameDataUp.frameHdr.DevAddr].timer1);
 					}
 					else
 					{
