@@ -299,7 +299,7 @@ int main(int argc ,char *argv[])
         ret = pthread_create(&mjlora_pkg_handle, NULL, mjlora_pkg_routin, &fd);
         ret = pthread_create(&mjmodbus_server_handle, NULL, mjmodbus_server_routin, &fd);
         ret = pthread_create(&mjmodbus_slave485_handle, NULL, mjmodbus_slave485_routin, &fd);
-        ret = pthread_create(&mjmodbus_slave232_handle, NULL, mjmodbus_slave232_routin, &fd);
+        //ret = pthread_create(&mjmodbus_slave232_handle, NULL, mjmodbus_slave232_routin, &fd);
     }
     //ret = pthread_create(&mjcheckfirewarecopy_handle, NULL, mjcheckfirewarecopy_routin, &fd);
 #define RF_FREQUENCY                                470000000 // Hz
